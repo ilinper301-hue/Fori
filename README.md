@@ -21,8 +21,8 @@ Pizarra digital y panel de asamblea para la **Pantalla Digital Interactiva (PDI)
 | `index.html` | La app completa |
 | `sw.js` | Funcionamiento sin conexión y actualizaciones |
 | `manifest.webmanifest` | Datos para instalarla como app |
-| `icon.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `favicon-32.png` | Iconos |
-| `fonts/` | Fuente Fredoka (licencia OFL) |
+| `icon.svg`, `icon-fav.svg`, `icon-mark.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `favicon-32.png` | Icono de la app, de la pestaña y marca de la barra superior |
+| `fonts/` | Fuente Inter (licencia OFL) |
 | `billetes/` (opcional) | Imágenes oficiales del BCE (`5.jpg`, `10.jpg`, `20.jpg`, `50.jpg`, `100.jpg`, `200.jpg`) para el modelo «Imagen real» de billetes |
 
 ## Publicar
@@ -30,5 +30,5 @@ GitHub Pages sirve la rama `main` desde la raíz (*Settings → Pages*). Para in
 
 ## Créditos
 - Pictogramas: Sergio Palao. Origen: ARASAAC (https://arasaac.org). Licencia: CC BY-NC-SA. Propiedad: Gobierno de Aragón (España).
-- Fuente Fredoka: SIL Open Font License (ver `fonts/OFL-Fredoka.txt`).
+- Fuente Inter: SIL Open Font License (ver `fonts/LICENSE-Inter.txt`).
 - Imágenes de billetes: Banco Central Europeo, según sus normas de reproducción.

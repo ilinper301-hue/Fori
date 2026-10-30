@@ -1,7 +1,7 @@
 /* Service worker de Pizarra del aula */
 // Prefijo propio: Fori comparte dominio con Lectori, Barri y Tabula y solo debe borrar sus cachés
-const CACHE = 'fori-v1';
-const PRECACHE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon.svg', './favicon-32.png', './fonts/fredoka.woff'];
+const CACHE = 'fori-v2';
+const PRECACHE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './icon.svg', './favicon-32.png', './icon-mark.svg', './icon-fav.svg', './fonts/inter-400.woff', './fonts/inter-500.woff', './fonts/inter-600.woff'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
