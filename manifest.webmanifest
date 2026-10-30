@@ -2,8 +2,8 @@
   "name": "Fori: pizarra del aula",
   "short_name": "Fori",
   "description": "Pizarra digital y asamblea para el aula de primaria en la PDI.",
-  "display": "fullscreen",
-  "orientation": "landscape",
+  "display": "standalone",
+  "orientation": "any",
   "start_url": "./",
   "scope": "./",
   "background_color": "#13214A",
@@ -33,5 +33,9 @@
   "categories": [
     "education",
     "kids"
+  ],
+  "display_override": [
+    "fullscreen",
+    "standalone"
   ]
 }
