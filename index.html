@@ -513,6 +513,9 @@ dialog::backdrop{background:rgba(9,16,40,.62)}
 .appbtn img{display:block;width:100%;height:100%}
 .appbtn:hover{box-shadow:0 0 0 2px var(--teal)}
 .appbtn:active{transform:scale(.92)}
+/* pantallas estrechas (móvil, tablet en vertical): que quepan los botones de la barra superior */
+@media (max-width:1000px){#dateStr,#subject,.brand-sep:first-of-type{display:none}}
+@media (max-width:640px){.brand{font-size:0;gap:0}#clock{font-size:18px}#top{gap:8px}}
 </style>
 </head>
 <body>
@@ -597,6 +600,28 @@ dialog::backdrop{background:rgba(9,16,40,.62)}
   </div>
 </dialog>
 
+<script>
+/* Compatibilidad con navegadores antiguos (tablets y móviles Android sin actualizar) y aviso si Fori no arranca */
+(function(){
+  if(!window.structuredClone)window.structuredClone=function(v){return JSON.parse(JSON.stringify(v))};
+  [window.Element,window.DocumentFragment,window.Document].forEach(function(C){
+    if(C&&!C.prototype.replaceChildren)C.prototype.replaceChildren=function(){this.textContent='';this.append.apply(this,arguments)};
+  });
+  var shown=false;
+  function fail(msg){
+    if(shown||window.__foriOK)return;shown=true;
+    var d=document.createElement('div');
+    d.setAttribute('style','position:fixed;inset:0;z-index:99999;background:#13214A;color:#fff;font:18px/1.5 system-ui,sans-serif;padding:32px;overflow:auto');
+    d.innerHTML='<h2 style="margin:0 0 12px">Fori no ha podido arrancar en este navegador</h2><p>Actualiza Google Chrome (o el navegador del dispositivo) desde la tienda de aplicaciones y vuelve a abrir Fori.</p><p style="opacity:.75">Si sigue sin funcionar, envía este mensaje a quien te ayuda con la app:</p><pre style="white-space:pre-wrap;background:rgba(255,255,255,.1);padding:12px;border-radius:10px;font-size:14px"></pre>';
+    d.querySelector('pre').textContent=msg+'\n'+navigator.userAgent;
+    (document.body||document.documentElement).appendChild(d);
+  }
+  window.addEventListener('error',function(e){fail((e.message||'Error')+' ('+(e.lineno||'?')+':'+(e.colno||'?')+')')});
+  window.addEventListener('unhandledrejection',function(e){fail('Promesa: '+(e.reason&&e.reason.message||e.reason))});
+  // si al cabo de unos segundos la app no ha terminado de arrancar, también se avisa
+  window.addEventListener('load',function(){setTimeout(function(){if(!window.__foriOK)fail('La app no terminó de arrancar')},4000)});
+})();
+</script>
 <script>
 (()=>{
 'use strict';
@@ -768,7 +793,7 @@ let pages=[newPage()],cur=0,sel=null;
 const P=()=>pages[cur];
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('fori',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch{r()}})},
-  get(k){return new Promise(r=>{if(!this.db)return r(null);try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result??null);q.onerror=()=>r(null)}catch{r(null)}})},
+  get(k){return new Promise(r=>{if(!this.db)return r(null);try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result===undefined?null:q.result);q.onerror=()=>r(null)}catch{r(null)}})},
   set(k,v){return new Promise(r=>{if(!this.db)return r(false);try{const t=this.db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>r(true);t.onerror=()=>r(false)}catch{r(false)}})}
 };
 let persistT=null;
@@ -2844,6 +2869,7 @@ new ResizeObserver(fit).observe(stage);
 fit();tickClock();setInterval(tickClock,1000);
 setView(S.view||'full');
 loadBoard();
+window.__foriOK=true; // arranque correcto
 if(location.protocol.startsWith('http')&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
