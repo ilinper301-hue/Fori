@@ -1,0 +1,37 @@
+{
+  "name": "Fori: pizarra del aula",
+  "short_name": "Fori",
+  "description": "Pizarra digital y asamblea para el aula de primaria en la PDI.",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "start_url": "./",
+  "scope": "./",
+  "background_color": "#162043",
+  "theme_color": "#F4664A",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "id": "fori-app",
+  "categories": [
+    "education",
+    "kids"
+  ]
+}
