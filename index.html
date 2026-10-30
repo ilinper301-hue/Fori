@@ -508,6 +508,11 @@ dialog::backdrop{background:rgba(9,16,40,.62)}
 .dbtn.tray.min{color:var(--on-frame2)}
 .dbtn.tray.min{opacity:.75;background:transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
 .win>header .x+.x{margin-left:-4px}
+/* accesos a Lectori y Barri */
+.appbtn{display:block;width:38px;height:38px;border-radius:10px;overflow:hidden;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.12);transition:transform .15s}
+.appbtn img{display:block;width:100%;height:100%}
+.appbtn:hover{box-shadow:0 0 0 2px var(--teal)}
+.appbtn:active{transform:scale(.92)}
 </style>
 </head>
 <body>
@@ -521,6 +526,10 @@ dialog::backdrop{background:rgba(9,16,40,.62)}
     <span id="modeChip"></span>
     <span class="sp"></span>
     <button class="chip" id="clsChip"></button>
+    <!-- Accesos directos a las otras apps de la familia: se abren en su propia ventana, no dentro de Fori -->
+    <a class="appbtn" href="https://ilinper301-hue.github.io/Lectori/" target="_blank" rel="noopener" title="Abrir Lectori" aria-label="Abrir Lectori"><img src="apps/lectori.png" alt=""></a>
+    <a class="appbtn" href="https://ilinper301-hue.github.io/barri/" target="_blank" rel="noopener" title="Abrir Barri" aria-label="Abrir Barri"><img src="apps/barri.png" alt=""></a>
+    <span class="brand-sep"></span>
     <button class="mini" id="btnView" data-pop="view" aria-label="Modo de pantalla">▣</button>
     <button class="mini" id="btnFs" aria-label="Pantalla completa">⛶</button>
   </header>
