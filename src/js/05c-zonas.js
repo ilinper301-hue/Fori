@@ -2,8 +2,8 @@
 // Cada zona tiene su propio color y su goma, para que salgan varios alumnos a la vez.
 // Lo que se dibuja en una zona no puede salirse de ella.
 const ZONE_COLORS=['ink','#1e6fe0','#e03131','#2f9e44','#f08c00','#7048e8'];
-const ZN={n:Math.min(3,Math.max(1,S.zoneN|0||1)),z:[]};
-for(let i=0;i<3;i++)ZN.z.push({color:['ink','#1e6fe0','#e03131'][i],eraser:false});
+const ZN={n:Math.min(4,Math.max(1,S.zoneN|0||1)),z:[]};
+for(let i=0;i<4;i++)ZN.z.push({color:['ink','#1e6fe0','#e03131','#2f9e44'][i],eraser:false});
 const zoneLayer=h('div',{class:'zones'});
 stage.append(zoneLayer);
 function zoneAt(x){if(ZN.n<2)return -1;return clamp(Math.floor(x/(stage.clientWidth/ZN.n)),0,ZN.n-1)}
@@ -25,7 +25,7 @@ function renderZoneBars(){
   if(ZN.n<2)return;
   for(let i=0;i<ZN.n;i++){
     const z=ZN.z[i];
-    const bar=h('div',{class:'zonebar',style:`left:${(i+.5)/ZN.n*100}%`},
+    const bar=h('div',{class:'zonebar'+(ZN.n>3?' compact':''),style:`left:${(i+.5)/ZN.n*100}%`},
       h('span',{class:'zn'},String(i+1)),
       ...ZONE_COLORS.slice(0,4).map(c=>h('button',{class:'zsw'+(!z.eraser&&z.color===c?' on':''),'aria-label':'Color',style:`background:${cssColor(c)}`,onclick:()=>{z.color=c;z.eraser=false;renderZoneBars()}})),
       h('button',{class:'zb'+(z.eraser?' on':''),'aria-label':'Goma',title:'Goma',onclick:()=>{z.eraser=!z.eraser;renderZoneBars()}},ico('eraser')),

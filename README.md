@@ -15,7 +15,7 @@ Pizarra digital y panel de asamblea para la **Pantalla Digital Interactiva (PDI)
 - **Matemáticas:** base 10, reloj analógico y digital (con la hora en palabras), regla y transportador, monedas y billetes de euro, recta numérica, fracciones, tabla del 100, dados, geoplano, regletas de Cuisenaire y tangram con retos.
 - **Insertar:** imágenes y fotos (que se mueven y se agrandan) y fichas o libros en PDF (cada página del PDF pasa a ser una página de la pizarra para escribir encima).
 - **Lecciones:** guarda las páginas como lección para prepararla en casa y abrirla en la PDI; se pueden exportar e importar como archivo `.fori`. Las páginas se adaptan al tamaño de la pantalla donde se abren.
-- **Pizarra dividida** en 2 o 3 zonas, cada una con su color y su goma, para que salgan varios alumnos a la vez.
+- **Pizarra dividida** en 2, 3 o 4 zonas, cada una con su color y su goma, para que salgan varios alumnos a la vez.
 - **Ruleta** para elegir alumno, **regla** para trazar líneas apoyándose en ella y letra **Fredoka** en la herramienta Texto.
 - **Tabula:** importa clases, alumnos y horario desde Tabula (mismo navegador o archivo de copia). **PIN** opcional para Ajustes.
 - **Privacidad:** no hay cuentas ni servidor. Alumnos, ajustes y pizarras se guardan solo en el navegador del equipo. *Ajustes → Exportar datos* hace una copia de seguridad de alumnos y ajustes.

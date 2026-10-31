@@ -4,6 +4,7 @@ const ICONS={
   zones1:'<rect x="3.5" y="5" width="17" height="14" rx="2"/>',
   zones2:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M12 5v14" stroke-dasharray="2 2.5"/>',
   zones3:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M9.2 5v14M14.8 5v14" stroke-dasharray="2 2.5"/>',
+  zones4:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M7.75 5v14M12 5v14M16.25 5v14" stroke-dasharray="2 2.5"/>',
   pen:'<path d="M4 20l1.2-4.6L15.8 4.8a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/><path d="M13.5 7l3.5 3.5"/>',
   marker:'<path d="M15.5 3.5l5 5-8.5 8.5H7v-5z"/><path d="M7 17l-3 3"/><path d="M4 21h9"/>',
   eraser:'<path d="M8 20l-4.2-4.2a2 2 0 0 1 0-2.8l9.2-9.2a2 2 0 0 1 2.8 0l4.2 4.2a2 2 0 0 1 0 2.8L12 20z"/><path d="M8 20h12"/><path d="M8.5 10.5l5 5"/>',

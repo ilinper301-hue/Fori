@@ -14,3 +14,4 @@
 .zonebar .zsw.on{box-shadow:0 0 0 3px var(--teal)}
 .zonebar .zb{width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:var(--on-frame2);font-size:22px;display:grid;place-items:center}
 .zonebar .zb.on{background:rgba(39,193,176,.18);color:var(--teal)}
+.zonebar.compact{gap:4px;padding:5px 6px}.zonebar.compact .zsw{width:32px;height:32px}.zonebar.compact .zb{width:38px;height:38px;font-size:20px}.zonebar.compact .zn{display:none}

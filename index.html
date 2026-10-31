@@ -588,6 +588,7 @@ dialog.tabdlg.small{width:min(420px,92vw)}
 .zonebar .zsw.on{box-shadow:0 0 0 3px var(--teal)}
 .zonebar .zb{width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:var(--on-frame2);font-size:22px;display:grid;place-items:center}
 .zonebar .zb.on{background:rgba(39,193,176,.18);color:var(--teal)}
+.zonebar.compact{gap:4px;padding:5px 6px}.zonebar.compact .zsw{width:32px;height:32px}.zonebar.compact .zb{width:38px;height:38px;font-size:20px}.zonebar.compact .zn{display:none}
 /* Ruleta del módulo «Alumno al azar» */
 .win.rl-big{max-height:96vh}
 .rl-seg{max-width:340px;margin-left:auto;margin-right:auto}
@@ -764,6 +765,7 @@ const ICONS={
   zones1:'<rect x="3.5" y="5" width="17" height="14" rx="2"/>',
   zones2:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M12 5v14" stroke-dasharray="2 2.5"/>',
   zones3:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M9.2 5v14M14.8 5v14" stroke-dasharray="2 2.5"/>',
+  zones4:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M7.75 5v14M12 5v14M16.25 5v14" stroke-dasharray="2 2.5"/>',
   pen:'<path d="M4 20l1.2-4.6L15.8 4.8a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/><path d="M13.5 7l3.5 3.5"/>',
   marker:'<path d="M15.5 3.5l5 5-8.5 8.5H7v-5z"/><path d="M7 17l-3 3"/><path d="M4 21h9"/>',
   eraser:'<path d="M8 20l-4.2-4.2a2 2 0 0 1 0-2.8l9.2-9.2a2 2 0 0 1 2.8 0l4.2 4.2a2 2 0 0 1 0 2.8L12 20z"/><path d="M8 20h12"/><path d="M8.5 10.5l5 5"/>',
@@ -1586,8 +1588,8 @@ REG.pageMenu.push(
 // Cada zona tiene su propio color y su goma, para que salgan varios alumnos a la vez.
 // Lo que se dibuja en una zona no puede salirse de ella.
 const ZONE_COLORS=['ink','#1e6fe0','#e03131','#2f9e44','#f08c00','#7048e8'];
-const ZN={n:Math.min(3,Math.max(1,S.zoneN|0||1)),z:[]};
-for(let i=0;i<3;i++)ZN.z.push({color:['ink','#1e6fe0','#e03131'][i],eraser:false});
+const ZN={n:Math.min(4,Math.max(1,S.zoneN|0||1)),z:[]};
+for(let i=0;i<4;i++)ZN.z.push({color:['ink','#1e6fe0','#e03131','#2f9e44'][i],eraser:false});
 const zoneLayer=h('div',{class:'zones'});
 stage.append(zoneLayer);
 function zoneAt(x){if(ZN.n<2)return -1;return clamp(Math.floor(x/(stage.clientWidth/ZN.n)),0,ZN.n-1)}
@@ -1609,7 +1611,7 @@ function renderZoneBars(){
   if(ZN.n<2)return;
   for(let i=0;i<ZN.n;i++){
     const z=ZN.z[i];
-    const bar=h('div',{class:'zonebar',style:`left:${(i+.5)/ZN.n*100}%`},
+    const bar=h('div',{class:'zonebar'+(ZN.n>3?' compact':''),style:`left:${(i+.5)/ZN.n*100}%`},
       h('span',{class:'zn'},String(i+1)),
       ...ZONE_COLORS.slice(0,4).map(c=>h('button',{class:'zsw'+(!z.eraser&&z.color===c?' on':''),'aria-label':'Color',style:`background:${cssColor(c)}`,onclick:()=>{z.color=c;z.eraser=false;renderZoneBars()}})),
       h('button',{class:'zb'+(z.eraser?' on':''),'aria-label':'Goma',title:'Goma',onclick:()=>{z.eraser=!z.eraser;renderZoneBars()}},ico('eraser')),
@@ -3332,7 +3334,7 @@ function buildDock(){
       else $('#bgFile').click();
     }},...ib('image',P().img?'Quitar imagen de fondo':'Poner imagen de fondo')),
     h('div',{class:'popsep'},'Pizarra dividida'),
-    ...[[1,'Una sola zona'],[2,'Dividir en 2 zonas'],[3,'Dividir en 3 zonas']].map(([n,lb])=>h('button',{class:'wide'+(ZN.n===n?' on':''),onclick:()=>{closePop();setZones(n)}},...ib('zones'+n,lb)))],'above')});
+    ...[[1,'Una sola zona'],[2,'Dividir en 2 zonas'],[3,'Dividir en 3 zonas'],[4,'Dividir en 4 zonas']].map(([n,lb])=>h('button',{class:'wide'+(ZN.n===n?' on':''),onclick:()=>{closePop();setZones(n)}},...ib('zones'+n,lb)))],'above')});
   $('#bgFile').addEventListener('change',async e=>{
     const f=e.target.files[0];if(!f)return;e.target.value='';
     await setBgImage(f);setBg();

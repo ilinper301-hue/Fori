@@ -117,7 +117,7 @@ function buildDock(){
       else $('#bgFile').click();
     }},...ib('image',P().img?'Quitar imagen de fondo':'Poner imagen de fondo')),
     h('div',{class:'popsep'},'Pizarra dividida'),
-    ...[[1,'Una sola zona'],[2,'Dividir en 2 zonas'],[3,'Dividir en 3 zonas']].map(([n,lb])=>h('button',{class:'wide'+(ZN.n===n?' on':''),onclick:()=>{closePop();setZones(n)}},...ib('zones'+n,lb)))],'above')});
+    ...[[1,'Una sola zona'],[2,'Dividir en 2 zonas'],[3,'Dividir en 3 zonas'],[4,'Dividir en 4 zonas']].map(([n,lb])=>h('button',{class:'wide'+(ZN.n===n?' on':''),onclick:()=>{closePop();setZones(n)}},...ib('zones'+n,lb)))],'above')});
   $('#bgFile').addEventListener('change',async e=>{
     const f=e.target.files[0];if(!f)return;e.target.value='';
     await setBgImage(f);setBg();
