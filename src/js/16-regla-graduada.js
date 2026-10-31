@@ -68,3 +68,14 @@ function mRuler(body){
   lab.textContent=`1 cm = ${RUL.ppc} px`;
 }
 
+// Dibujar apoyándose en la regla: si el trazo empieza junto a uno de sus bordes (por fuera), sigue la línea del borde.
+// Devuelve una función que lleva cada punto al borde, o null si el punto no está junto a la regla.
+function rulerSnap(p,size){
+  if(!ruler||ruler.el.style.display==='none')return null;
+  const a=ruler.a*Math.PI/180,d={x:Math.cos(a),y:Math.sin(a)},n={x:-Math.sin(a),y:Math.cos(a)},O={x:ruler.x+RPAD,y:ruler.y};
+  const v={x:p.x-O.x,y:p.y-O.y},t=v.x*d.x+v.y*d.y,k=v.x*n.x+v.y*n.y; // t: a lo largo de la regla; k: distancia al borde superior
+  if(t<-RPAD||t>ruler.W-RPAD)return null;
+  let off;
+  if(k<0&&k>-36)off=-(size/2+2);else if(k>RH&&k<RH+36)off=RH+size/2+2;else return null;
+  return q=>{const w={x:q.x-O.x,y:q.y-O.y},tt=w.x*d.x+w.y*d.y;return{x:O.x+d.x*tt+n.x*off,y:O.y+d.y*tt+n.y*off}};
+}

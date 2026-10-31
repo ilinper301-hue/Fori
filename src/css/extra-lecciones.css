@@ -1,0 +1,20 @@
+/* Lecciones */
+.les-bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.les-list{display:flex;flex-direction:column;gap:10px;max-height:min(60vh,520px);overflow:auto}
+.les-item{display:flex;gap:14px;padding:10px;border:1px solid var(--line);border-radius:14px;background:var(--chrome)}
+.les-th{flex:none;width:132px;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);font-size:32px}
+.les-th img{width:100%;height:100%;object-fit:cover;display:block}
+.les-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.les-name{font-weight:700;font-size:18px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.les-sub{font-size:14px;color:var(--muted)}
+.les-acts{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px}
+.les-acts .btn{min-height:44px;padding:0 14px;font-size:16px}
+.les-acts .btn.ghost{background:var(--panel)}
+.les-acts .btn.les-i{width:44px;padding:0}
+.les-acts .btn.les-del{color:var(--danger)}
+.les-sep{flex:1}
+.les-empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:28px 12px;text-align:center;color:var(--muted);font-size:40px}
+.les-empty p{margin:0;font-size:16px;color:var(--ink)}
+.les-empty .les-sub{font-size:14px;color:var(--muted)}
+@media (max-width:640px){.les-item{flex-direction:column}.les-th{width:100%}}
+.win:has(.les-bar){max-width:calc(100% - 24px)}

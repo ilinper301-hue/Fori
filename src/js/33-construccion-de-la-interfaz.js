@@ -115,7 +115,9 @@ function buildDock(){
       closePop();
       if(P().img){P().img=null;drawBg();persist();setBg()}
       else $('#bgFile').click();
-    }},...ib('image',P().img?'Quitar imagen de fondo':'Poner imagen de fondo'))],'above')});
+    }},...ib('image',P().img?'Quitar imagen de fondo':'Poner imagen de fondo')),
+    h('div',{class:'popsep'},'Pizarra dividida'),
+    ...[[1,'Una sola zona'],[2,'Dividir en 2 zonas'],[3,'Dividir en 3 zonas']].map(([n,lb])=>h('button',{class:'wide'+(ZN.n===n?' on':''),onclick:()=>{closePop();setZones(n)}},...ib('zones'+n,lb)))],'above')});
   $('#bgFile').addEventListener('change',async e=>{
     const f=e.target.files[0];if(!f)return;e.target.value='';
     await setBgImage(f);setBg();
@@ -130,7 +132,7 @@ function buildDock(){
     h('button',{class:'wide',onclick:()=>{closePop();exportPDF()}},...ib('pdf','Guardar todas en PDF')),
     ...REG.pageMenu.map(f=>f())],'above')});
   dock.replaceChildren(
-    bgBtn,mathBtn,h('span',{id:'tray'}),h('span',{class:'dsep'}),
+    bgBtn,h('button',{class:'dbtn','data-pop':'ins',onclick:e=>openPop('ins',e.currentTarget,1,insertNodes(),'above')},...ib('plus','Insertar ▾')),mathBtn,h('span',{id:'tray'}),h('span',{class:'dsep'}),
     h('button',{class:'dbtn nav','aria-label':'Página anterior',onclick:()=>gotoPage(cur-1)},ico('left')),
     pageBtn,
     h('button',{class:'dbtn nav','aria-label':'Página siguiente',onclick:()=>cur<pages.length-1?gotoPage(cur+1):addPage(false)},ico('right')),

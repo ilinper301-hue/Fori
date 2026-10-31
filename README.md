@@ -13,6 +13,11 @@ Pizarra digital y panel de asamblea para la **Pantalla Digital Interactiva (PDI)
 - **Gestión del aula:** alumno al azar, parejas y grupos, encargados, horario del día (con pictogramas de ARASAAC), semáforo de trabajo, temporizador y cronómetro, medidor de ruido y contadores de puntos. Varias clases con su propia lista.
 - **Apoyo a la explicación:** foco de atención y notas adhesivas.
 - **Matemáticas:** base 10, reloj analógico y digital (con la hora en palabras), regla y transportador, monedas y billetes de euro, recta numérica, fracciones, tabla del 100, dados, geoplano, regletas de Cuisenaire y tangram con retos.
+- **Insertar:** imágenes y fotos (que se mueven y se agrandan) y fichas o libros en PDF (cada página del PDF pasa a ser una página de la pizarra para escribir encima).
+- **Lecciones:** guarda las páginas como lección para prepararla en casa y abrirla en la PDI; se pueden exportar e importar como archivo `.fori`. Las páginas se adaptan al tamaño de la pantalla donde se abren.
+- **Pizarra dividida** en 2 o 3 zonas, cada una con su color y su goma, para que salgan varios alumnos a la vez.
+- **Ruleta** para elegir alumno, **regla** para trazar líneas apoyándose en ella y letra **Fredoka** en la herramienta Texto.
+- **Tabula:** importa clases, alumnos y horario desde Tabula (mismo navegador o archivo de copia). **PIN** opcional para Ajustes.
 - **Privacidad:** no hay cuentas ni servidor. Alumnos, ajustes y pizarras se guardan solo en el navegador del equipo. *Ajustes → Exportar datos* hace una copia de seguridad de alumnos y ajustes.
 
 ## Archivos
@@ -22,7 +27,7 @@ Pizarra digital y panel de asamblea para la **Pantalla Digital Interactiva (PDI)
 | `sw.js` | Funcionamiento sin conexión y actualizaciones |
 | `manifest.webmanifest` | Datos para instalarla como app |
 | `icon.svg`, `icon-fav.svg`, `icon-mark.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `favicon-32.png` | Icono de la app, de la pestaña y marca de la barra superior |
-| `fonts/` | Fuente Inter (licencia OFL) |
+| `fonts/` | Fuentes Inter y Fredoka (licencia OFL) |
 | `billetes/` (opcional) | Imágenes oficiales del BCE (`5.jpg`, `10.jpg`, `20.jpg`, `50.jpg`, `100.jpg`, `200.jpg`) para el modelo «Imagen real» de billetes |
 
 ## Publicar
@@ -30,7 +35,8 @@ GitHub Pages sirve la rama `main` desde la raíz (*Settings → Pages*). Para in
 
 ## Créditos
 - Pictogramas: Sergio Palao. Origen: ARASAAC (https://arasaac.org). Licencia: CC BY-NC-SA. Propiedad: Gobierno de Aragón (España).
-- Fuente Inter: SIL Open Font License (ver `fonts/LICENSE-Inter.txt`).
+- Fuentes Inter y Fredoka: SIL Open Font License (ver `fonts/LICENSE-Inter.txt` y `fonts/OFL-Fredoka.txt`).
+- Lector de PDF: pdf.js (Mozilla, licencia Apache 2.0), que se descarga la primera vez que se abre un PDF.
 - Imágenes de billetes: Banco Central Europeo, según sus normas de reproducción.
 
 ## Desarrollo

@@ -1,0 +1,16 @@
+/* letra Fredoka para la herramienta Texto */
+@font-face{font-family:'Fredoka';src:url(fonts/fredoka.woff) format('woff');font-weight:400 700;font-display:swap}
+@font-face{font-family:'Fredoka';src:url(fonts/fredoka-ext.woff) format('woff');font-weight:400 600;font-display:swap;unicode-range:U+0131,U+0152-0153,U+2122,U+2212}
+.txted{font-family:'Fredoka',system-ui,sans-serif}
+/* asa para cambiar el tamaño de una imagen */
+.selhandle{position:absolute;z-index:3;display:none;width:28px;height:28px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);touch-action:none;cursor:nwse-resize}
+/* separador con título dentro de los menús */
+#pop .popsep{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:10px 16px 2px;border-top:1px solid var(--line);margin-top:4px}
+/* pizarra dividida en zonas */
+.zones{position:absolute;inset:0;pointer-events:none;z-index:2;display:none}
+.zonebar{position:absolute;bottom:14px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--frame);border-radius:16px;box-shadow:0 8px 24px rgba(9,16,40,.3);pointer-events:auto}
+.zonebar .zn{color:var(--on-frame2);font-weight:700;font-size:15px;padding:0 6px}
+.zonebar .zsw{width:38px;height:38px;border-radius:50%;border:3px solid var(--frame);box-shadow:0 0 0 2px rgba(255,255,255,.2);padding:0}
+.zonebar .zsw.on{box-shadow:0 0 0 3px var(--teal)}
+.zonebar .zb{width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:var(--on-frame2);font-size:22px;display:grid;place-items:center}
+.zonebar .zb.on{background:rgba(39,193,176,.18);color:var(--teal)}

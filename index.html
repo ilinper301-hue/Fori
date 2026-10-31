@@ -516,6 +516,110 @@ dialog::backdrop{background:rgba(9,16,40,.62)}
 /* pantallas estrechas (móvil, tablet en vertical): que quepan los botones de la barra superior */
 @media (max-width:1000px){#dateStr,#subject,.brand-sep:first-of-type{display:none}}
 @media (max-width:640px){.brand{font-size:0;gap:0}#clock{font-size:18px}#top{gap:8px}}
+/* Ajustes: seguridad (PIN) e importación desde Tabula */
+.sec-note{margin:8px 0 0;font-size:14px;line-height:1.45;color:var(--muted);user-select:text;-webkit-user-select:text}
+#sPinState{margin:0 0 10px;font-size:16px;color:var(--ink);font-weight:600}
+dialog.pindlg{width:min(380px,92vw);padding:26px 24px 22px;text-align:center;overflow:visible}
+.pin-lock{width:56px;height:56px;margin:0 auto 10px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--accent) 16%,var(--panel));color:var(--accent)}
+.pin-lock .ico{width:28px;height:28px}
+.pindlg h2{margin:0 0 16px;font-size:20px}
+.pin-dots{display:flex;gap:16px;justify-content:center;margin:0 0 10px}
+.pin-dots i{width:20px;height:20px;border-radius:50%;border:2px solid var(--frame,var(--line));background:transparent;transition:background .12s,border-color .12s,transform .12s}
+.pin-dots i.on{background:var(--accent);border-color:var(--accent);transform:scale(1.08)}
+.pin-msg{min-height:22px;margin:0 0 12px;font-size:15px;font-weight:600;color:var(--muted)}
+.pin-msg.bad{color:var(--danger)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pin-key{height:72px;border-radius:18px;border:1px solid var(--line);background:var(--board);color:var(--ink);font:inherit;font-size:30px;font-weight:600;display:grid;place-items:center;box-shadow:0 2px 0 var(--line);touch-action:manipulation}
+.pin-key:active{transform:translateY(1px) scale(.97);background:color-mix(in srgb,var(--accent) 16%,var(--board))}
+.pin-key.fn{background:var(--chrome);box-shadow:none;color:var(--muted)}
+.pin-key.txt{font-size:16px;font-weight:700}
+.pin-key .ico{width:30px;height:30px}
+.pin-key:disabled{opacity:.4}
+.pin-key:focus-visible,.tab-row:focus-within{outline:3px solid var(--accent);outline-offset:2px}
+.pindlg.shake{animation:pinshake .35s}
+@keyframes pinshake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+@media (prefers-reduced-motion:reduce){.pindlg.shake{animation:none}}
+dialog.tabdlg{width:min(640px,94vw)}
+dialog.tabdlg.small{width:min(420px,92vw)}
+.tab-note{margin:8px 0;font-size:16px;line-height:1.45;user-select:text;-webkit-user-select:text}
+.tab-note.bad{color:var(--danger);font-weight:700}
+.tab-help{margin:10px 0;padding:12px 16px;border-radius:14px;background:var(--board);border:1px solid var(--line);font-size:15px;line-height:1.5;user-select:text;-webkit-user-select:text}
+.tab-help p{margin:6px 0 2px;font-weight:700}.tab-help ul,.tab-help ol{margin:2px 0 6px;padding-left:22px}
+.tab-list{display:flex;flex-direction:column;gap:8px}
+.tab-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0;padding:10px 14px;border-radius:14px;background:var(--board);border:1px solid var(--line);cursor:pointer}
+.tab-row input{width:26px;height:26px;flex:none}
+.tab-name{font-size:18px;font-weight:700}.tab-name em{font-weight:500;color:var(--muted)}
+.tab-meta{font-size:14px;font-weight:500;color:var(--muted)}
+.tab-sch{display:flex;flex-direction:column;gap:8px}
+.tab-sch select{align-self:flex-start;max-width:100%;background:var(--board);color:var(--ink);border:1px solid var(--line)}
+/* Lecciones */
+.les-bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+.les-list{display:flex;flex-direction:column;gap:10px;max-height:min(60vh,520px);overflow:auto}
+.les-item{display:flex;gap:14px;padding:10px;border:1px solid var(--line);border-radius:14px;background:var(--chrome)}
+.les-th{flex:none;width:132px;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:var(--panel);border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);font-size:32px}
+.les-th img{width:100%;height:100%;object-fit:cover;display:block}
+.les-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.les-name{font-weight:700;font-size:18px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.les-sub{font-size:14px;color:var(--muted)}
+.les-acts{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:6px}
+.les-acts .btn{min-height:44px;padding:0 14px;font-size:16px}
+.les-acts .btn.ghost{background:var(--panel)}
+.les-acts .btn.les-i{width:44px;padding:0}
+.les-acts .btn.les-del{color:var(--danger)}
+.les-sep{flex:1}
+.les-empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:28px 12px;text-align:center;color:var(--muted);font-size:40px}
+.les-empty p{margin:0;font-size:16px;color:var(--ink)}
+.les-empty .les-sub{font-size:14px;color:var(--muted)}
+@media (max-width:640px){.les-item{flex-direction:column}.les-th{width:100%}}
+.win:has(.les-bar){max-width:calc(100% - 24px)}
+/* letra Fredoka para la herramienta Texto */
+@font-face{font-family:'Fredoka';src:url(fonts/fredoka.woff) format('woff');font-weight:400 700;font-display:swap}
+@font-face{font-family:'Fredoka';src:url(fonts/fredoka-ext.woff) format('woff');font-weight:400 600;font-display:swap;unicode-range:U+0131,U+0152-0153,U+2122,U+2212}
+.txted{font-family:'Fredoka',system-ui,sans-serif}
+/* asa para cambiar el tamaño de una imagen */
+.selhandle{position:absolute;z-index:3;display:none;width:28px;height:28px;border-radius:50%;background:var(--teal);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);touch-action:none;cursor:nwse-resize}
+/* separador con título dentro de los menús */
+#pop .popsep{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:10px 16px 2px;border-top:1px solid var(--line);margin-top:4px}
+/* pizarra dividida en zonas */
+.zones{position:absolute;inset:0;pointer-events:none;z-index:2;display:none}
+.zonebar{position:absolute;bottom:14px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:6px 8px;background:var(--frame);border-radius:16px;box-shadow:0 8px 24px rgba(9,16,40,.3);pointer-events:auto}
+.zonebar .zn{color:var(--on-frame2);font-weight:700;font-size:15px;padding:0 6px}
+.zonebar .zsw{width:38px;height:38px;border-radius:50%;border:3px solid var(--frame);box-shadow:0 0 0 2px rgba(255,255,255,.2);padding:0}
+.zonebar .zsw.on{box-shadow:0 0 0 3px var(--teal)}
+.zonebar .zb{width:44px;height:44px;border-radius:12px;border:0;background:transparent;color:var(--on-frame2);font-size:22px;display:grid;place-items:center}
+.zonebar .zb.on{background:rgba(39,193,176,.18);color:var(--teal)}
+/* Ruleta del módulo «Alumno al azar» */
+.win.rl-big{max-height:96vh}
+.rl-seg{max-width:340px;margin-left:auto;margin-right:auto}
+.rl-view{display:flex;justify-content:center}
+.rl-stage{position:relative;width:min(100%,calc(52vh / var(--ui,1)));aspect-ratio:1;container-type:inline-size}
+.rl-svgw,.rl-svgw svg{display:block;width:100%;height:100%}
+.rl-svgw svg{filter:drop-shadow(0 10px 18px rgba(9,16,40,.28))}
+.rl-s{stroke:var(--panel);stroke-width:1.6;transition:opacity .35s,filter .35s}
+.rl-t text{font-weight:700;font-family:inherit;pointer-events:none;transition:opacity .35s}
+.rl-svgw.done .rl-s,.rl-svgw.done .rl-t{opacity:.28}
+.rl-svgw.done .rl-s.win,.rl-svgw.done .rl-t.win{opacity:1}
+.rl-s.win{stroke:var(--ink);stroke-width:4;stroke-linejoin:round}
+.rl-rim{stroke:var(--ink)}
+.rl-rimi{stroke:var(--panel)}
+.rl-peg{fill:var(--panel);stroke:var(--ink);stroke-width:1}
+.rl-blank{fill:var(--chrome);stroke:var(--line);stroke-width:3}
+.rl-ptr{position:absolute;left:50%;top:0;width:10%;margin-left:-5%;transform-origin:50% 28%;transition:transform .07s;z-index:2;filter:drop-shadow(0 3px 4px rgba(0,0,0,.35))}
+.rl-ptr svg{display:block;width:100%;fill:var(--accent);stroke:var(--panel);stroke-width:2.5;stroke-linejoin:round}
+.rl-ptr svg circle{fill:var(--panel);stroke:none}
+.rl-ptr.tk{transform:rotate(-14deg)}
+.rl-hub{position:absolute;left:50%;top:52.5%;width:22%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:5px solid var(--panel);background:var(--ink);color:var(--panel);font:inherit;font-weight:700;font-size:4.4cqw;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.1em;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.4);z-index:2}
+.rl-hub .ico{font-size:1.5em}
+.rl-hub:active:not(:disabled){transform:translate(-50%,-50%) scale(.95)}
+.rl-hub:disabled{opacity:.7;cursor:default}
+.rl-res{position:absolute;left:50%;top:54%;width:70%;transform:translate(-50%,-50%) scale(.85);opacity:0;pointer-events:none;background:var(--panel);color:var(--ink);border:2px solid var(--line);border-top:8px solid var(--yellow);border-radius:18px;padding:3.5cqw 3cqw;text-align:center;box-shadow:0 20px 50px rgba(9,16,40,.45);transition:opacity .3s,transform .35s cubic-bezier(.2,1.3,.4,1);z-index:3;cursor:pointer}
+.rl-res.on{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.rl-rl{font-size:3.6cqw;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.rl-rn{font-weight:800;line-height:1.1;margin:1.5cqw 0;word-break:break-word;color:var(--ink)}
+.rl-rh{font-size:3cqw;color:var(--muted)}
+.rl-empty{position:absolute;inset:0;display:grid;place-items:center;font-size:5cqw;font-weight:700;color:var(--muted);text-align:center;padding:20%}
+.rl-opts{display:flex;gap:6px 28px;flex-wrap:wrap;justify-content:center}
+@media (prefers-reduced-motion:reduce){.rl-res{transition:none}}
 </style>
 </head>
 <body>
@@ -569,6 +673,7 @@ dialog::backdrop{background:rgba(9,16,40,.62)}
     <button class="btn ghost" id="sClsNew"><span class="ico" aria-hidden="true"><svg><use href="#i-plus"/></svg></span> Nueva clase</button>
     <button class="btn ghost" id="sClsRen"><span class="ico" aria-hidden="true"><svg><use href="#i-pen"/></svg></span> Renombrar</button>
     <button class="btn ghost" id="sClsDel"><span class="ico" aria-hidden="true"><svg><use href="#i-trash"/></svg></span> Borrar</button>
+    <button class="btn ghost" id="sTabula"><span class="ico" aria-hidden="true"><svg><use href="#i-download"/></svg></span> Importar desde Tabula</button>
   </div>
   <div class="sgrid" style="margin-top:12px">
     <div><label for="sStudents">Alumnos (uno por línea)</label><textarea id="sStudents" rows="10"></textarea></div>
@@ -588,6 +693,13 @@ dialog::backdrop{background:rgba(9,16,40,.62)}
     <label class="inl">Tamaño de pauta y cuadrícula <select id="sPauta"><option value="0.75">Pequeña</option><option value="1">Mediana</option><option value="1.35">Grande</option></select></label>
   </div>
   <label class="inl" style="margin-top:12px"><input type="checkbox" id="sPictos" style="width:24px;height:24px"> Mostrar pictogramas de ARASAAC en horario y encargados (necesita internet la primera vez)</label>
+  <h3>Seguridad</h3>
+  <p class="sec-note" id="sPinState"></p>
+  <div class="row">
+    <button class="btn ghost" id="sPinOn"><span class="ico" aria-hidden="true"><svg><use href="#i-lock"/></svg></span> <span id="sPinOnLbl">Activar PIN</span></button>
+    <button class="btn ghost" id="sPinOff"><span class="ico" aria-hidden="true"><svg><use href="#i-trash"/></svg></span> Quitar PIN</button>
+  </div>
+  <p class="sec-note">El PIN se guarda solo en este navegador (como una huella que no se puede leer) y se pide al abrir Ajustes. «Exportar datos» guarda el resto de ajustes, pero no el PIN: si lo olvidas, borra los datos de Fori en el navegador y recupera todo con «Importar datos».</p>
   <h3>Copia de seguridad</h3>
   <div class="row">
     <button class="btn ghost" id="sExport"><span class="ico" aria-hidden="true"><svg><use href="#i-download"/></svg></span> Exportar datos</button>
@@ -648,6 +760,10 @@ function h(tag,props={},...kids){
 const REG={pageMenu:[]};
 /* ============ Iconos de línea (propios, 24×24, trazo redondeado) ============ */
 const ICONS={
+  camera:'<path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  zones1:'<rect x="3.5" y="5" width="17" height="14" rx="2"/>',
+  zones2:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M12 5v14" stroke-dasharray="2 2.5"/>',
+  zones3:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M9.2 5v14M14.8 5v14" stroke-dasharray="2 2.5"/>',
   pen:'<path d="M4 20l1.2-4.6L15.8 4.8a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/><path d="M13.5 7l3.5 3.5"/>',
   marker:'<path d="M15.5 3.5l5 5-8.5 8.5H7v-5z"/><path d="M7 17l-3 3"/><path d="M4 21h9"/>',
   eraser:'<path d="M8 20l-4.2-4.2a2 2 0 0 1 0-2.8l9.2-9.2a2 2 0 0 1 2.8 0l4.2 4.2a2 2 0 0 1 0 2.8L12 20z"/><path d="M8 20h12"/><path d="M8.5 10.5l5 5"/>',
@@ -722,6 +838,9 @@ const ICONS={
   book:'<path d="M12 6.500C10 5 7 4.500 4 5v13c3-.5 6 0 8 1.500 2-1.500 5-2 8-1.500V5c-3-.5-6 0-8 1.500z"/><path d="M12 6.500v13"/>',
   power:'<path d="M12 3.500v8"/><path d="M7 6.500a7.500 7.500 0 1 0 10 0"/>',
   pair:'<circle cx="8.500" cy="8" r="3"/><circle cx="15.500" cy="8" r="3"/><path d="M3 19.500a5.500 5.500 0 0 1 11 0"/><path d="M10.500 14.600A5.500 5.500 0 0 1 21 19.500"/>',
+  share:'<circle cx="6" cy="12" r="2.6"/><circle cx="17.5" cy="5.5" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/><path d="M8.3 10.7l7-3.9"/><path d="M8.3 13.3l7 3.9"/>',
+  lock:'<rect x="5" y="10.5" width="14" height="10" rx="2.500"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.500"/><path d="M12 14.500v2.500"/>',
+  backspace:'<path d="M9 5.500h10a1.500 1.500 0 0 1 1.500 1.500v10a1.500 1.500 0 0 1-1.500 1.500H9L3 12z"/><path d="M12.500 9.500l5 5M17.500 9.500l-5 5"/>',
 };
 document.body.insertAdjacentHTML('afterbegin',`<svg width="0" height="0" style="position:absolute" aria-hidden="true">${Object.entries(ICONS).map(([k,v])=>`<symbol id="i-${k}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${v}</symbol>`).join('')}</svg>`);
 const ico=(name,cls='')=>h('span',{class:'ico '+cls,'aria-hidden':'true',html:`<svg><use href="#i-${name}"/></svg>`});
@@ -786,7 +905,7 @@ function tickClock(){
 const stage=$('#stage'),bg=$('#bg'),dr=$('#draw'),lv=$('#live');
 const cb=bg.getContext('2d'),cd=dr.getContext('2d'),cl=lv.getContext('2d');
 const T={tool:'pen',color:'ink',size:6,shape:'line',fill:false};
-const FONT='system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif';
+const FONT="'Fredoka',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif"; // letra de la herramienta Texto
 const FS={3:32,6:48,12:72}; // tamaño de letra según el grosor elegido
 const active=new Map();
 const inkColor=()=>document.documentElement.dataset.theme==='dark'?'#ffffff':'#111111';
@@ -803,13 +922,13 @@ const DB={db:null,
 let persistT=null;
 function persist(){
   clearTimeout(persistT);
-  persistT=setTimeout(()=>DB.set('board',{cur,pages:pages.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img}))}),600);
+  persistT=setTimeout(()=>DB.set('board',{cur,pages:pages.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img,size:p.size||null}))}),600);
 }
 async function loadBoard(){
   await DB.open();
   const d=await DB.get('board');
   if(d&&Array.isArray(d.pages)&&d.pages.length){
-    pages=d.pages.map(p=>({strokes:p.strokes||[],bg:p.bg||'plain',img:p.img||null,undo:[],redo:[]}));
+    pages=d.pages.map(p=>({strokes:p.strokes||[],bg:p.bg||'plain',img:p.img||null,size:p.size||null,undo:[],redo:[]}));
     cur=clamp(d.cur|0,0,pages.length-1);
   }
   showPage();
@@ -817,6 +936,7 @@ async function loadBoard(){
 
 /* --- Fondos y pautas --- */
 function fit(){
+  if(typeof pages!=='undefined'&&pages[cur])fitPage(P());
   const dpr=window.devicePixelRatio||1,w=stage.clientWidth,hh=stage.clientHeight;
   for(const [c,x] of [[bg,cb],[dr,cd],[lv,cl]]){c.width=Math.round(w*dpr);c.height=Math.round(hh*dpr);x.setTransform(dpr,0,0,dpr,0,0)}
   drawBg();redraw();
@@ -858,6 +978,8 @@ function drawBg(){
   const w=stage.clientWidth,hh=stage.clientHeight;
   cb.clearRect(0,0,w,hh);
   paintBg(cb,w,hh,P().bg,document.documentElement.dataset.theme==='dark');
+  P().strokes.forEach(s=>{if(s.type==='img')drawImgObj(cb,s)}); // imágenes insertadas: debajo de la tinta
+  drawZoneLines(cb,w,hh);
   $('#bgimg').style.backgroundImage=P().img?`url(${P().img})`:'';
 }
 
@@ -907,6 +1029,7 @@ function drawText(ctx,s){
   ctx.restore();
 }
 function drawStroke(ctx,s){
+  if(s.type==='img')return; // las imágenes se pintan en la capa de fondo
   if(s.type==='text')return drawText(ctx,s);
   if(s.type==='shape')return drawShape(ctx,s);
   if(s.pts.length===1)return seg(ctx,s,s.pts[0],s.pts[0]);
@@ -914,11 +1037,12 @@ function drawStroke(ctx,s){
   s.pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
   ctx.stroke();ctx.restore();
 }
-function redraw(){cd.clearRect(0,0,stage.clientWidth,stage.clientHeight);P().strokes.forEach(s=>drawStroke(cd,s))}
+function redraw(){drawBg();cd.clearRect(0,0,stage.clientWidth,stage.clientHeight);P().strokes.forEach(s=>drawStroke(cd,s))}
 const pt=e=>{const r=dr.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
 
 /* --- Selección: caja envolvente y detección de toque --- */
 function bbox(s){
+  if(s.type==='img')return{x:s.x,y:s.y,w:s.w,h:s.h};
   if(s.type==='text'){
     cl.save();cl.font=`600 ${s.fs}px ${FONT}`;
     const w=Math.max(20,...s.text.split('\n').map(l=>cl.measureText(l).width));cl.restore();
@@ -942,7 +1066,7 @@ function hitTest(p){
   return null;
 }
 function translate(s,dx,dy){
-  if(s.type==='text'){s.x+=dx;s.y+=dy}
+  if(s.type==='text'||s.type==='img'){s.x+=dx;s.y+=dy}
   else if(s.type==='shape'){s.a={x:s.a.x+dx,y:s.a.y+dy};s.b={x:s.b.x+dx,y:s.b.y+dy}}
   else s.pts.forEach(p=>{p.x+=dx;p.y+=dy});
 }
@@ -951,11 +1075,12 @@ function translate(s,dx,dy){
 function applyOp(op,rev){
   const st=P().strokes;
   switch(op.t){
-    case 'add':if(!rev)st.push(op.s);else{const i=st.lastIndexOf(op.s);if(i>=0)st.splice(i,1)}break;
+    case 'add':if(!rev){op.i!=null?st.splice(op.i,0,op.s):st.push(op.s)}else{const i=st.lastIndexOf(op.s);if(i>=0)st.splice(i,1)}break;
     case 'del':if(!rev)st.splice(st.indexOf(op.s),1);else st.splice(Math.min(op.i,st.length),0,op.s);break;
     case 'move':translate(op.s,rev?-op.dx:op.dx,rev?-op.dy:op.dy);break;
     case 'rep':{const i=st.indexOf(rev?op.b:op.a);if(i>=0)st[i]=rev?op.a:op.b;break}
     case 'clear':P().strokes=rev?op.backup:[];break;
+    case 'size':Object.assign(op.s,rev?op.a:op.b);break;
     case 'multi':(rev?[...op.ops].reverse():op.ops).forEach(o=>applyOp(o,rev));break;
   }
 }
@@ -967,6 +1092,8 @@ function redo(){commitEditor();const op=P().redo.pop();if(!op)return;applyOp(op,
 function clearBoard(){
   commitEditor();setSel(null);
   if(!P().strokes.length)return;
+  const keep=P().strokes.filter(s=>s.type==='img');
+  if(keep.length){doOp({t:'multi',ops:P().strokes.filter(s=>s.type!=='img').map(s=>({t:'del',s,i:0}))});toast('Página limpiada (las imágenes se conservan)',{label:ib('undo','Deshacer'),fn:undo});return}
   doOp({t:'clear',backup:P().strokes});
   toast('Página limpiada',{label:ib('undo','Deshacer'),fn:undo});
 }
@@ -995,8 +1122,8 @@ function grpBox(){
   return{x,y,w:Math.max(...bs.map(b=>b.x+b.w))-x,h:Math.max(...bs.map(b=>b.y+b.h))-y};
 }
 const selBox=()=>sel?bbox(sel):grpBox();
-function setSel(s){sel=s;grp=null;drawLive();placeSelbar()}
-function setGrp(g){grp=g&&(g.strokes.length||g.pieces.length)?g:null;sel=null;drawLive();placeSelbar()}
+function setSel(s){sel=s;grp=null;drawLive();placeSelbar();placeHandle()}
+function setGrp(g){grp=g&&(g.strokes.length||g.pieces.length)?g:null;sel=null;drawLive();placeSelbar();placeHandle()}
 function deleteSelection(){
   if(sel){const s=sel;setSel(null);doOp({t:'del',s,i:P().strokes.indexOf(s)});return}
   if(!grp)return;
@@ -1116,16 +1243,23 @@ dr.addEventListener('pointerdown',e=>{
   }
   setSel(null);
   let s;
-  if(T.tool==='shape')s={type:'shape',shape:T.shape,fill:T.fill,color:T.color,size:T.size,a:p,b:p};
+  const zi=zoneAt(p.x);
+  if(zi>=0){ // pizarra dividida: cada zona dibuja con su color o su goma y no se sale de su parte
+    const z=ZN.z[zi],[x0,x1]=zoneRange(zi);
+    s={type:'free',tool:z.eraser?'eraser':'pen',color:z.color,size:z.eraser?40:6,pts:[p],zone:[x0+3,x1-3]};
+    seg(cd,s,p,p);
+  }else if(T.tool==='shape')s={type:'shape',shape:T.shape,fill:T.fill,color:T.color,size:T.size,a:p,b:p};
   else{
     const size=T.tool==='eraser'?Math.max(30,T.size*5):T.tool==='marker'?T.size*4+10:T.size;
     s={type:'free',tool:T.tool,color:T.color,size,pts:[p]};
-    if(!previewed(s))seg(cd,s,p,p);
+    // junto al borde de la regla: el trazo sigue su borde
+    if(T.tool!=='eraser'){const sn=rulerSnap(p,size);if(sn){s.snap=sn;s.pts=[sn(p)]}}
+    if(!previewed(s))seg(cd,s,s.pts[0],s.pts[0]);
   }
   s.pen=e.pointerType==='pen';
   active.set(e.pointerId,s);drawLive();
   // mantener pulsado sin mover: se convierte en bolsa de selección
-  if(T.tool!=='eraser'){
+  if(T.tool!=='eraser'&&!s.zone&&!s.snap){
     const id=e.pointerId,start=p;
     s.lp=setTimeout(()=>{
       if(active.get(id)!==s||s.moved)return;
@@ -1151,7 +1285,7 @@ dr.addEventListener('pointermove',e=>{
   }
   if(s.type==='shape'){s.b=pt(e);drawLive();return}
   const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
-  for(const ev of (evs.length?evs:[e])){const p=pt(ev),last=s.pts[s.pts.length-1];s.pts.push(p);if(!previewed(s))seg(cd,s,last,p)}
+  for(const ev of (evs.length?evs:[e])){let p=pt(ev);if(s.snap)p=s.snap(p);if(s.zone)p={x:clamp(p.x,s.zone[0],s.zone[1]),y:p.y};const last=s.pts[s.pts.length-1];s.pts.push(p);if(!previewed(s))seg(cd,s,last,p)}
   if(previewed(s))drawLive();
 });
 function endStroke(e){
@@ -1161,7 +1295,7 @@ function endStroke(e){
   if(s.lasso){lassoSelect(s.lasso);drawLive();return}
   if(s.grpDrag){if(grp&&grp.strokes.length&&(s.dx||s.dy))record({t:'multi',ops:grp.strokes.map(t=>({t:'move',s:t,dx:s.dx,dy:s.dy}))});placeSelbar();return}
   if(s.sel!==undefined){if(s.sel&&(s.dx||s.dy))record({t:'move',s:s.sel,dx:s.dx,dy:s.dy});return}
-  delete s.pen;delete s.lp;delete s.moved;
+  delete s.pen;delete s.lp;delete s.moved;delete s.snap;delete s.zone;
   if(s.type==='shape'&&s.a.x===s.b.x&&s.a.y===s.b.y){drawLive();return}
   P().strokes.push(s);
   if(previewed(s))drawStroke(cd,s);
@@ -1178,7 +1312,22 @@ document.addEventListener('keydown',e=>{
 });
 
 /* --- Navegación entre páginas --- */
-function showPage(){setSel(null);active.clear();drawBg();redraw();drawLive();updatePageUI()}
+// Cada página recuerda el tamaño de pizarra en que se hizo. Si se abre en una pantalla de otro tamaño
+// (lección preparada en casa, otra PDI, cambio de modo de pantalla), se escala para que quepa igual.
+function fitPage(p){
+  const W=stage.clientWidth,H=stage.clientHeight;if(!W||!H)return;
+  if(!p.size||!p.strokes.length){p.size={w:W,h:H};return}
+  const k=Math.min(W/p.size.w,H/p.size.h);p.size={w:W,h:H};
+  if(Math.abs(k-1)<.01)return;
+  const sp=q=>{q.x*=k;q.y*=k};
+  for(const s of p.strokes){
+    if(s.type==='img'){s.x*=k;s.y*=k;s.w*=k;s.h*=k}
+    else if(s.type==='text'){sp(s);s.fs*=k}
+    else{if(s.type==='shape'){sp(s.a);sp(s.b)}else s.pts.forEach(sp);s.size=Math.max(1,s.size*k)}
+  }
+  persist();
+}
+function showPage(){fitPage(P());setSel(null);active.clear();drawBg();redraw();drawLive();updatePageUI()}
 function gotoPage(i){commitEditor();cur=clamp(i,0,pages.length-1);showPage();persist()}
 function addPage(copy){
   commitEditor();
@@ -1207,6 +1356,7 @@ async function renderPage(p,scale=2){
   x.fillStyle=getComputedStyle(stage).backgroundColor;x.fillRect(0,0,w,hh);
   if(p.img){const im=await loadImg(p.img);if(im){const k=Math.min(w/im.width,hh/im.height);x.drawImage(im,(w-im.width*k)/2,(hh-im.height*k)/2,im.width*k,im.height*k)}}
   paintBg(x,w,hh,p.bg,dark);
+  for(const s of p.strokes)if(s.type==='img'){const im=await loadImg(s.src);if(im)x.drawImage(im,s.x,s.y,s.w,s.h)}
   const ink=document.createElement('canvas');ink.width=c.width;ink.height=c.height; // capa aparte para que el borrador no borre el fondo
   const ix=ink.getContext('2d');ix.scale(scale,scale);p.strokes.forEach(s=>drawStroke(ix,s));
   x.setTransform(1,0,0,1,0,0);x.drawImage(ink,0,0);
@@ -1229,6 +1379,354 @@ async function exportPDF(){
 async function setBgImage(file){
   try{P().img=await shrinkImage(file,1920);drawBg();persist()}catch{toast('No se pudo cargar la imagen')}
 }
+
+/* ============ Lecciones: preparar la clase en casa y abrirla en la PDI ============ */
+/* Biblioteca en IndexedDB (base 'fori', almacén 'kv'):
+   'lessons'      -> lista ligera [{id,name,date,n,thumb}]
+   'lesson:<id>'  -> páginas de esa lección [{strokes,bg,img}]
+   No toca la clave 'board'. Archivo .fori = JSON {app:'fori',type:'lesson',version:1,name,date,pages}. */
+const LES={KEY:'lessons',VER:1,MAXP:300,sig:null,refresh:null};
+
+const lesPlain=ps=>ps.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img||null,size:p.size||null}));
+const lesSig=()=>{ // huella del contenido actual, para saber si hay cambios sin guardar como lección
+  const s=JSON.stringify(lesPlain(pages));let x=5381;
+  for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;
+  return s.length+':'+x;
+};
+const lesHasContent=()=>pages.some(p=>p.strokes.length||p.img);
+const lesUnsaved=()=>lesHasContent()&&lesSig()!==LES.sig;
+const lesId=()=>(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,8));
+const lesN=n=>n===1?'1 página':n+' páginas';
+const lesDate=iso=>{try{return new Date(iso).toLocaleDateString('es-ES',{day:'numeric',month:'short',year:'numeric'})}catch{return ''}};
+
+// Escritura con aviso real de fallo (cuota llena, etc.)
+function lesPut(k,v){
+  return new Promise(r=>{
+    if(!DB.db)return r(false);
+    try{const t=DB.db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>r(true);t.onerror=t.onabort=()=>r(false)}catch{r(false)}
+  });
+}
+function lesDel(k){
+  return new Promise(r=>{
+    if(!DB.db)return r(false);
+    try{const t=DB.db.transaction('kv','readwrite');t.objectStore('kv').delete(k);t.oncomplete=()=>r(true);t.onerror=t.onabort=()=>r(false)}catch{r(false)}
+  });
+}
+const lesList=async()=>{const l=await DB.get(LES.KEY);return Array.isArray(l)?l:[]};
+const lesPages=async id=>{const d=await DB.get('lesson:'+id);return Array.isArray(d)?d:null};
+
+async function lesThumb(p){
+  try{
+    const c=await renderPage({strokes:p.strokes,bg:p.bg,img:p.img},Math.min(1,220/Math.max(1,stage.clientWidth)));
+    return c.toDataURL('image/jpeg',.6);
+  }catch{return null}
+}
+
+// Guarda páginas como lección nueva (o sustituye la de id dado). Devuelve la ficha o null si falla.
+async function lesStore(name,ps,date,id){
+  id=id||lesId();
+  const meta={id,name,date:date||new Date().toISOString(),n:ps.length,thumb:await lesThumb(ps[0])};
+  if(!await lesPut('lesson:'+id,ps)){toast('No se ha podido guardar: no hay espacio suficiente en el equipo');return null}
+  const list=(await lesList()).filter(l=>l.id!==id);
+  list.unshift(meta);
+  if(!await lesPut(LES.KEY,list)){await lesDel('lesson:'+id);toast('No se ha podido guardar la lección');return null}
+  LES.refresh&&LES.refresh();
+  return meta;
+}
+
+async function saveLesson(){
+  commitEditor();
+  if(!DB.db){toast('Este navegador no permite guardar lecciones');return}
+  const def='Lección '+new Date().toLocaleDateString('es-ES',{day:'numeric',month:'long'});
+  const n=prompt('Nombre de la lección:',def);
+  if(n===null)return;
+  const name=n.trim().slice(0,80)||def;
+  const list=await lesList(),same=list.find(l=>l.name.toLowerCase()===name.toLowerCase());
+  if(same&&!confirm(`Ya hay una lección llamada «${same.name}». ¿Quieres sustituirla?`))return;
+  const m=await lesStore(name,structuredClone(lesPlain(pages)),null,same&&same.id);
+  if(m){LES.sig=lesSig();toast(`Lección «${name}» guardada (${lesN(m.n)})`)}
+}
+
+// Abrir: sustituye las páginas actuales; «añadir» las pone al final.
+async function lesOpen(l,add){
+  commitEditor();
+  const ps=await lesPages(l.id);
+  if(!ps||!ps.length){toast('No se ha podido leer la lección');return}
+  const fresh=ps.map(p=>({strokes:structuredClone(p.strokes||[]),bg:p.bg||'plain',img:p.img||null,size:p.size||null,undo:[],redo:[]}));
+  if(add){
+    const at=pages.length;pages.push(...fresh);cur=at;
+    showPage();persist();toast(`Añadidas ${lesN(fresh.length)} al final`);
+  }else{
+    if(lesUnsaved()&&!confirm('Las páginas actuales no están guardadas como lección y se perderán. ¿Abrir «'+l.name+'» de todos modos?'))return;
+    pages=fresh;cur=0;showPage();persist();LES.sig=lesSig();toast(`Lección «${l.name}» abierta`);
+  }
+}
+
+async function lesRename(l){
+  const n=prompt('Nuevo nombre:',l.name);if(n===null||!n.trim())return;
+  const list=await lesList(),x=list.find(q=>q.id===l.id);if(!x)return;
+  x.name=n.trim().slice(0,80);
+  if(!await lesPut(LES.KEY,list))toast('No se ha podido renombrar');
+  LES.refresh&&LES.refresh();
+}
+async function lesDup(l){
+  const ps=await lesPages(l.id);if(!ps){toast('No se ha podido leer la lección');return}
+  const m=await lesStore(l.name+' (copia)',ps,new Date().toISOString());
+  if(m)toast('Lección duplicada');
+}
+async function lesRemove(l){
+  if(!confirm(`¿Borrar la lección «${l.name}»? No se puede deshacer.`))return;
+  const list=(await lesList()).filter(q=>q.id!==l.id);
+  await lesPut(LES.KEY,list);await lesDel('lesson:'+l.id);
+  LES.refresh&&LES.refresh();toast('Lección borrada');
+}
+
+// Archivo .fori
+async function lesFile(l){
+  const ps=await lesPages(l.id);if(!ps)return null;
+  const data={app:'fori',type:'lesson',version:LES.VER,name:l.name,date:l.date,pages:ps};
+  const base=(l.name.replace(/[\\/:*?"<>|\u0000-\u001f]+/g,' ').trim().replace(/\s+/g,'-')||'leccion').slice(0,60);
+  return{blob:new Blob([JSON.stringify(data)],{type:'application/json'}),name:base+'.fori'};
+}
+async function lesExport(l){
+  const f=await lesFile(l);if(!f){toast('No se ha podido leer la lección');return}
+  const a=h('a',{href:URL.createObjectURL(f.blob),download:f.name});
+  document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+  toast(`Archivo «${f.name}» descargado`);
+}
+const lesCanShare=()=>{
+  try{return!!navigator.share&&!!navigator.canShare&&navigator.canShare({files:[new File(['{}'],'a.fori',{type:'application/json'})]})}catch{return false}
+};
+async function lesShare(l){
+  const f=await lesFile(l);if(!f){toast('No se ha podido leer la lección');return}
+  const file=new File([f.blob],f.name,{type:'application/json'});
+  try{await navigator.share({files:[file],title:l.name,text:'Lección de Fori: '+l.name})}
+  catch(e){if(e&&e.name!=='AbortError')toast('No se ha podido compartir. Prueba con «Exportar».')}
+}
+
+// Validación del archivo: devuelve {name,date,pages} o lanza Error con un mensaje claro
+const lesNum=v=>typeof v==='number'&&isFinite(v);
+const lesPt=p=>p&&lesNum(p.x)&&lesNum(p.y);
+function lesCheckStroke(s){
+  if(!s||typeof s!=='object')return false;
+  if(s.type==='text')return typeof s.text==='string'&&lesNum(s.x)&&lesNum(s.y)&&lesNum(s.fs);
+  if(s.type==='img')return typeof s.src==='string'&&/^data:image\//.test(s.src)&&lesNum(s.x)&&lesNum(s.y)&&lesNum(s.w)&&lesNum(s.h);
+  if(!lesNum(s.size))return false;
+  if(s.type==='shape')return typeof s.shape==='string'&&lesPt(s.a)&&lesPt(s.b);
+  return Array.isArray(s.pts)&&s.pts.length>0&&s.pts.every(lesPt);
+}
+function lesParse(text){
+  let d;
+  try{d=JSON.parse(text)}catch{throw new Error('El archivo no se puede leer: no es una lección de Fori.')}
+  if(!d||d.app!=='fori'||d.type!=='lesson')throw new Error('Este archivo no es una lección de Fori.');
+  if(!lesNum(d.version)||d.version>LES.VER)throw new Error('Esta lección es de una versión más nueva de Fori. Actualiza la aplicación e inténtalo de nuevo.');
+  if(!Array.isArray(d.pages)||!d.pages.length)throw new Error('La lección no tiene ninguna página.');
+  if(d.pages.length>LES.MAXP)throw new Error('La lección tiene demasiadas páginas.');
+  const pagesOk=d.pages.map((p,i)=>{
+    if(!p||!Array.isArray(p.strokes)||!p.strokes.every(lesCheckStroke))throw new Error(`La página ${i+1} está dañada.`);
+    const img=p.img==null?null:p.img;
+    if(img!==null&&!(typeof img==='string'&&/^data:image\//.test(img)))throw new Error(`La imagen de fondo de la página ${i+1} no es válida.`);
+    return{strokes:p.strokes,bg:typeof p.bg==='string'?p.bg:'plain',img,size:(p.size&&lesNum(p.size.w)&&lesNum(p.size.h)?{w:p.size.w,h:p.size.h}:null)};
+  });
+  const date=typeof d.date==='string'&&!isNaN(Date.parse(d.date))?d.date:new Date().toISOString();
+  return{name:(typeof d.name==='string'&&d.name.trim()?d.name.trim():'Lección importada').slice(0,80),date,pages:pagesOk};
+}
+async function lesImport(file){
+  if(!file)return;
+  if(!DB.db){toast('Este navegador no permite guardar lecciones');return}
+  let d;
+  try{d=lesParse(await file.text())}catch(e){alert(e.message);return}
+  const m=await lesStore(d.name,d.pages,d.date);
+  if(!m)return;
+  toast(`Lección «${m.name}» importada`);
+  if(confirm(`Lección «${m.name}» importada (${lesN(m.n)}). ¿Quieres abrirla ahora?`))lesOpen(m,false);
+}
+
+// Panel «Mis lecciones»
+function lessonsPanel(body){
+  const input=h('input',{type:'file',accept:'.fori,.json,application/json',style:'display:none',onchange:e=>{const f=e.target.files[0];e.target.value='';lesImport(f)}});
+  const list=h('div',{class:'les-list'});
+  const share=lesCanShare();
+  async function render(){
+    const ls=await lesList();
+    if(!list.isConnected&&!body.contains(list))return;
+    if(!ls.length){list.replaceChildren(h('div',{class:'les-empty'},ico('book'),h('p',{},'Todavía no hay lecciones.'),h('p',{class:'les-sub'},'Prepara las páginas y usa «Guardar como lección» en el menú Página, o importa un archivo .fori.')));return}
+    list.replaceChildren(...ls.map(l=>h('div',{class:'les-item'},
+      h('div',{class:'les-th'},l.thumb?h('img',{src:l.thumb,alt:''}):ico('page')),
+      h('div',{class:'les-main'},
+        h('div',{class:'les-name',title:l.name},l.name),
+        h('div',{class:'les-sub'},`${lesDate(l.date)} · ${lesN(l.n)}`),
+        h('div',{class:'les-acts'},
+          h('button',{class:'btn',onclick:()=>lesOpen(l,false)},...ib('book','Abrir')),
+          h('button',{class:'btn ghost',onclick:()=>lesOpen(l,true)},...ib('plus','Añadir al final')),
+          h('span',{class:'les-sep'}),
+          h('button',{class:'btn ghost les-i',title:'Renombrar','aria-label':'Renombrar',onclick:()=>lesRename(l)},ico('pen')),
+          h('button',{class:'btn ghost les-i',title:'Duplicar','aria-label':'Duplicar',onclick:()=>lesDup(l)},ico('copy')),
+          h('button',{class:'btn ghost les-i',title:'Exportar (.fori)','aria-label':'Exportar',onclick:()=>lesExport(l)},ico('download')),
+          share?h('button',{class:'btn ghost les-i',title:'Compartir','aria-label':'Compartir',onclick:()=>lesShare(l)},ico('share')):null,
+          h('button',{class:'btn ghost les-i les-del',title:'Borrar','aria-label':'Borrar',onclick:()=>lesRemove(l)},ico('trash'))
+        ))
+    )));
+  }
+  body.append(
+    h('div',{class:'les-bar'},
+      h('button',{class:'btn',onclick:saveLesson},...ib('save','Guardar como lección')),
+      h('button',{class:'btn ghost',onclick:()=>input.click()},...ib('upload','Importar lección'))),
+    list,input);
+  LES.refresh=render;render();
+  return()=>{LES.refresh=null};
+}
+function openLessons(){openWin('lessons','Mis lecciones',lessonsPanel,600)}
+
+REG.pageMenu.push(
+  ()=>h('button',{class:'wide',onclick:()=>{closePop();saveLesson()}},...ib('save','Guardar como lección')),
+  ()=>h('button',{class:'wide',onclick:()=>{closePop();openLessons()}},...ib('book','Mis lecciones'))
+);
+/* ============ Pizarra dividida en zonas ============ */
+// Cada zona tiene su propio color y su goma, para que salgan varios alumnos a la vez.
+// Lo que se dibuja en una zona no puede salirse de ella.
+const ZONE_COLORS=['ink','#1e6fe0','#e03131','#2f9e44','#f08c00','#7048e8'];
+const ZN={n:Math.min(3,Math.max(1,S.zoneN|0||1)),z:[]};
+for(let i=0;i<3;i++)ZN.z.push({color:['ink','#1e6fe0','#e03131'][i],eraser:false});
+const zoneLayer=h('div',{class:'zones'});
+stage.append(zoneLayer);
+function zoneAt(x){if(ZN.n<2)return -1;return clamp(Math.floor(x/(stage.clientWidth/ZN.n)),0,ZN.n-1)}
+function zoneRange(i){const w=stage.clientWidth/ZN.n;return[i*w,(i+1)*w]}
+function drawZoneLines(ctx,w,hh){
+  if(ZN.n<2)return;
+  ctx.save();ctx.setLineDash([14,10]);ctx.lineWidth=3;ctx.strokeStyle=document.documentElement.dataset.theme==='dark'?'rgba(255,255,255,.35)':'rgba(19,33,74,.3)';
+  for(let i=1;i<ZN.n;i++){const x=Math.round(w*i/ZN.n)+.5;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,hh);ctx.stroke()}
+  ctx.restore();
+}
+function clearZone(i){
+  const [x0,x1]=zoneRange(i);
+  const list=P().strokes.filter(s=>{if(s.type==='img')return false;const b=bbox(s),cx=b.x+b.w/2;return cx>=x0&&cx<x1});
+  if(list.length)doOp({t:'multi',ops:list.map(s=>({t:'del',s,i:P().strokes.indexOf(s)}))});
+}
+function renderZoneBars(){
+  zoneLayer.replaceChildren();
+  zoneLayer.style.display=ZN.n>1?'block':'none';
+  if(ZN.n<2)return;
+  for(let i=0;i<ZN.n;i++){
+    const z=ZN.z[i];
+    const bar=h('div',{class:'zonebar',style:`left:${(i+.5)/ZN.n*100}%`},
+      h('span',{class:'zn'},String(i+1)),
+      ...ZONE_COLORS.slice(0,4).map(c=>h('button',{class:'zsw'+(!z.eraser&&z.color===c?' on':''),'aria-label':'Color',style:`background:${cssColor(c)}`,onclick:()=>{z.color=c;z.eraser=false;renderZoneBars()}})),
+      h('button',{class:'zb'+(z.eraser?' on':''),'aria-label':'Goma',title:'Goma',onclick:()=>{z.eraser=!z.eraser;renderZoneBars()}},ico('eraser')),
+      h('button',{class:'zb','aria-label':'Borrar esta zona',title:'Borrar esta zona',onclick:()=>clearZone(i)},ico('trash')));
+    zoneLayer.append(bar);
+  }
+}
+function setZones(n){ZN.n=n;S.zoneN=n;save();setSel(null);renderZoneBars();drawBg()}
+renderZoneBars();
+
+/* ============ Insertar imágenes, fotos y fichas en PDF ============ */
+// Las imágenes son objetos de la página (tipo 'img'): se mueven y se agrandan con la herramienta Mover,
+// quedan debajo de la tinta y el borrador no las borra. Cada página de un PDF se convierte en una página de Fori
+// con la ficha como fondo, para escribir encima.
+const IMGS=new Map(); // caché de imágenes ya decodificadas
+function imgEl(src){
+  let i=IMGS.get(src);
+  if(!i){i=new Image();i.onload=()=>drawBg();i.src=src;IMGS.set(src,i)}
+  return i;
+}
+function drawImgObj(ctx,s){const i=imgEl(s.src);if(i.complete&&i.naturalWidth)ctx.drawImage(i,s.x,s.y,s.w,s.h)}
+// Lee un archivo de imagen y lo reduce (máx. 1600 px); conserva la transparencia de los PNG
+function readImage(file,max=1600){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file),im=new Image();
+    im.onload=()=>{
+      const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');
+      c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      URL.revokeObjectURL(url);
+      res({src:/png|gif|webp|svg/.test(file.type)?c.toDataURL('image/png'):c.toDataURL('image/jpeg',.88),w:c.width,h:c.height});
+    };
+    im.onerror=()=>{URL.revokeObjectURL(url);rej(new Error('imagen'))};
+    im.src=url;
+  });
+}
+async function insertImageFile(file,at){
+  try{
+    const r=await readImage(file);
+    const W=stage.clientWidth,H=stage.clientHeight,k=Math.min(1,W*.6/r.w,H*.6/r.h),w=Math.round(r.w*k),hh=Math.round(r.h*k);
+    const c=at||{x:W/2,y:H/2};
+    const s={type:'img',src:r.src,x:Math.round(clamp(c.x-w/2,0,W-w)),y:Math.round(clamp(c.y-hh/2,0,H-hh)),w,h:hh};
+    doOp({t:'add',s,i:0}); // al fondo: lo que se escriba queda encima
+    T.tool='select';refreshTools();setSel(s);
+    toast('Imagen añadida: arrástrala para moverla y usa la esquina para cambiar su tamaño');
+  }catch{toast('No se pudo abrir la imagen')}
+}
+// Lector de PDF (pdf.js): se descarga la primera vez que se usa y queda guardado para usarlo sin conexión
+const PDFJS='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+function loadPdfJs(){
+  if(window.pdfjsLib)return Promise.resolve(window.pdfjsLib);
+  return new Promise((res,rej)=>{
+    const sc=document.createElement('script');sc.src=PDFJS+'pdf.min.js';
+    sc.onload=()=>{if(!window.pdfjsLib)return rej(new Error('pdf.js'));window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS+'pdf.worker.min.js';res(window.pdfjsLib)};
+    sc.onerror=()=>rej(new Error('red'));document.head.append(sc);
+  });
+}
+async function importPDF(file){
+  commitEditor();
+  let lib;
+  try{lib=await loadPdfJs()}catch{toast('Para abrir un PDF la primera vez hace falta conexión a internet');return}
+  try{
+    toast('Abriendo el PDF…');
+    const doc=await lib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;
+    const n=doc.numPages;
+    if(n>30&&!confirm(`El PDF tiene ${n} páginas. ¿Añadirlas todas a la pizarra?`))return;
+    const W=stage.clientWidth,H=stage.clientHeight,list=[];
+    for(let i=1;i<=n;i++){
+      const page=await doc.getPage(i),vp1=page.getViewport({scale:1});
+      // resolución suficiente para la PDI sin que pese demasiado (máx. ~2000 px de lado)
+      const k=Math.min(2000/Math.max(vp1.width,vp1.height),Math.max(W/vp1.width,H/vp1.height)*1.5),vp=page.getViewport({scale:k});
+      const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
+      const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+      await page.render({canvasContext:x,viewport:vp}).promise;
+      const pg=newPage('plain');pg.img=c.toDataURL('image/jpeg',.85);list.push(pg);
+      toast(`Preparando página ${i} de ${n}…`);
+    }
+    const at=cur+1;pages.splice(at,0,...list);gotoPage(at);persist();
+    toast(n===1?'Ficha añadida como página nueva':`${n} páginas añadidas a la pizarra`);
+  }catch(e){toast('No se pudo leer el PDF')}
+}
+function insertFiles(files,at){
+  for(const f of files){
+    if(f.type==='application/pdf'||/\.pdf$/i.test(f.name))importPDF(f);
+    else if(f.type.startsWith('image/'))insertImageFile(f,at);
+  }
+}
+// Pegar (Ctrl+V) y arrastrar archivos sobre la pizarra
+document.addEventListener('paste',e=>{
+  if(e.target.closest&&e.target.closest('textarea,input,[contenteditable]'))return;
+  const fs=[...(e.clipboardData&&e.clipboardData.files||[])];if(fs.length){e.preventDefault();insertFiles(fs)}
+});
+stage.addEventListener('dragover',e=>{e.preventDefault()});
+stage.addEventListener('drop',e=>{e.preventDefault();const r=stage.getBoundingClientRect();insertFiles([...e.dataTransfer.files],{x:e.clientX-r.left,y:e.clientY-r.top})});
+const fileIn=(accept,capture)=>{const i=h('input',{type:'file',accept,hidden:''});if(capture)i.setAttribute('capture',capture);i.multiple=!capture;i.addEventListener('change',()=>{insertFiles([...i.files]);i.value=''});document.body.append(i);return i};
+const inImg=fileIn('image/*'),inCam=fileIn('image/*','environment'),inPdf=fileIn('application/pdf,.pdf');
+const insertNodes=()=>[
+  h('button',{class:'wide',onclick:()=>{closePop();inImg.click()}},...ib('image','Imagen')),
+  h('button',{class:'wide',onclick:()=>{closePop();inCam.click()}},...ib('camera','Foto con la cámara')),
+  h('button',{class:'wide',onclick:()=>{closePop();inPdf.click()}},...ib('pdf','Ficha o libro en PDF')),
+];
+
+/* --- Cambiar el tamaño de una imagen seleccionada: asa en la esquina --- */
+const resizeHandle=h('div',{class:'selhandle','aria-label':'Cambiar tamaño'});
+stage.append(resizeHandle);
+function placeHandle(){
+  if(!sel||sel.type!=='img'){resizeHandle.style.display='none';return}
+  resizeHandle.style.display='block';resizeHandle.style.left=(sel.x+sel.w-14)+'px';resizeHandle.style.top=(sel.y+sel.h-14)+'px';
+}
+(()=>{
+  let d=null;
+  resizeHandle.addEventListener('pointerdown',e=>{if(!sel||sel.type!=='img')return;e.stopPropagation();resizeHandle.setPointerCapture(e.pointerId);d={x:e.clientX,w:sel.w,h:sel.h,s:sel}});
+  resizeHandle.addEventListener('pointermove',e=>{
+    if(!d)return;const w=Math.max(40,d.w+(e.clientX-d.x));d.s.w=Math.round(w);d.s.h=Math.round(w*d.h/d.w);drawBg();setSel(d.s);
+  });
+  const end=()=>{if(!d)return;const s=d.s;if(s.w!==d.w)record({t:'size',s,a:{w:d.w,h:d.h},b:{w:s.w,h:s.h}});d=null};
+  resizeHandle.addEventListener('pointerup',end);resizeHandle.addEventListener('pointercancel',end);
+})();
 
 /* ============ Ventanas flotantes ============ */
 const floaters=$('#floaters'),wins=new Map();let zTop=10;
@@ -1316,15 +1814,46 @@ function mTimer(body){
   return()=>clearInterval(iv);
 }
 
-/* ============ Módulo: alumno al azar ============ */
+/* ============ Módulo: alumno al azar (nombres + ruleta) ============ */
 let pool=[];
+const RL={cx:200,cy:210,R:170,hub:40,
+  // [relleno, texto]: colores de marca con buen contraste
+  pal:[['#27C1B0','#06302b'],['#7444E0','#ffffff'],['#FFC845','#33260a'],['#F4664A','#2e0c05'],['#7FDDD2','#06302b'],['#A98BF0','#1c0a4d']]};
+const rlEsc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+// Texto del sector: nombre completo, abreviado o iniciales según el espacio
+function rlLabel(name,n,a){
+  const avail=RL.R-14-RL.hub-8,arcW=(RL.hub+avail*.55)*a*Math.PI/180,fsMax=Math.min(26,arcW*.62),minFs=n>20?9:11;
+  const w=name.trim().split(/\s+/),ini=w.map(x=>x[0]).join('').toUpperCase().slice(0,3);
+  const cand=[name.trim(),w.length>1?w[0]+' '+w.slice(1).map(x=>x[0].toUpperCase()+'.').join(' '):null,w[0],ini].filter(Boolean);
+  for(const t of cand){const fs=Math.min(fsMax,avail/(t.length*.6));if(fs>=minFs)return{t,fs}}
+  return{t:ini,fs:Math.max(minFs,Math.min(fsMax,avail/(ini.length*.6)))};
+}
+function rlSvg(list,win){
+  const n=list.length,{cx,cy,R}=RL,a=360/n,P=(r,d)=>[(cx+r*Math.sin(d*Math.PI/180)).toFixed(2),(cy-r*Math.cos(d*Math.PI/180)).toFixed(2)];
+  let s='',t='',pegs='';
+  list.forEach((nm,i)=>{
+    let ci=i%4;if(n%4===1&&i===n-1)ci=4;else if(n%4===2&&n>2&&i===n-1)ci=5;else if(n%4===3&&i===n-1)ci=4;
+    const [bg,fg]=RL.pal[ci],m=(i+.5)*a,lb=rlLabel(nm,n,a);
+    if(n===1)s+=`<circle class="rl-s" data-i="0" cx="${cx}" cy="${cy}" r="${R}" fill="${bg}"/>`;
+    else{const p0=P(R,i*a),p1=P(R,(i+1)*a);s+=`<path class="rl-s${i===win?' win':''}" data-i="${i}" fill="${bg}" d="M${cx} ${cy}L${p0[0]} ${p0[1]}A${R} ${R} 0 ${a>180?1:0} 1 ${p1[0]} ${p1[1]}Z"/>`}
+    t+=`<g class="rl-t${i===win?' win':''}" transform="translate(${cx} ${cy}) rotate(${(m-90).toFixed(2)})"><text x="${R-14}" y="0" text-anchor="end" dominant-baseline="central" fill="${fg}" font-size="${lb.fs.toFixed(1)}"><title>${rlEsc(nm)}</title>${rlEsc(lb.t)}</text></g>`;
+    if(n>1){const q=P(R+8,i*a);pegs+=`<circle cx="${q[0]}" cy="${q[1]}" r="3.6" class="rl-peg"/>`}
+  });
+  return `<g class="rl-rot">${s}${t}</g><circle class="rl-rim" cx="${cx}" cy="${cy}" r="${R+8}" fill="none" stroke-width="15"/><circle class="rl-rimi" cx="${cx}" cy="${cy}" r="${R+15.5}" fill="none" stroke-width="1.5"/>${pegs}`;
+}
 function mPicker(body){
-  let iv=null;
+  let iv=null,raf=0,spinning=false,theta=0,list=[];
+  const win=body.parentElement,ui=S.ui||1;
+  const mode=()=>S.pickerMode==='wheel'?'wheel':'names';
   const out=h('div',{class:'pick'},'—');
   const info=h('div',{class:'muted'});
   const nr=h('input',{type:'checkbox',checked:''});
+  const snd=h('input',{type:'checkbox'});snd.checked=S.pickerSound!==false;
+  snd.addEventListener('change',()=>{S.pickerSound=snd.checked;save()});
   const upd=()=>info.textContent=S.students.length?(nr.checked?`Quedan ${pool.length||S.students.length} por salir`:`${S.students.length} alumnos`):'Añade alumnos en Ajustes';
-  nr.addEventListener('change',()=>{pool=[];upd()});
+  nr.addEventListener('change',()=>{pool=[];upd();if(mode()==='wheel')draw()});
+
+  /* ---- modo nombres (el de siempre) ---- */
   const go=h('button',{class:'btn',style:'min-width:200px;min-height:68px;font-size:28px',onclick:()=>{
     if(!S.students.length||iv)return;
     if(nr.checked&&!pool.length)pool=[...S.students];
@@ -1337,12 +1866,106 @@ function mPicker(body){
         upd();}
     },80);
   }},...ib('dice','¡Elegir!'));
-  body.append(out,h('div',{class:'row c'},go,h('button',{class:'btn ghost','aria-label':'Reiniciar',onclick:()=>{pool=[];out.textContent='—';upd()}},ico('reset'))),
-    h('label',{class:'chk'},nr,'No repetir hasta que salgan todos'),info);
-  upd();
-  return()=>clearInterval(iv);
-}
+  const namesView=h('div',{},out,h('div',{class:'row c'},go));
 
+  /* ---- modo ruleta ---- */
+  const svg=h('div',{class:'rl-svgw'});
+  const ptr=h('div',{class:'rl-ptr',html:'<svg viewBox="0 0 40 52"><path d="M20 50L4 14a17 17 0 1 1 32 0z"/><circle cx="20" cy="14" r="5"/></svg>'});
+  const hub=h('button',{class:'rl-hub','aria-label':'Girar la ruleta',onclick:()=>spin()},ico('rotate'),h('span',{},'Girar'));
+  const resName=h('div',{class:'rl-rn'}),
+    res=h('div',{class:'rl-res',role:'status',onclick:()=>dismiss()},h('div',{class:'rl-rl'},'Le toca a'),resName,h('div',{class:'rl-rh'},'Toca para cerrar'));
+  const empty=h('div',{class:'rl-empty'},'Añade alumnos en Ajustes');
+  const stage=h('div',{class:'rl-stage'},svg,ptr,hub,res,empty);
+  const wheelView=h('div',{class:'rl-view'},stage);
+  const cur=()=>nr.checked&&pool.length?pool:S.students;
+  function draw(win=-1){
+    list=[...cur()];
+    const ok=list.length>0;
+    empty.style.display=ok?'none':'';hub.disabled=!ok||spinning;
+    svg.innerHTML=ok?`<svg viewBox="0 0 400 400" role="img" aria-label="Ruleta de alumnos">${rlSvg(list,win)}</svg>`:`<svg viewBox="0 0 400 400"><circle cx="200" cy="210" r="170" class="rl-blank"/></svg>`;
+    svg.classList.toggle('done',win>=0);
+    rot(theta);
+  }
+  function rot(d){
+    const g=svg.querySelector('.rl-rot');if(!g)return;
+    g.setAttribute('transform',`rotate(${d.toFixed(3)} ${RL.cx} ${RL.cy})`);
+    if(spinning)return;
+    // con la ruleta parada, los nombres de la mitad izquierda se giran para que se lean del derecho
+    svg.querySelectorAll('.rl-t').forEach(t=>{
+      const m=/rotate\(([-\d.]+)\)/.exec(t.getAttribute('transform')),tx=t.querySelector('text');if(!m||!tx)return;
+      const abs=(+m[1]+d)*Math.PI/180;
+      if(Math.cos(abs)<0){const x=+tx.getAttribute('x'),len=tx.getComputedTextLength();tx.setAttribute('transform',`rotate(180 ${(x-len/2).toFixed(1)} 0)`)}
+      else tx.removeAttribute('transform');
+    });
+  }
+  function dismiss(){
+    if(!res.classList.contains('on'))return;
+    res.classList.remove('on');draw();
+  }
+  function tick(){
+    ptr.classList.add('tk');setTimeout(()=>ptr.classList.remove('tk'),70);
+    if(!snd.checked)return;
+    try{const c=audio(),o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.value=1200;o.connect(g);g.connect(c.destination);
+      const t=c.currentTime;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.08,t+.004);g.gain.exponentialRampToValueAtTime(.0001,t+.04);o.start(t);o.stop(t+.05)}catch{}
+  }
+  function chime(){
+    if(!snd.checked)return;
+    try{const c=audio();[660,880].forEach((f,i)=>{const o=c.createOscillator(),g=c.createGain();o.frequency.value=f;o.connect(g);g.connect(c.destination);
+      const t=c.currentTime+i*.14;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.5);o.start(t);o.stop(t+.55)})}catch{}
+  }
+  function spin(){
+    if(spinning||!S.students.length)return;
+    if(res.classList.contains('on')){res.classList.remove('on');draw()}
+    if(nr.checked&&!pool.length){pool=[...S.students];draw()}
+    const n=list.length,a=360/n,w=Math.floor(Math.random()*n),jit=(Math.random()-.5)*.7;
+    // sector w (centro + pequeño desvío) debe quedar bajo la flecha (arriba)
+    const base=((-(w+.5+jit)*a)%360+360)%360,from=theta,
+      to=from+(5+Math.floor(Math.random()*3))*360+((base-from)%360+360)%360;
+    const dur=4300+Math.random()*700,t0=performance.now();
+    spinning=true;hub.disabled=true;nr.disabled=true;svg.classList.remove('done');
+    let last=-1;
+    const step=now=>{
+      const k=Math.min(1,(now-t0)/dur),e=1-Math.pow(1-k,4);
+      theta=from+(to-from)*e;rot(theta);
+      const idx=Math.floor((((-theta)%360+360)%360)/a);
+      if(idx!==last){if(last>=0)tick();last=idx}
+      if(k<1){raf=requestAnimationFrame(step);return}
+      raf=0;spinning=false;theta=to%360;
+      const name=list[w];
+      draw(w);nr.disabled=false;
+      resName.textContent=name;
+      resName.style.fontSize=Math.max(28,Math.min(64,420/Math.max(6,name.length)*1.6))+'px';
+      res.classList.add('on');chime();
+      if(nr.checked){const j=pool.indexOf(name);if(j>=0)pool.splice(j,1)}
+      upd();
+    };
+    raf=requestAnimationFrame(step);
+  }
+
+  /* ---- selector Nombre / Ruleta ---- */
+  const bN=h('button',{type:'button',onclick:()=>setMode('names')},'Nombre'),
+    bW=h('button',{type:'button',onclick:()=>setMode('wheel')},ico('rotate'),h('span',{},'Ruleta'));
+  const seg=h('div',{class:'seg rl-seg',style:'margin-bottom:12px'},bN,bW);
+  const box=h('div',{});
+  const sndLbl=h('label',{class:'chk'},snd,'Sonido');
+  function setMode(m){
+    if(spinning)return;
+    S.pickerMode=m;save();
+    bN.classList.toggle('on',m==='names');bW.classList.toggle('on',m==='wheel');
+    box.replaceChildren(m==='wheel'?wheelView:namesView);
+    sndLbl.style.display=m==='wheel'?'':'none';
+    win.style.width=Math.round((m==='wheel'?680:440)*ui)+'px';
+    win.classList.toggle('rl-big',m==='wheel');
+    res.classList.remove('on');
+    if(m==='wheel')draw();
+  }
+  const reset=h('button',{class:'btn ghost','aria-label':'Reiniciar',onclick:()=>{
+    if(spinning)return;pool=[];out.textContent='—';res.classList.remove('on');upd();if(mode()==='wheel')draw()}},ico('reset'));
+  body.append(seg,box,h('div',{class:'row c'},reset),
+    h('div',{class:'rl-opts'},h('label',{class:'chk'},nr,'No repetir hasta que salgan todos'),sndLbl),info);
+  upd();setMode(mode());
+  return()=>{clearInterval(iv);if(raf)cancelAnimationFrame(raf)};
+}
 /* ============ Módulo: parejas y grupos ============ */
 function mGroups(body){
   let mode='pairs',n=3;
@@ -1705,6 +2328,17 @@ function mRuler(body){
   lab.textContent=`1 cm = ${RUL.ppc} px`;
 }
 
+// Dibujar apoyándose en la regla: si el trazo empieza junto a uno de sus bordes (por fuera), sigue la línea del borde.
+// Devuelve una función que lleva cada punto al borde, o null si el punto no está junto a la regla.
+function rulerSnap(p,size){
+  if(!ruler||ruler.el.style.display==='none')return null;
+  const a=ruler.a*Math.PI/180,d={x:Math.cos(a),y:Math.sin(a)},n={x:-Math.sin(a),y:Math.cos(a)},O={x:ruler.x+RPAD,y:ruler.y};
+  const v={x:p.x-O.x,y:p.y-O.y},t=v.x*d.x+v.y*d.y,k=v.x*n.x+v.y*n.y; // t: a lo largo de la regla; k: distancia al borde superior
+  if(t<-RPAD||t>ruler.W-RPAD)return null;
+  let off;
+  if(k<0&&k>-36)off=-(size/2+2);else if(k>RH&&k<RH+36)off=RH+size/2+2;else return null;
+  return q=>{const w={x:q.x-O.x,y:q.y-O.y},tt=w.x*d.x+w.y*d.y;return{x:O.x+d.x*tt+n.x*off,y:O.y+d.y*tt+n.y*off}};
+}
 /* ============ Monedas y billetes de euro ============ */
 // Diámetros reales en mm y tamaños de billete en mm, para respetar las proporciones entre piezas
 const COINS=[[1,16.25],[2,18.75],[5,21.25],[10,19.75],[20,22.25],[50,24.25],[100,23.25],[200,25.75]];
@@ -2696,7 +3330,9 @@ function buildDock(){
       closePop();
       if(P().img){P().img=null;drawBg();persist();setBg()}
       else $('#bgFile').click();
-    }},...ib('image',P().img?'Quitar imagen de fondo':'Poner imagen de fondo'))],'above')});
+    }},...ib('image',P().img?'Quitar imagen de fondo':'Poner imagen de fondo')),
+    h('div',{class:'popsep'},'Pizarra dividida'),
+    ...[[1,'Una sola zona'],[2,'Dividir en 2 zonas'],[3,'Dividir en 3 zonas']].map(([n,lb])=>h('button',{class:'wide'+(ZN.n===n?' on':''),onclick:()=>{closePop();setZones(n)}},...ib('zones'+n,lb)))],'above')});
   $('#bgFile').addEventListener('change',async e=>{
     const f=e.target.files[0];if(!f)return;e.target.value='';
     await setBgImage(f);setBg();
@@ -2711,7 +3347,7 @@ function buildDock(){
     h('button',{class:'wide',onclick:()=>{closePop();exportPDF()}},...ib('pdf','Guardar todas en PDF')),
     ...REG.pageMenu.map(f=>f())],'above')});
   dock.replaceChildren(
-    bgBtn,mathBtn,h('span',{id:'tray'}),h('span',{class:'dsep'}),
+    bgBtn,h('button',{class:'dbtn','data-pop':'ins',onclick:e=>openPop('ins',e.currentTarget,1,insertNodes(),'above')},...ib('plus','Insertar ▾')),mathBtn,h('span',{id:'tray'}),h('span',{class:'dsep'}),
     h('button',{class:'dbtn nav','aria-label':'Página anterior',onclick:()=>gotoPage(cur-1)},ico('left')),
     pageBtn,
     h('button',{class:'dbtn nav','aria-label':'Página siguiente',onclick:()=>cur<pages.length-1?gotoPage(cur+1):addPage(false)},ico('right')),
@@ -2800,7 +3436,7 @@ function fillClassUI(){
 }
 function readClassUI(){const c=S.classes[dlgCls];c.students=lines($('#sStudents').value);c.roles=lines($('#sRoles').value)}
 function openSettings(){
-  syncClass();dlgCls=S.cls;fillClassUI();
+  pinUI();syncClass();dlgCls=S.cls;fillClassUI();
   [1,2,3,4,5].forEach(d=>$('#sd'+d).value=(S.schedule[d]||[]).join('\n'));
   $('#sTheme').value=S.theme;$('#sUi').value=String(S.ui||1);$('#sPauta').value=String(S.pautaSize||1);
   $('#sPictos').checked=S.pictos!==false;
@@ -2826,22 +3462,349 @@ $('#sSave').onclick=()=>{
 $('#sCancel').onclick=()=>dlg.close();
 $('#sExport').onclick=()=>{
   syncClass();
-  const a=h('a',{href:URL.createObjectURL(new Blob([JSON.stringify(S,null,2)],{type:'application/json'})),download:'fori-datos.json'});document.body.append(a);a.click();a.remove();
+  const a=h('a',{href:URL.createObjectURL(new Blob([JSON.stringify({...S,pinHash:undefined},null,2)],{type:'application/json'})),download:'fori-datos.json'});document.body.append(a);a.click();a.remove();
 };
 $('#sImport').onclick=()=>$('#sFile').click();
 $('#sFile').addEventListener('change',async e=>{
   const f=e.target.files[0];if(!f)return;
-  try{S={...structuredClone(DEF),...JSON.parse(await f.text())};save();location.reload()}catch{toast('Archivo no válido')}
+  try{const d=JSON.parse(await f.text());if(!d||typeof d!=='object'||Array.isArray(d))throw 0;S={...structuredClone(DEF),...d,pinHash:S.pinHash};save();location.reload()}catch{toast('Archivo no válido')}
 });
+/* ---- PIN opcional para abrir Ajustes ---- */
+const PIN_SALT='fori·ajustes·v1·',PIN_LOCK='fori-pinlock',PIN_TRIES=5,PIN_WAIT=30000;
+async function hashPin(p){
+  try{if(window.crypto&&crypto.subtle){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(PIN_SALT+p));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}}catch{}
+  let a=0x811c9dc5;for(const ch of PIN_SALT+p){a^=ch.charCodeAt(0);a=Math.imul(a,16777619)>>>0}return 'f'+a.toString(16);
+}
+const pinLock={
+  get(){try{const v=JSON.parse(localStorage.getItem(PIN_LOCK));return v&&typeof v==='object'?{n:v.n|0,until:Number(v.until)||0}:{n:0,until:0}}catch{return{n:0,until:0}}},
+  set(v){try{localStorage.setItem(PIN_LOCK,JSON.stringify(v))}catch{}}
+};
+const hasPin=()=>typeof S.pinHash==='string'&&S.pinHash.length>0;
+const pinOk=async p=>(await hashPin(p))===S.pinHash;
+// Teclado numérico grande. Devuelve el PIN escrito (4 dígitos) o null si se cancela. Con `verify`, solo acepta un PIN correcto.
+function askPin({title,hint='',verify=null}){
+  return new Promise(resolve=>{
+    let val='',busy=false,tick=null;
+    const dots=[0,1,2,3].map(()=>h('i'));
+    const msg=h('p',{class:'pin-msg',role:'status','aria-live':'polite'},hint);
+    const keyBtn=(label,aria,fn,cls='')=>h('button',{type:'button',class:'pin-key '+cls,'aria-label':aria,onclick:fn},label);
+    const nums=[1,2,3,4,5,6,7,8,9,0].map(n=>keyBtn(String(n),String(n),()=>press(String(n))));
+    const back=keyBtn(ico('backspace'),'Borrar',()=>{if(!busy&&val){val=val.slice(0,-1);paint()}},'fn');
+    const cancel=keyBtn('Cancelar','Cancelar',()=>finish(null),'fn txt');
+    const pad=h('div',{class:'pin-pad'},...nums.slice(0,9),cancel,nums[9],back);
+    const d=h('dialog',{class:'pindlg','aria-label':title},h('div',{class:'pin-lock'},ico('lock')),h('h2',{},title),h('div',{class:'pin-dots'},dots),msg,pad);
+    const paint=()=>dots.forEach((x,i)=>x.classList.toggle('on',i<val.length));
+    const left=()=>Math.max(0,pinLock.get().until-Date.now());
+    const lockUI=()=>{
+      clearInterval(tick);
+      const upd=()=>{
+        const ms=left();
+        if(ms<=0){clearInterval(tick);pad.classList.remove('locked');$$('button',pad).forEach(b=>{if(b!==cancel)b.disabled=false});msg.textContent='Ya puedes intentarlo de nuevo';msg.classList.remove('bad');return}
+        pad.classList.add('locked');$$('button',pad).forEach(b=>{if(b!==cancel)b.disabled=true});
+        msg.textContent=`Demasiados intentos. Espera ${Math.ceil(ms/1000)} s`;msg.classList.add('bad');
+      };
+      upd();if(left()>0)tick=setInterval(upd,500);
+    };
+    function finish(v){clearInterval(tick);document.removeEventListener('keydown',onKey,true);d.close();d.remove();resolve(v)}
+    async function press(n){
+      if(busy||left()>0||val.length>=4)return;
+      val+=n;paint();if(val.length<4)return;
+      if(!verify){finish(val);return}
+      busy=true;let ok=false;try{ok=await verify(val)}catch{}
+      if(ok){pinLock.set({n:0,until:0});finish(val);return}
+      let st=pinLock.get();st.n++;
+      if(st.n>=PIN_TRIES)st={n:0,until:Date.now()+PIN_WAIT};
+      pinLock.set(st);
+      val='';
+      dots.forEach(x=>x.classList.add('on'));d.classList.remove('shake');void d.offsetWidth;d.classList.add('shake');
+      setTimeout(()=>{paint();busy=false},350);
+      if(left()>0)lockUI();else{msg.textContent=`PIN incorrecto. Te quedan ${PIN_TRIES-st.n} intento${PIN_TRIES-st.n===1?'':'s'}`;msg.classList.add('bad')}
+    }
+    function onKey(e){
+      if(/^[0-9]$/.test(e.key)){e.preventDefault();e.stopPropagation();press(e.key)}
+      else if(e.key==='Backspace'){e.preventDefault();e.stopPropagation();if(!busy&&val){val=val.slice(0,-1);paint()}}
+    }
+    d.addEventListener('cancel',e=>{e.preventDefault();finish(null)});
+    document.body.append(d);document.addEventListener('keydown',onKey,true);
+    d.showModal();if(left()>0)lockUI();
+  });
+}
+let askingPin=false;
+async function requestSettings(){
+  if(!hasPin()){openSettings();return}
+  if(askingPin||dlg.open)return;
+  askingPin=true;
+  try{if(await askPin({title:'PIN para abrir Ajustes',verify:pinOk}))openSettings()}finally{askingPin=false}
+}
+function pinUI(){
+  $('#sPinState').textContent=hasPin()?'PIN activado: se pide al abrir Ajustes.':'Sin PIN: cualquiera puede abrir Ajustes manteniendo pulsado el botón.';
+  $('#sPinOnLbl').textContent=hasPin()?'Cambiar PIN':'Activar PIN';
+  $('#sPinOff').style.display=hasPin()?'':'none';
+}
+async function newPin(){
+  const a=await askPin({title:'Elige un PIN de 4 dígitos'});if(!a)return null;
+  const b=await askPin({title:'Repite el PIN',hint:'Para comprobar que no te has equivocado'});if(!b)return null;
+  if(a!==b){toast('Los PIN no coinciden. No se ha cambiado nada');return null}
+  return a;
+}
+$('#sPinOn').onclick=async()=>{
+  const had=hasPin();
+  if(had&&!await askPin({title:'Escribe el PIN actual',verify:pinOk}))return;
+  const p=await newPin();if(!p)return;
+  S.pinHash=await hashPin(p);save();pinUI();toast(had?'PIN cambiado':'PIN activado');
+};
+$('#sPinOff').onclick=async()=>{
+  if(!hasPin())return;
+  if(!await askPin({title:'Escribe el PIN actual para quitarlo',verify:pinOk}))return;
+  delete S.pinHash;save();pinUI();toast('PIN quitado');
+};
 // Ajustes: pulsación larga para evitar toques accidentales
 (()=>{
   const b=$('#btnSettings');let timer=null,fired=false;
-  b.addEventListener('pointerdown',()=>{fired=false;b.classList.add('holding');timer=setTimeout(()=>{fired=true;b.classList.remove('holding');openSettings()},700)});
+  b.addEventListener('pointerdown',()=>{fired=false;b.classList.add('holding');timer=setTimeout(()=>{fired=true;b.classList.remove('holding');requestSettings()},700)});
   const cancel=()=>{clearTimeout(timer);b.classList.remove('holding')};
   b.addEventListener('pointerup',()=>{cancel();if(!fired)toast('Mantén pulsado el botón de Ajustes para abrirlos')});
   b.addEventListener('pointerleave',cancel);b.addEventListener('pointercancel',cancel);
 })();
 
+/* ============ Importar clases y horario desde Tabula ============ */
+// Tabula (mismo dominio) guarda sus datos en este navegador:
+//   IndexedDB «tabula-data» → almacén «cols» → claves «groups», «students», «schedule» (cada una, una lista de objetos)
+//   (o, si no hay IndexedDB, localStorage «tabula:v1:groups» / «:students» / «:schedule», con la lista en JSON).
+// Solo se LEE; no se escribe nada en Tabula ni se envía nada a ningún servidor.
+// También se acepta una copia de Tabula (.zip con «tabula.json», o un .json antiguo): {app:'tabula', data:{groups:'[...]', ...}}.
+const TAB_AREA={
+  'Lengua Castellana y Literatura':'Lengua','Matemáticas':'Matemáticas','Conocimiento del Medio Natural, Social y Cultural':'Conocimiento del Medio',
+  'Lengua Extranjera (Inglés)':'Inglés','Educación Artística':'Educación Artística','Educación Física':'Educación Física',
+  'Religión / Atención educativa':'Religión','Segunda Lengua Extranjera':'Francés','Educación en Valores Cívicos y Éticos':'Valores','Tutoría':'Tutoría'
+};
+const tabTime=/^(\d{1,2}):(\d{2})$/;
+const tabArr=v=>Array.isArray(v)?v.filter(x=>x&&typeof x==='object'):[];
+const tabStr=v=>typeof v==='string'?v.trim():'';
+
+// Lee IndexedDB de Tabula sin crearla si no existe (si no existía, se cancela su creación).
+function tabReadIdb(){
+  return new Promise(res=>{
+    let done=false;const end=v=>{if(!done){done=true;res(v)}};
+    setTimeout(()=>end(null),4000);
+    if(typeof indexedDB==='undefined')return end(null);
+    let req;try{req=indexedDB.open('tabula-data')}catch{return end(null)}
+    req.onupgradeneeded=()=>{try{req.transaction.abort()}catch{}};
+    req.onerror=()=>end(null);req.onblocked=()=>end(null);
+    req.onsuccess=()=>{
+      const db=req.result;
+      try{
+        if(!db.objectStoreNames.contains('cols')){db.close();return end(null)}
+        const t=db.transaction('cols','readonly'),out={};
+        ['groups','students','schedule'].forEach(k=>{const r=t.objectStore('cols').get(k);r.onsuccess=()=>{out[k]=r.result}});
+        t.oncomplete=()=>{db.close();end(out)};t.onerror=t.onabort=()=>{db.close();end(null)};
+      }catch{try{db.close()}catch{}end(null)}
+    };
+  });
+}
+function tabReadLs(){
+  const out={};
+  for(const k of ['groups','students','schedule']){try{const v=JSON.parse(localStorage.getItem('tabula:v1:'+k));if(Array.isArray(v))out[k]=v}catch{}}
+  return out;
+}
+async function tabReadLocal(){
+  let a=null;try{a=await tabReadIdb()}catch{}
+  const b=tabReadLs(),out={};
+  for(const k of ['groups','students','schedule'])out[k]=Array.isArray(a&&a[k])&&a[k].length?a[k]:(b[k]||[]);
+  return out;
+}
+
+// Copia de Tabula: .zip (sin comprimir o deflate) o .json
+async function tabUnzip(buf){
+  const u8=new Uint8Array(buf),dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength);
+  let eocd=-1;
+  for(let i=u8.length-22;i>=Math.max(0,u8.length-65557);i--)if(dv.getUint32(i,true)===0x06054b50){eocd=i;break}
+  if(eocd<0)throw new Error('zip');
+  const count=dv.getUint16(eocd+10,true);let p=dv.getUint32(eocd+16,true);
+  const dec=new TextDecoder();
+  for(let n=0;n<count;n++){
+    if(dv.getUint32(p,true)!==0x02014b50)throw new Error('zip');
+    const method=dv.getUint16(p+10,true),csize=dv.getUint32(p+20,true);
+    const nlen=dv.getUint16(p+28,true),xlen=dv.getUint16(p+30,true),clen=dv.getUint16(p+32,true),lho=dv.getUint32(p+42,true);
+    const name=dec.decode(u8.subarray(p+46,p+46+nlen));
+    if(name==='tabula.json'){
+      const start=lho+30+dv.getUint16(lho+26,true)+dv.getUint16(lho+28,true),raw=u8.subarray(start,start+csize);
+      if(method===0)return dec.decode(raw);
+      if(method===8&&typeof DecompressionStream!=='undefined'){
+        const ds=new Blob([raw]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+        return dec.decode(new Uint8Array(await new Response(ds).arrayBuffer()));
+      }
+      throw new Error('compresion');
+    }
+    p+=46+nlen+xlen+clen;
+  }
+  throw new Error('sin-datos');
+}
+async function tabReadFile(f){
+  const buf=await f.arrayBuffer(),b=new Uint8Array(buf);
+  const text=(b[0]===0x50&&b[1]===0x4b)?await tabUnzip(buf):new TextDecoder().decode(b);
+  const j=JSON.parse(text);
+  if(!j||j.app!=='tabula'||!j.data||typeof j.data!=='object')throw new Error('no-tabula');
+  const out={};
+  for(const k of ['groups','students','schedule']){let v=j.data[k];if(typeof v==='string'){try{v=JSON.parse(v)}catch{v=[]}}out[k]=Array.isArray(v)?v:[]}
+  return out;
+}
+
+// Nombre como Tabula lo muestra en clase: «María»; si hay otro igual en el grupo, «María G.»; y si aún coincide, «María García».
+function tabNames(list){
+  const nm=s=>tabStr(s.nombre)||tabStr(s.apellidos),low=s=>nm(s).toLowerCase();
+  const first=s=>tabStr(s.apellidos).split(/\s+/)[0]||'';
+  const base=list.map(s=>{
+    const dup=list.some(x=>x!==s&&low(x)===low(s)),ap=tabStr(s.apellidos);
+    return dup&&tabStr(s.nombre)&&ap?`${nm(s)} ${ap[0].toUpperCase()}.`:nm(s);
+  });
+  return list.map((s,i)=>base.filter(x=>x.toLowerCase()===base[i].toLowerCase()).length>1&&first(s)&&tabStr(s.nombre)?`${nm(s)} ${first(s)}`:base[i]).filter(Boolean);
+}
+function tabModel(raw){
+  const groups=tabArr(raw.groups).filter(g=>g.id!=null&&tabStr(g.nombre)).map(g=>({id:String(g.id),name:tabStr(g.nombre),curso:Number(g.curso)||0,archived:!!g.archivado}))
+    .sort((a,b)=>(a.archived-b.archived)||(a.curso-b.curso)||a.name.localeCompare(b.name,'es'));
+  const studs=tabArr(raw.students).filter(s=>s.groupId!=null&&(tabStr(s.nombre)||tabStr(s.apellidos)));
+  groups.forEach(g=>{
+    const l=studs.filter(s=>String(s.groupId)===g.id).sort((a,b)=>(Number(a.orden)||0)-(Number(b.orden)||0)||(tabStr(a.nombre)+tabStr(a.apellidos)).localeCompare(tabStr(b.nombre)+tabStr(b.apellidos),'es'));
+    g.students=tabNames(l);
+  });
+  const ids=new Set(groups.map(g=>g.id));
+  const sess=tabArr(raw.schedule).map(x=>({dia:Number(x.dia),ini:tabStr(x.inicio),fin:tabStr(x.fin),tipo:tabStr(x.tipo)||'clase',area:tabStr(x.area),titulo:tabStr(x.titulo),gid:x.groupId!=null&&ids.has(String(x.groupId))?String(x.groupId):null}))
+    .filter(x=>x.dia>=1&&x.dia<=5&&tabTime.test(x.ini)&&tabTime.test(x.fin));
+  return {groups,sess};
+}
+// Horario de Tabula → líneas «HH:MM-HH:MM Asignatura». gid = clase concreta, o null = todo (con el nombre de la clase si hay varias).
+function tabSchedule(m,gid){
+  const hhmm=t=>{const x=tabTime.exec(t);return pad(x[1])+':'+x[2]};
+  const many=new Set(m.sess.filter(x=>x.tipo==='clase'&&x.gid).map(x=>x.gid)).size>1;
+  const gname=Object.fromEntries(m.groups.map(g=>[g.id,g.name]));
+  const out={1:[],2:[],3:[],4:[],5:[]};
+  const rows={1:[],2:[],3:[],4:[],5:[]};
+  m.sess.forEach(x=>{
+    if(gid&&x.gid&&x.gid!==gid)return;
+    let name=x.tipo==='recreo'?(x.titulo||'Recreo'):x.tipo==='otro'?(x.titulo||'Otra actividad'):(TAB_AREA[x.area]||x.area||x.titulo||'Clase');
+    if(!gid&&many&&x.gid&&x.tipo==='clase')name+=` (${gname[x.gid]})`;
+    rows[x.dia].push({k:hhmm(x.ini),l:`${hhmm(x.ini)}-${hhmm(x.fin)} ${name}`});
+  });
+  for(const d of [1,2,3,4,5])out[d]=[...new Set(rows[d].sort((a,b)=>a.k.localeCompare(b.k)).map(r=>r.l))];
+  return out;
+}
+const tabCount=sch=>[1,2,3,4,5].reduce((n,d)=>n+sch[d].length,0);
+
+(()=>{
+  const plural=(n,a,b)=>`${n} ${n===1?a:b}`;
+  const norm=s=>s.trim().toLowerCase();
+  let dlgT=null;
+  function closeT(){if(dlgT){dlgT.close();dlgT.remove();dlgT=null}}
+  function applyUI(){fillClassUI();[1,2,3,4,5].forEach(d=>$('#sd'+d).value=(S.schedule[d]||[]).join('\n'));renderClassChip()}
+
+  async function openTabula(){
+    closeT();
+    dlgT=h('dialog',{class:'tabdlg','aria-label':'Importar desde Tabula'});
+    dlgT.addEventListener('cancel',e=>{e.preventDefault();closeT()});
+    document.body.append(dlgT);dlgT.showModal();
+    dlgT.replaceChildren(h('h2',{},'Importar desde Tabula'),h('p',{class:'tab-note'},'Buscando datos de Tabula en este navegador…'));
+    let raw=null;try{raw=await tabReadLocal()}catch{}
+    show(raw,'local');
+  }
+  function fileBtn(label){
+    const inp=h('input',{type:'file',accept:'.zip,.json,application/zip,application/json',hidden:''});
+    inp.addEventListener('change',async()=>{
+      const f=inp.files[0];if(!f)return;
+      try{show(await tabReadFile(f),'archivo')}
+      catch(e){show(null,'archivo',e&&e.message==='no-tabula'?'Ese archivo no parece una copia de Tabula.':'No he podido leer ese archivo. Elige el .zip que descarga Tabula en Ajustes → Copia de seguridad.')}
+    });
+    return [h('button',{class:'btn ghost',type:'button',onclick:()=>inp.click()},ico('upload'),' '+label),inp];
+  }
+  function show(raw,from,err){
+    if(!dlgT)return;
+    let m=null;try{if(raw)m=tabModel(raw)}catch{}
+    const cancel=h('button',{class:'btn ghost',type:'button',onclick:closeT},'Cancelar');
+    if(!m||!m.groups.length){
+      dlgT.replaceChildren(h('h2',{},'Importar desde Tabula'),
+        ...(err?[h('p',{class:'tab-note bad'},err)]:[]),
+        h('p',{class:'tab-note'},from==='archivo'&&!err?'Ese archivo no tiene clases ni alumnos.':'No he encontrado clases de Tabula en este navegador.'),
+        h('div',{class:'tab-help'},
+          h('p',{},'Esto pasa si:'),
+          h('ul',{},h('li',{},'Tabula no se ha usado en este navegador o en este equipo.'),h('li',{},'Tus datos están solo en la nube (has entrado con tu cuenta en otro equipo).'),h('li',{},'Estás en una ventana privada.')),
+          h('p',{},'Qué hacer:'),
+          h('ol',{},h('li',{},'Abre Tabula en este mismo navegador y entra con tu cuenta; cuando cargue tus clases, vuelve aquí.'),
+            h('li',{},'O bien, en Tabula ve a Ajustes → Copia de seguridad → «Descargar copia» y elige aquí ese archivo.')),
+          h('p',{},'Fori solo lee los datos de este equipo; no envía nada a ningún servidor.')),
+        h('div',{class:'row end'},cancel,...fileBtn('Elegir archivo de copia de Tabula')));
+      return;
+    }
+    const exists=g=>S.classes.some(c=>norm(c.name)===norm(g.name));
+    const checks=m.groups.map(g=>{
+      const cb=h('input',{type:'checkbox',checked:'',id:'tbg_'+g.id});cb.checked=!g.archived;
+      return {g,cb,row:h('label',{class:'tab-row',for:'tbg_'+g.id},cb,h('span',{class:'tab-name'},g.name,g.archived?h('em',{},' (archivada)'):null),
+        h('span',{class:'tab-meta'},plural(g.students.length,'alumno','alumnos')+(exists(g)?' · ya existe: se actualizará su lista':' · clase nueva')))};
+    });
+    const sessIds=[...new Set(m.sess.filter(x=>x.gid).map(x=>x.gid))];
+    const withSch=m.groups.filter(g=>sessIds.includes(g.id));
+    const schSel=h('select',{id:'tbSchSel','aria-label':'Horario de qué clase'},
+      ...withSch.map(g=>h('option',{value:g.id},'Horario de '+g.name)),h('option',{value:''},'Horario completo (todas las clases)'));
+    const first=checks.find(c=>c.cb.checked&&sessIds.includes(c.g.id));
+    schSel.value=withSch.length===1?withSch[0].id:first?first.g.id:'';
+    const hasSch=m.sess.length>0;
+    const schCb=h('input',{type:'checkbox',id:'tbSch'});schCb.checked=hasSch;schCb.disabled=!hasSch;
+    const schInfo=h('span',{class:'tab-meta'});
+    const upd=()=>{const n=tabCount(tabSchedule(m,schSel.value||null));schInfo.textContent=hasSch?`${plural(n,'sesión','sesiones')} por semana. Sustituirá el horario actual de Fori.`:''};
+    schSel.onchange=upd;upd();
+    const go=h('button',{class:'btn',type:'button',onclick:()=>doImport(m,checks,schCb.checked&&hasSch?(schSel.value||null):undefined)},'Importar');
+    dlgT.replaceChildren(h('h2',{},'Importar desde Tabula'),
+      h('p',{class:'tab-note'},from==='archivo'?'Datos leídos del archivo. Elige qué importar.':'He encontrado estos datos de Tabula en este navegador. Elige qué importar.'),
+      h('h3',{},'Clases y alumnos'),h('div',{class:'tab-list'},checks.map(c=>c.row)),
+      h('h3',{},'Horario semanal'),
+      hasSch?h('div',{class:'tab-sch'},h('label',{class:'tab-row',for:'tbSch'},schCb,h('span',{class:'tab-name'},'Importar el horario')),schSel,schInfo)
+            :h('p',{class:'tab-note'},'Tabula no tiene horario guardado.'),
+      h('p',{class:'tab-note'},'No se borra nada sin tu permiso: las clases con el mismo nombre se actualizan y las demás se dejan como están.'),
+      h('div',{class:'row end'},...fileBtn('Usar un archivo de copia'),cancel,go));
+  }
+
+  function doImport(m,checks,schGid){
+    const chosen=checks.filter(c=>c.cb.checked).map(c=>c.g);
+    if(!chosen.length&&schGid===undefined){toast('No has elegido nada para importar');return}
+    const upd=chosen.filter(g=>S.classes.some(c=>norm(c.name)===norm(g.name)));
+    let sch=null;if(schGid!==undefined){sch=tabSchedule(m,schGid);if(!tabCount(sch))sch=null}
+    const warn=[];
+    if(upd.length)warn.push(`Se sustituirá la lista de alumnos de: ${upd.map(g=>'«'+g.name+'»').join(', ')}.`);
+    if(sch)warn.push('Se sustituirá el horario semanal actual.');
+    if(warn.length&&!confirm(warn.join('\n')+'\n\nPodrás deshacerlo justo después. ¿Continuar?'))return;
+    try{
+      const prev=structuredClone({classes:S.classes,cls:S.cls,students:S.students,roles:S.roles,offset:S.offset,schedule:S.schedule});
+      // Primero se recoge lo que haya a medias en el diálogo de Ajustes
+      readClassUI();
+      const act=S.classes[S.cls];if(act){S.students=act.students;S.roles=act.roles;S.offset=act.offset||0}
+      let nNew=0,nUpd=0,nAl=0;
+      chosen.forEach(g=>{
+        const i=S.classes.findIndex(c=>norm(c.name)===norm(g.name));
+        if(i>=0){S.classes[i].students=[...g.students];nUpd++;if(i===S.cls){S.students=S.classes[i].students}}
+        else{S.classes.push({name:g.name,students:[...g.students],roles:[...S.roles],offset:0});nNew++}
+        nAl+=g.students.length;
+      });
+      if(sch){S.schedule=sch}
+      pool=[];save();applyUI();
+      const parts=[];
+      if(chosen.length){parts.push(plural(chosen.length,'clase','clases')+(nNew&&nUpd?` (${plural(nNew,'nueva','nuevas')} y ${plural(nUpd,'actualizada','actualizadas')})`:nUpd?' (actualizadas)':''));parts.push(plural(nAl,'alumno','alumnos'))}
+      if(sch)parts.push('el horario');
+      const msg=(chosen.length===1?'Importada ':chosen.length?'Importadas ':'Importado ')+(parts.length>1?parts.slice(0,-1).join(', ')+' y '+parts[parts.length-1]:parts[0]);
+      closeT();
+      showSummary(msg,()=>{
+        S.classes=prev.classes;S.cls=prev.cls;S.students=prev.students;S.roles=prev.roles;S.offset=prev.offset;S.schedule=prev.schedule;
+        dlgCls=clamp(dlgCls,0,S.classes.length-1);pool=[];save();applyUI();toast('Importación deshecha');
+      });
+    }catch(e){console.warn('Fori: error al importar de Tabula',e);toast('No se ha podido importar. No se ha cambiado nada importante.')}
+  }
+  function showSummary(msg,undo){
+    const d=h('dialog',{class:'tabdlg small','aria-label':'Resumen de la importación'},h('h2',{},'Importación terminada'),h('p',{class:'tab-note'},msg+'.'),
+      h('p',{class:'tab-note'},'Ya está guardado. Si no te convence, pulsa «Deshacer».'),
+      h('div',{class:'row end'},h('button',{class:'btn ghost',type:'button',onclick:()=>{d.close();d.remove();undo()}},'Deshacer'),h('button',{class:'btn',type:'button',onclick:()=>{d.close();d.remove()}},'Aceptar')));
+    d.addEventListener('cancel',e=>{e.preventDefault();d.close();d.remove()});
+    document.body.append(d);d.showModal();
+  }
+  $('#sTabula').onclick=()=>{openTabula().catch(e=>{console.warn('Fori: Tabula',e);closeT();toast('No se ha podido leer Tabula')})};
+})();
 /* ============ Pantalla completa, tema, tamaño y arranque ============ */
 $('#btnFs').onclick=()=>{
   if(document.fullscreenElement)document.exitFullscreen();
@@ -2863,7 +3826,7 @@ document.addEventListener('gesturestart',e=>e.preventDefault());
 // tocar fuera cierra el menú; si el toque cae en la pizarra, no se dibuja nada
 document.addEventListener('pointerdown',e=>{if(pop.style.display==='grid'&&!e.target.closest('#pop,[data-pop]')){closePop();if(e.target===dr)e.stopPropagation()}},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePop();if(sp.on)toggleSpot(false);else if(S.view==='clean')setView('full');setSel(null)}});
-window.addEventListener('pagehide',()=>{commitEditor();clearTimeout(persistT);DB.set('board',{cur,pages:pages.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img}))})});
+window.addEventListener('pagehide',()=>{commitEditor();clearTimeout(persistT);DB.set('board',{cur,pages:pages.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img,size:p.size||null}))})});
 
 $('#btnSettings').replaceChildren(ico('settings'));$('#btnView').replaceChildren(ico('view'));$('#btnFs').replaceChildren(ico('full'));$('#cornerBtn').replaceChildren(ico('view'));
 applyUi();
@@ -2873,6 +3836,8 @@ document.documentElement.dataset.theme=S.theme;
 new ResizeObserver(fit).observe(stage);
 fit();tickClock();setInterval(tickClock,1000);
 setView(S.view||'full');
+renderZoneBars();
+if(document.fonts&&document.fonts.load)document.fonts.load("600 48px Fredoka").then(()=>redraw()).catch(()=>{});
 loadBoard();
 window.__foriOK=true; // arranque correcto
 if(location.protocol.startsWith('http')&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});

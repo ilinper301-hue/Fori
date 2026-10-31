@@ -1,5 +1,9 @@
 /* ============ Iconos de línea (propios, 24×24, trazo redondeado) ============ */
 const ICONS={
+  camera:'<path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  zones1:'<rect x="3.5" y="5" width="17" height="14" rx="2"/>',
+  zones2:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M12 5v14" stroke-dasharray="2 2.5"/>',
+  zones3:'<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M9.2 5v14M14.8 5v14" stroke-dasharray="2 2.5"/>',
   pen:'<path d="M4 20l1.2-4.6L15.8 4.8a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/><path d="M13.5 7l3.5 3.5"/>',
   marker:'<path d="M15.5 3.5l5 5-8.5 8.5H7v-5z"/><path d="M7 17l-3 3"/><path d="M4 21h9"/>',
   eraser:'<path d="M8 20l-4.2-4.2a2 2 0 0 1 0-2.8l9.2-9.2a2 2 0 0 1 2.8 0l4.2 4.2a2 2 0 0 1 0 2.8L12 20z"/><path d="M8 20h12"/><path d="M8.5 10.5l5 5"/>',
@@ -74,6 +78,9 @@ const ICONS={
   book:'<path d="M12 6.500C10 5 7 4.500 4 5v13c3-.5 6 0 8 1.500 2-1.500 5-2 8-1.500V5c-3-.5-6 0-8 1.500z"/><path d="M12 6.500v13"/>',
   power:'<path d="M12 3.500v8"/><path d="M7 6.500a7.500 7.500 0 1 0 10 0"/>',
   pair:'<circle cx="8.500" cy="8" r="3"/><circle cx="15.500" cy="8" r="3"/><path d="M3 19.500a5.500 5.500 0 0 1 11 0"/><path d="M10.500 14.600A5.500 5.500 0 0 1 21 19.500"/>',
+  share:'<circle cx="6" cy="12" r="2.6"/><circle cx="17.5" cy="5.5" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/><path d="M8.3 10.7l7-3.9"/><path d="M8.3 13.3l7 3.9"/>',
+  lock:'<rect x="5" y="10.5" width="14" height="10" rx="2.500"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.500"/><path d="M12 14.500v2.500"/>',
+  backspace:'<path d="M9 5.500h10a1.500 1.500 0 0 1 1.500 1.500v10a1.500 1.500 0 0 1-1.500 1.500H9L3 12z"/><path d="M12.500 9.500l5 5M17.500 9.500l-5 5"/>',
 };
 document.body.insertAdjacentHTML('afterbegin',`<svg width="0" height="0" style="position:absolute" aria-hidden="true">${Object.entries(ICONS).map(([k,v])=>`<symbol id="i-${k}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${v}</symbol>`).join('')}</svg>`);
 const ico=(name,cls='')=>h('span',{class:'ico '+cls,'aria-hidden':'true',html:`<svg><use href="#i-${name}"/></svg>`});

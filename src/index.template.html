@@ -70,6 +70,7 @@
     <button class="btn ghost" id="sClsNew"><span class="ico" aria-hidden="true"><svg><use href="#i-plus"/></svg></span> Nueva clase</button>
     <button class="btn ghost" id="sClsRen"><span class="ico" aria-hidden="true"><svg><use href="#i-pen"/></svg></span> Renombrar</button>
     <button class="btn ghost" id="sClsDel"><span class="ico" aria-hidden="true"><svg><use href="#i-trash"/></svg></span> Borrar</button>
+    <button class="btn ghost" id="sTabula"><span class="ico" aria-hidden="true"><svg><use href="#i-download"/></svg></span> Importar desde Tabula</button>
   </div>
   <div class="sgrid" style="margin-top:12px">
     <div><label for="sStudents">Alumnos (uno por línea)</label><textarea id="sStudents" rows="10"></textarea></div>
@@ -89,6 +90,13 @@
     <label class="inl">Tamaño de pauta y cuadrícula <select id="sPauta"><option value="0.75">Pequeña</option><option value="1">Mediana</option><option value="1.35">Grande</option></select></label>
   </div>
   <label class="inl" style="margin-top:12px"><input type="checkbox" id="sPictos" style="width:24px;height:24px"> Mostrar pictogramas de ARASAAC en horario y encargados (necesita internet la primera vez)</label>
+  <h3>Seguridad</h3>
+  <p class="sec-note" id="sPinState"></p>
+  <div class="row">
+    <button class="btn ghost" id="sPinOn"><span class="ico" aria-hidden="true"><svg><use href="#i-lock"/></svg></span> <span id="sPinOnLbl">Activar PIN</span></button>
+    <button class="btn ghost" id="sPinOff"><span class="ico" aria-hidden="true"><svg><use href="#i-trash"/></svg></span> Quitar PIN</button>
+  </div>
+  <p class="sec-note">El PIN se guarda solo en este navegador (como una huella que no se puede leer) y se pide al abrir Ajustes. «Exportar datos» guarda el resto de ajustes, pero no el PIN: si lo olvidas, borra los datos de Fori en el navegador y recupera todo con «Importar datos».</p>
   <h3>Copia de seguridad</h3>
   <div class="row">
     <button class="btn ghost" id="sExport"><span class="ico" aria-hidden="true"><svg><use href="#i-download"/></svg></span> Exportar datos</button>
