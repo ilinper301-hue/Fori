@@ -34,5 +34,5 @@ function renderZoneBars(){
   }
 }
 function setZones(n){ZN.n=n;S.zoneN=n;save();setSel(null);renderZoneBars();drawBg()}
-renderZoneBars();
+// las barras se crean al arrancar (37-arranque.js), cuando ya existe toda la interfaz
 

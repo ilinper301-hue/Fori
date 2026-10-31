@@ -36,6 +36,13 @@ server.listen(0,async()=>{
     await p.click('#pageLbl');await p.click('#pop >> text=Página nueva');
     ok((await p.textContent('#pageLbl')).includes('2/2'),'crea una página nueva');
     ok(errs.length===0,'sin errores en la consola'+(errs.length?': '+errs.join(' | '):''));
+    // arrancar con ajustes guardados poco habituales (zonas, modo mínimo, ruleta, tema oscuro…)
+    for(const extra of [{zoneN:4},{zoneN:2,view:'mini'},{view:'clean',theme:'dark',pickerMode:'wheel'},{ui:1.3,pautaSize:1.35}]){
+      await p.evaluate(x=>{const k='fori-v1',s=JSON.parse(localStorage.getItem(k)||'{}');localStorage.setItem(k,JSON.stringify({...s,...x}))},extra);
+      const e2=[];const h=e=>e2.push(e.message);p.on('pageerror',h);
+      await p.reload();await p.waitForTimeout(700);p.off('pageerror',h);
+      ok(await p.evaluate(()=>window.__foriOK===true)&&!e2.length,'arranca con '+JSON.stringify(extra)+(e2.length?': '+e2.join(' | '):''));
+    }
   }catch(e){fails.push(String(e));console.log(e)}
   await b.close();server.close();
   console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0);
