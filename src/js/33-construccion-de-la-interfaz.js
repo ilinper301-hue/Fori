@@ -46,10 +46,7 @@ const shapeNodes=()=>[
   ...SHAPES.map(([id,ic,nm])=>h('button',{title:nm,'aria-label':nm,class:id===T.shape?'on':'',onclick:()=>{T.shape=id;T.tool='shape';refreshTools();closePop()}},ic)),
   h('button',{class:'wide'+(T.fill?' on':''),onclick:e=>{T.fill=!T.fill;e.currentTarget.classList.toggle('on',T.fill);e.currentTarget.textContent=fillLabel()}},fillLabel())
 ];
-const colorNodes=()=>[
-  ...PALETTE.map(c=>h('button',{class:'psw'+(c===T.color?' on':''),title:c==='ink'?'Tinta (se adapta al tema)':c,'aria-label':'Color',style:`background:${cssColor(c)}`,onclick:()=>{setColor(c,true);closePop()}})),
-  h('label',{class:'custom'},h('input',{type:'color',value:/^#[0-9a-f]{6}$/i.test(T.color)?T.color:'#1e6fe0',onchange:e=>{setColor(e.target.value,true);closePop()}}),'Color personalizado')
-];
+const colorNodes=()=>[colorPicker()]; // ruleta de color (ver 33b-selector-color.js)
 function toolBtn(tool,icon,label){
   const extra=tool==='shape'?{'data-pop':'shape'}:{};
   return h('button',{class:'tool','data-tool':tool,...extra,onclick:e=>{
@@ -65,7 +62,7 @@ function buildLeft(){
       h('button',{class:'tool half',id:'btnUndo','aria-label':'Deshacer',onclick:undo},ico('undo')),
       h('button',{class:'tool half',id:'btnRedo','aria-label':'Rehacer',onclick:redo},ico('redo'))),
     h('div',{class:'sep'}),
-    h('button',{class:'tool','data-pop':'color',onclick:e=>openPop('color',e.currentTarget,6,colorNodes())},h('span',{class:'curc'}),h('small',{},'Colores')),
+    h('button',{class:'tool','data-pop':'color',onclick:e=>openPop('color',e.currentTarget,1,colorNodes())},h('span',{class:'curc'}),h('small',{},'Colores')),
     h('div',{class:'grid2',id:'recent'}),
     h('div',{class:'sep'}),
     ...[[3,'Fino',6],[6,'Medio',12],[12,'Grueso',22]].map(([s,n,d])=>h('button',{class:'sz','data-s':s,'aria-label':n,onclick:()=>{T.size=s;refreshTools();if(editor){editor.fs=FS[s];editor.ta.style.fontSize=FS[s]+'px';sizeEditor()}}},h('i',{style:`width:${d}px;height:${d}px`}))));

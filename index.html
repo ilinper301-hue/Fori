@@ -552,6 +552,38 @@ dialog.tabdlg.small{width:min(420px,92vw)}
 .tab-meta{font-size:14px;font-weight:500;color:var(--muted)}
 .tab-sch{display:flex;flex-direction:column;gap:8px}
 .tab-sch select{align-self:flex-start;max-width:100%;background:var(--board);color:var(--ink);border:1px solid var(--line)}
+/* ===== Selector de color moderno: ruleta de color ===== */
+#pop .cp{display:flex;gap:22px;padding:8px}
+#pop .cp-left{display:flex;flex-direction:column;align-items:center;gap:14px}
+#pop .cp-wrap{position:relative;width:220px;height:220px;touch-action:none;cursor:crosshair;border-radius:50%;box-shadow:0 0 0 1px var(--line),0 6px 18px rgba(9,16,40,.15)}
+#pop .cp-wheel{width:220px;height:220px;display:block;border-radius:50%}
+#pop .cp-knob{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25),0 3px 8px rgba(0,0,0,.35);pointer-events:none}
+#pop .cp-vrow{display:flex;align-items:center;gap:10px;width:220px;color:var(--muted);font-size:18px}
+#pop .cp-v{flex:1;height:26px;-webkit-appearance:none;appearance:none;background:linear-gradient(90deg,#000,var(--full,#fff));border-radius:13px;outline:none;margin:0}
+#pop .cp-v::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25),0 2px 6px rgba(0,0,0,.3)}
+#pop .cp-v::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:#fff;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25)}
+#pop .cp-right{display:flex;flex-direction:column;gap:8px;min-width:236px}
+#pop .cp-cur{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+#pop .cp-prev{width:52px;height:52px;border-radius:14px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+#pop .cp-hex{font-size:17px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+#pop .cp-lbl{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+#pop .cp-grid{display:grid;grid-template-columns:repeat(6,34px);gap:8px}
+#pop .cp-row{display:flex;gap:8px;flex-wrap:wrap}
+#pop button.cp-sw{width:34px;height:34px;min-width:0;padding:0;border-radius:10px;border:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)}
+#pop button.cp-sw:hover{transform:scale(1.08)}
+#pop button.cp-sw.on{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--accent)}
+
+/* muestras de la barra lateral, barra mínima y zonas: cuadrados redondeados, sin bordes gruesos */
+.grid2{grid-template-columns:repeat(2,30px);gap:10px}
+.sw{width:30px;height:30px;border-radius:9px;border:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16);padding:0;transition:transform .12s}
+.sw:hover{transform:scale(1.08)}
+.sw.on{box-shadow:0 0 0 2px var(--frame),0 0 0 4px var(--teal)}
+#mini .msw{width:36px;height:36px;border-radius:10px;border:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+#mini .msw.on{box-shadow:0 0 0 2px var(--frame),0 0 0 4px var(--teal)}
+.zonebar .zsw{border-radius:10px;border:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
+.zonebar .zsw.on{box-shadow:0 0 0 2px var(--frame),0 0 0 4px var(--teal)}
+/* botón «Colores»: anillo de tonos fino alrededor del color actual */
+.curc{width:32px;height:32px;border-width:3px;box-shadow:0 0 0 2px var(--frame) inset}
 /* Lecciones */
 .les-bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
 .les-list{display:flex;flex-direction:column;gap:10px;max-height:min(60vh,520px);overflow:auto}
@@ -3263,10 +3295,7 @@ const shapeNodes=()=>[
   ...SHAPES.map(([id,ic,nm])=>h('button',{title:nm,'aria-label':nm,class:id===T.shape?'on':'',onclick:()=>{T.shape=id;T.tool='shape';refreshTools();closePop()}},ic)),
   h('button',{class:'wide'+(T.fill?' on':''),onclick:e=>{T.fill=!T.fill;e.currentTarget.classList.toggle('on',T.fill);e.currentTarget.textContent=fillLabel()}},fillLabel())
 ];
-const colorNodes=()=>[
-  ...PALETTE.map(c=>h('button',{class:'psw'+(c===T.color?' on':''),title:c==='ink'?'Tinta (se adapta al tema)':c,'aria-label':'Color',style:`background:${cssColor(c)}`,onclick:()=>{setColor(c,true);closePop()}})),
-  h('label',{class:'custom'},h('input',{type:'color',value:/^#[0-9a-f]{6}$/i.test(T.color)?T.color:'#1e6fe0',onchange:e=>{setColor(e.target.value,true);closePop()}}),'Color personalizado')
-];
+const colorNodes=()=>[colorPicker()]; // ruleta de color (ver 33b-selector-color.js)
 function toolBtn(tool,icon,label){
   const extra=tool==='shape'?{'data-pop':'shape'}:{};
   return h('button',{class:'tool','data-tool':tool,...extra,onclick:e=>{
@@ -3282,7 +3311,7 @@ function buildLeft(){
       h('button',{class:'tool half',id:'btnUndo','aria-label':'Deshacer',onclick:undo},ico('undo')),
       h('button',{class:'tool half',id:'btnRedo','aria-label':'Rehacer',onclick:redo},ico('redo'))),
     h('div',{class:'sep'}),
-    h('button',{class:'tool','data-pop':'color',onclick:e=>openPop('color',e.currentTarget,6,colorNodes())},h('span',{class:'curc'}),h('small',{},'Colores')),
+    h('button',{class:'tool','data-pop':'color',onclick:e=>openPop('color',e.currentTarget,1,colorNodes())},h('span',{class:'curc'}),h('small',{},'Colores')),
     h('div',{class:'grid2',id:'recent'}),
     h('div',{class:'sep'}),
     ...[[3,'Fino',6],[6,'Medio',12],[12,'Grueso',22]].map(([s,n,d])=>h('button',{class:'sz','data-s':s,'aria-label':n,onclick:()=>{T.size=s;refreshTools();if(editor){editor.fs=FS[s];editor.ta.style.fontSize=FS[s]+'px';sizeEditor()}}},h('i',{style:`width:${d}px;height:${d}px`}))));
@@ -3365,6 +3394,70 @@ function buildDock(){
   updatePageUI();
 }
 
+/* ============ Selector de color: ruleta de color ============ */
+// Rueda de tonos (ángulo = tono, distancia al centro = intensidad) con control de luminosidad,
+// colores rápidos y recientes. El color se aplica en directo mientras se arrastra.
+const QUICK_COLORS=['ink','#ffffff','#868e96','#e03131','#f76707','#fcc419','#2f9e44','#0ca678','#1e6fe0','#7048e8','#e64980','#8d5524'];
+const hsv2rgb=(hu,s,v)=>{const f=n=>{const k=(n+hu/60)%6;return v-v*s*Math.max(0,Math.min(k,4-k,1))};return[f(5),f(3),f(1)].map(x=>Math.round(x*255))};
+const rgb2hex=c=>'#'+c.map(x=>x.toString(16).padStart(2,'0')).join('');
+function hex2hsv(hex){
+  const n=parseInt(hex.slice(1),16),r=(n>>16&255)/255,g=(n>>8&255)/255,b=(n&255)/255,mx=Math.max(r,g,b),d=mx-Math.min(r,g,b);
+  let hu=0;if(d){hu=mx===r?((g-b)/d)%6:mx===g?(b-r)/d+2:(r-g)/d+4;hu=(hu*60+360)%360}
+  return{h:hu,s:mx?d/mx:0,v:mx};
+}
+function colorPicker(){
+  const D=220,R=D/2,Q=2; // tamaño en pantalla y factor de resolución
+  const cur=/^#[0-9a-f]{6}$/i.test(T.color)?hex2hsv(T.color):{h:200,s:.8,v:.9};
+  let hu=cur.h,sa=cur.s,va=Math.max(.15,cur.v);
+  const cv=h('canvas',{class:'cp-wheel',width:String(D*Q),height:String(D*Q)});
+  const knob=h('div',{class:'cp-knob'}),wheel=h('div',{class:'cp-wrap'},cv,knob);
+  const prev=h('div',{class:'cp-prev'}),hexT=h('span',{class:'cp-hex'});
+  const vr=h('input',{type:'range',min:'15',max:'100',class:'cp-v','aria-label':'Luminosidad'});vr.value=String(Math.round(va*100));
+  function paintWheel(){
+    const x=cv.getContext('2d'),N=D*Q,img=x.createImageData(N,N),dt=img.data,RR=N/2;
+    for(let j=0;j<N;j++)for(let i=0;i<N;i++){
+      const dx=i-RR+.5,dy=j-RR+.5,r=Math.hypot(dx,dy);if(r>RR)continue;
+      const [cr,cg,cb]=hsv2rgb((Math.atan2(dy,dx)*180/Math.PI+450)%360,r/RR,va),k=(j*N+i)*4;
+      dt[k]=cr;dt[k+1]=cg;dt[k+2]=cb;dt[k+3]=r>RR-1.5?Math.round((RR-r)/1.5*255):255; // borde suave
+    }
+    x.putImageData(img,0,0);
+  }
+  function update(commit){
+    const hex=rgb2hex(hsv2rgb(hu,sa,va)),a=(hu-90)*Math.PI/180;
+    knob.style.left=(R+Math.cos(a)*sa*R)+'px';knob.style.top=(R+Math.sin(a)*sa*R)+'px';knob.style.background=hex;
+    prev.style.background=hex;hexT.textContent=hex.toUpperCase();
+    vr.style.setProperty('--full',rgb2hex(hsv2rgb(hu,sa,1)));
+    setColor(hex,commit);
+    box.querySelectorAll('.cp-sw').forEach(b=>b.classList.toggle('on',b.title===hex));
+  }
+  let drag=false;
+  const pick=e=>{const r=cv.getBoundingClientRect(),dx=(e.clientX-r.left)/r.width*D-R,dy=(e.clientY-r.top)/r.height*D-R;
+    hu=(Math.atan2(dy,dx)*180/Math.PI+450)%360;sa=Math.min(1,Math.hypot(dx,dy)/R);update(false)};
+  wheel.addEventListener('pointerdown',e=>{drag=true;wheel.setPointerCapture(e.pointerId);pick(e)});
+  wheel.addEventListener('pointermove',e=>{if(drag)pick(e)});
+  const end=()=>{if(drag){drag=false;update(true);renderRecentRow()}};
+  wheel.addEventListener('pointerup',end);wheel.addEventListener('pointercancel',end);
+  vr.addEventListener('input',()=>{va=vr.value/100;paintWheel();update(false)});
+  vr.addEventListener('change',()=>{update(true);renderRecentRow()});
+  const sw=(c,cls)=>h('button',{class:cls+(c===T.color?' on':''),title:c==='ink'?'Tinta (se adapta al tema)':c,'aria-label':'Color',style:`background:${cssColor(c)}`,onclick:()=>{setColor(c,true);closePop()}});
+  const recentRow=h('div',{class:'cp-row'});
+  const renderRecentRow=()=>recentRow.replaceChildren(...S.recent.map(c=>sw(c,'cp-sw')));
+  renderRecentRow();
+  const box=h('div',{class:'cp'},
+    h('div',{class:'cp-left'},wheel,h('div',{class:'cp-vrow'},ico('sun'),vr)),
+    h('div',{class:'cp-right'},
+      h('div',{class:'cp-cur'},prev,h('div',{},h('div',{class:'cp-lbl'},'Color actual'),hexT)),
+      h('div',{class:'cp-lbl'},'Colores rápidos'),h('div',{class:'cp-grid'},...QUICK_COLORS.map(c=>sw(c,'cp-sw'))),
+      h('div',{class:'cp-lbl'},'Recientes'),recentRow));
+  requestAnimationFrame(()=>{paintWheel();
+    const a=(hu-90)*Math.PI/180;knob.style.left=(R+Math.cos(a)*sa*R)+'px';knob.style.top=(R+Math.sin(a)*sa*R)+'px';
+    const hex=T.color==='ink'?getComputedStyle(document.documentElement).getPropertyValue('--ink').trim():rgb2hex(hsv2rgb(hu,sa,va));
+    knob.style.background=prev.style.background=T.color==='ink'?'var(--ink)':hex;hexT.textContent=T.color==='ink'?'Tinta':hex.toUpperCase();
+    vr.style.setProperty('--full',rgb2hex(hsv2rgb(hu,sa,1)));
+  });
+  return box;
+}
+
 /* ============ Clases (varias listas de alumnos) ============ */
 // La clase activa vive en S.students / S.roles / S.offset; S.classes guarda todas.
 if(!Array.isArray(S.classes)||!S.classes.length){S.classes=[{name:'Mi clase',students:S.students,roles:S.roles,offset:S.offset||0}];S.cls=0}
@@ -3399,7 +3492,7 @@ function renderMini(){
     h('span',{class:'grip','aria-label':'Mover la barra'},ico('grip')),
     tb('pen','pen','Lápiz'),tb('marker','marker','Fluorescente'),tb('eraser','eraser','Borrador'),tb('text','text','Texto'),
     ...S.recent.slice(0,4).map(c=>h('button',{class:'sw msw','data-c':c,'aria-label':'Color',style:`background:${cssColor(c)}`,onclick:()=>setColor(c)})),
-    h('button',{'data-pop':'color','aria-label':'Más colores',onclick:e=>openPop('color',e.currentTarget,6,colorNodes(),'above')},h('span',{class:'curc',style:'width:34px;height:34px;border-width:5px'})),
+    h('button',{'data-pop':'color','aria-label':'Más colores',onclick:e=>openPop('color',e.currentTarget,1,colorNodes(),'above')},h('span',{class:'curc',style:'width:34px;height:34px;border-width:5px'})),
     h('button',{'aria-label':'Grosor',onclick:()=>{T.size=T.size===3?6:T.size===6?12:3;refreshTools();renderMini()}},h('i',{class:'mdot',style:`width:${T.size*1.6+4}px;height:${T.size*1.6+4}px`})),
     h('button',{'aria-label':'Deshacer',onclick:undo},ico('undo')),h('button',{'aria-label':'Rehacer',onclick:redo},ico('redo')),
     h('button',{'data-pop':'view','aria-label':'Modo de pantalla',onclick:e=>openPop('view',e.currentTarget,1,viewNodes(),'above')},ico('view')));
