@@ -32,3 +32,19 @@ GitHub Pages sirve la rama `main` desde la raíz (*Settings → Pages*). Para in
 - Pictogramas: Sergio Palao. Origen: ARASAAC (https://arasaac.org). Licencia: CC BY-NC-SA. Propiedad: Gobierno de Aragón (España).
 - Fuente Inter: SIL Open Font License (ver `fonts/LICENSE-Inter.txt`).
 - Imágenes de billetes: Banco Central Europeo, según sus normas de reproducción.
+
+## Desarrollo
+El código está separado en partes dentro de `src/` y se junta en un único `index.html` (que es lo que se publica):
+
+- `src/index.template.html`: estructura de la página.
+- `src/css/`: estilos (`base.css`, `estilo-fori.css`, `modulos.css`).
+- `src/js/`: un archivo por módulo (pizarra, herramientas del aula, matemáticas, asamblea, interfaz…). Se juntan en orden alfabético, por eso empiezan por un número.
+
+Después de cambiar algo en `src/`:
+
+```
+python3 tools/build.py   # genera index.html
+node tools/test.js       # prueba rápida (necesita Playwright)
+```
+
+No edites `index.html` a mano: se sobrescribe al generar.

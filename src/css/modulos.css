@@ -1,0 +1,101 @@
+/* ================= Módulos al estilo Fori ================= */
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=range],input[type=checkbox]{accent-color:var(--accent)}
+.btn,.seg button,.addp{display:inline-flex;align-items:center;justify-content:center;gap:8px;text-align:center}
+.btn,.seg button,.addp{line-height:1.15}
+.btn .ico,.seg button .ico{font-size:20px}
+.btn:hover{filter:brightness(1.07)}
+.btn.ghost:not(.on):hover{background:color-mix(in srgb,var(--ink) 9%,var(--chrome));filter:none}
+.btn.tog.on:hover{filter:none}
+.team .btn.ghost{background:var(--panel)}
+.team .btn.ghost:hover{background:color-mix(in srgb,var(--ink) 7%,var(--panel))}
+.btn.big{font-size:28px}.btn.big .ico{font-size:26px}
+.btn.tdel .ico,.as-m .ico{font-size:20px}
+.btn.danger{color:#fff}
+.btn.tog:not(.on){color:var(--ink)}
+.seg button{display:flex}
+.addp{border-radius:12px;font-weight:700}
+.lbl{font-weight:600}
+.muted{font-weight:500}
+.win>.body{padding:18px}
+.win>header span{font-weight:700}
+
+/* tipografía: pesos entre 500 y 700 */
+.addp,.rang,.eurtot,.target,.res,.dig,.big,.ringnum,.pick,.tv,.mlinfo,.fr,.hc.hl,.as-big2,.as-mt,.as-now,.as-sn,.as-sb,#modeChip,.cuisb,.as-n,.as-bigday,.fr b,.pv b,.mat b,.mat span,.rrow b,.gchip,.team .tn{font-weight:700}
+.dig,.big,.ringnum,.tv,.pick{letter-spacing:-.01em}
+
+/* radios y superficies */
+.pv div,.gcard,.srow,.mbtn,.as-eb,.cuisb,.as-sb,.as-wb,.as-season,.nbar{border-radius:12px}
+.team{border-radius:14px;border-top-width:8px}
+.gcard{border-left-width:6px}
+.nbar{border-radius:999px}
+.as-wb{border-width:3px}
+.as-sb{border-width:3px;border-radius:14px}
+.as-d{border-radius:10px}
+.hc{border-width:1.5px;border-radius:9px}
+.gchip{border-radius:10px;border-left-width:8px}
+.numin,.din,dialog textarea,dialog select,dialog input[type=date]{border-radius:10px;border:1px solid var(--line)}
+.numin{border-width:1.5px}
+#trash{border-radius:18px;border:3px dashed var(--danger);color:var(--danger)}
+#trash .ico{font-size:52px}
+#trash.hot{color:#fff}
+.note{border-radius:10px;box-shadow:0 8px 22px rgba(9,16,40,.22)}
+.nh{background:rgba(0,0,0,.07);border-radius:10px 10px 0 0}
+.nh button{display:grid;place-items:center;color:#2b2f36;border-radius:8px;font-size:20px}
+.nh button:hover{background:rgba(0,0,0,.1)}
+.nb{font-family:var(--font);font-weight:500}
+.piece{filter:drop-shadow(0 2px 3px rgba(9,16,40,.22))}
+.ruler{filter:drop-shadow(0 6px 10px rgba(9,16,40,.24))}
+.prot{filter:drop-shadow(0 6px 10px rgba(9,16,40,.22))}
+
+/* asas de giro y botones de la regla y el transportador */
+.rrot,.prot-h{background:var(--accent);color:var(--accent-ink);font-size:24px;box-shadow:0 3px 8px rgba(9,16,40,.28)}
+.prot-h.prot-x{background:var(--danger);color:#fff;font-size:22px}
+.rbtns button{display:grid;place-items:center;border-radius:10px;background:rgba(0,0,0,.12);color:#2b2108}
+.rbtns button:hover{background:rgba(0,0,0,.2)}
+.rbtns .ico{font-size:20px}
+
+/* fracciones */
+.fp.on{fill:var(--coral)}
+
+/* asamblea y semáforo */
+.as-tabs button span{font-size:inherit}
+.as-tabs button{gap:6px;font-size:16px;font-weight:600}
+.as-tabs button .ico{font-size:24px}
+.as-q{color:var(--muted);font-weight:600}
+.as-sc .ico{font-size:110px;color:var(--muted)}
+.as-wb{font-weight:600;font-size:17px}
+.as-sb{font-weight:700}
+
+/* aviso y foco */
+#toast .btn{min-height:40px;padding:0 14px;font-size:16px;background:var(--teal);color:var(--frame)}
+#spotCtl{border-radius:16px;border:1px solid var(--line);box-shadow:0 12px 30px rgba(9,16,40,.35);gap:8px;padding:8px}
+#spotCtl .btn{min-height:48px}
+
+/* ajustes */
+dialog{box-shadow:0 24px 70px rgba(9,16,40,.4);border:1px solid var(--line)}
+dialog h2{font-size:22px;font-weight:700;letter-spacing:-.01em}
+dialog h3{font-size:15px;font-weight:700;color:var(--muted);margin:22px 0 10px;padding-top:14px;border-top:1px solid var(--line)}
+dialog h2+h3{border-top:0;padding-top:0;margin-top:14px}
+dialog label{font-weight:600;color:var(--ink)}
+dialog code{background:var(--chrome);color:var(--ink);padding:2px 6px;border-radius:6px;font-size:.92em}
+dialog textarea,dialog select,.din{background:var(--board);color:var(--ink)}
+dialog::backdrop{background:rgba(9,16,40,.62)}
+.inl{font-weight:500}
+/* bolsa de selección, barra de ventanas minimizadas */
+.selbar .wide{width:auto;padding:0 16px;display:flex;align-items:center;gap:8px;font-size:16px;font-weight:600;white-space:nowrap}
+.selbar .wide .ico{font-size:20px}
+#tray{display:none;gap:8px;align-items:center;margin-left:4px}
+.dbtn.tray{min-height:48px;padding:0 14px;font-size:15px}
+.dbtn.tray.on{background:var(--frame2);color:var(--on-frame);box-shadow:inset 0 0 0 2px var(--coral)}
+.dbtn.tray.min{color:var(--on-frame2)}
+.dbtn.tray.min{opacity:.75;background:transparent;box-shadow:inset 0 0 0 1px rgba(255,255,255,.18)}
+.win>header .x+.x{margin-left:-4px}
+/* accesos a Lectori y Barri */
+.appbtn{display:block;width:38px;height:38px;border-radius:10px;overflow:hidden;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.12);transition:transform .15s}
+.appbtn img{display:block;width:100%;height:100%}
+.appbtn:hover{box-shadow:0 0 0 2px var(--teal)}
+.appbtn:active{transform:scale(.92)}
+/* pantallas estrechas (móvil, tablet en vertical): que quepan los botones de la barra superior */
+@media (max-width:1000px){#dateStr,#subject,.brand-sep:first-of-type{display:none}}
+@media (max-width:640px){.brand{font-size:0;gap:0}#clock{font-size:18px}#top{gap:8px}}

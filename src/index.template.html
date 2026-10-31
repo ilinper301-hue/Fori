@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#13214A">
+<title>Fori</title>
+<meta name="description" content="Fori: pizarra y asamblea para el aula de primaria">
+<!-- Añadir dentro de <head> (el theme-color ya existe en la página y se actualiza con el tema) -->
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icon-fav.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fori">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+<!--CSS-->
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <button class="mini" id="btnSettings" aria-label="Ajustes (mantener pulsado)">⚙</button>
+    <span class="brand"><img src="icon-mark.svg" alt="">Fori</span><span class="brand-sep"></span>
+    <span id="dateStr"></span>
+    <span id="clock"></span>
+    <span id="subject"></span>
+    <span id="modeChip"></span>
+    <span class="sp"></span>
+    <button class="chip" id="clsChip"></button>
+    <!-- Accesos directos a las otras apps de la familia: se abren en su propia ventana, no dentro de Fori -->
+    <a class="appbtn" href="https://ilinper301-hue.github.io/Lectori/" target="_blank" rel="noopener" title="Abrir Lectori" aria-label="Abrir Lectori"><img src="apps/lectori.png" alt=""></a>
+    <a class="appbtn" href="https://ilinper301-hue.github.io/barri/" target="_blank" rel="noopener" title="Abrir Barri" aria-label="Abrir Barri"><img src="apps/barri.png" alt=""></a>
+    <span class="brand-sep"></span>
+    <button class="mini" id="btnView" data-pop="view" aria-label="Modo de pantalla">▣</button>
+    <button class="mini" id="btnFs" aria-label="Pantalla completa">⛶</button>
+  </header>
+  <aside id="left"></aside>
+  <main id="stage">
+    <div id="bgimg"></div>
+    <canvas id="bg"></canvas>
+    <canvas id="draw"></canvas>
+    <canvas id="live"></canvas>
+    <div id="floaters"><div id="manip"><div class="mat" id="mat">
+      <div style="background:rgba(47,158,68,.08)"><b style="color:#2f9e44">C</b><span>Centenas</span></div>
+      <div style="background:rgba(224,49,49,.08)"><b style="color:#e03131">D</b><span>Decenas</span></div>
+      <div style="background:rgba(30,111,224,.08)"><b style="color:#1e6fe0">U</b><span>Unidades</span></div>
+    </div></div></div>
+    <div id="trash"><span class="ico" aria-hidden="true"><svg><use href="#i-trash"/></svg></span></div>
+  </main>
+  <aside id="right"></aside>
+  <footer id="dock"></footer>
+</div>
+
+<div id="pop"></div>
+<div id="mini"></div>
+<button id="cornerBtn" data-pop="view" aria-label="Mostrar herramientas (mantener pulsado)">▣</button>
+<div id="toast"></div>
+<div id="spot"><svg width="100%" height="100%"><defs><mask id="spm"><rect width="100%" height="100%" fill="white"/><circle id="hc" fill="black"/><rect id="hr" fill="black"/></mask></defs><rect width="100%" height="100%" fill="rgba(0,0,0,.86)" mask="url(#spm)"/></svg></div>
+<div id="spotCtl"></div>
+<input type="file" id="bgFile" accept="image/*" hidden>
+
+<dialog id="settings">
+  <h2>Ajustes</h2>
+  <h3>Clase</h3>
+  <div class="row">
+    <select id="sClass"></select>
+    <button class="btn ghost" id="sClsNew"><span class="ico" aria-hidden="true"><svg><use href="#i-plus"/></svg></span> Nueva clase</button>
+    <button class="btn ghost" id="sClsRen"><span class="ico" aria-hidden="true"><svg><use href="#i-pen"/></svg></span> Renombrar</button>
+    <button class="btn ghost" id="sClsDel"><span class="ico" aria-hidden="true"><svg><use href="#i-trash"/></svg></span> Borrar</button>
+  </div>
+  <div class="sgrid" style="margin-top:12px">
+    <div><label for="sStudents">Alumnos (uno por línea)</label><textarea id="sStudents" rows="10"></textarea></div>
+    <div><label for="sRoles">Encargados / roles (uno por línea)</label><textarea id="sRoles" rows="10"></textarea></div>
+  </div>
+  <h3>Horario · formato <code>09:00-10:00 Lengua</code></h3>
+  <div class="sched" id="sSched"></div>
+  <h3>Calendario escolar</h3>
+  <div class="sgrid">
+    <div><label for="sStart">Inicio de curso</label><input type="date" id="sStart" class="din"></div>
+    <div><label for="sFest">Días no lectivos (uno por línea: 12/10/2026 o 23/12/2026-07/01/2027)</label><textarea id="sFest" rows="4" spellcheck="false"></textarea></div>
+  </div>
+  <h3>Apariencia</h3>
+  <div class="row">
+    <label class="inl">Tema <select id="sTheme"><option value="light">Claro</option><option value="dark">Pizarra oscura</option></select></label>
+    <label class="inl">Tamaño de botones <select id="sUi"><option value="0.85">Pequeño</option><option value="1">Normal</option><option value="1.15">Grande</option><option value="1.3">Muy grande</option></select></label>
+    <label class="inl">Tamaño de pauta y cuadrícula <select id="sPauta"><option value="0.75">Pequeña</option><option value="1">Mediana</option><option value="1.35">Grande</option></select></label>
+  </div>
+  <label class="inl" style="margin-top:12px"><input type="checkbox" id="sPictos" style="width:24px;height:24px"> Mostrar pictogramas de ARASAAC en horario y encargados (necesita internet la primera vez)</label>
+  <h3>Copia de seguridad</h3>
+  <div class="row">
+    <button class="btn ghost" id="sExport"><span class="ico" aria-hidden="true"><svg><use href="#i-download"/></svg></span> Exportar datos</button>
+    <button class="btn ghost" id="sImport"><span class="ico" aria-hidden="true"><svg><use href="#i-upload"/></svg></span> Importar datos</button>
+    <input type="file" id="sFile" accept="application/json" hidden>
+  </div>
+  <div class="row end">
+    <button class="btn ghost" id="sCancel">Cancelar</button>
+    <button class="btn" id="sSave">Guardar</button>
+  </div>
+</dialog>
+
+<script>
+/* Compatibilidad con navegadores antiguos (tablets y móviles Android sin actualizar) y aviso si Fori no arranca */
+(function(){
+  if(!window.structuredClone)window.structuredClone=function(v){return JSON.parse(JSON.stringify(v))};
+  [window.Element,window.DocumentFragment,window.Document].forEach(function(C){
+    if(C&&!C.prototype.replaceChildren)C.prototype.replaceChildren=function(){this.textContent='';this.append.apply(this,arguments)};
+  });
+  var shown=false;
+  function fail(msg){
+    if(shown||window.__foriOK)return;shown=true;
+    var d=document.createElement('div');
+    d.setAttribute('style','position:fixed;inset:0;z-index:99999;background:#13214A;color:#fff;font:18px/1.5 system-ui,sans-serif;padding:32px;overflow:auto');
+    d.innerHTML='<h2 style="margin:0 0 12px">Fori no ha podido arrancar en este navegador</h2><p>Actualiza Google Chrome (o el navegador del dispositivo) desde la tienda de aplicaciones y vuelve a abrir Fori.</p><p style="opacity:.75">Si sigue sin funcionar, envía este mensaje a quien te ayuda con la app:</p><pre style="white-space:pre-wrap;background:rgba(255,255,255,.1);padding:12px;border-radius:10px;font-size:14px"></pre>';
+    d.querySelector('pre').textContent=msg+'\n'+navigator.userAgent;
+    (document.body||document.documentElement).appendChild(d);
+  }
+  window.addEventListener('error',function(e){fail((e.message||'Error')+' ('+(e.lineno||'?')+':'+(e.colno||'?')+')')});
+  window.addEventListener('unhandledrejection',function(e){fail('Promesa: '+(e.reason&&e.reason.message||e.reason))});
+  // si al cabo de unos segundos la app no ha terminado de arrancar, también se avisa
+  window.addEventListener('load',function(){setTimeout(function(){if(!window.__foriOK)fail('La app no terminó de arrancar')},4000)});
+})();
+</script>
+<script>
+(()=>{
+'use strict';
+<!--JS-->
+})();
+</script>
+</body>
+</html>

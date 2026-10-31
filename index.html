@@ -642,6 +642,10 @@ function h(tag,props={},...kids){
   return e;
 }
 
+
+// Puntos de enganche para que otros módulos añadan opciones a los menús sin tocar la interfaz.
+// pageMenu: funciones que devuelven botones para el menú de «Página».
+const REG={pageMenu:[]};
 /* ============ Iconos de línea (propios, 24×24, trazo redondeado) ============ */
 const ICONS={
   pen:'<path d="M4 20l1.2-4.6L15.8 4.8a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/><path d="M13.5 7l3.5 3.5"/>',
@@ -2704,7 +2708,8 @@ function buildDock(){
     h('button',{class:'wide',onclick:()=>{closePop();addPage(true)}},...ib('copy','Duplicar esta página')),
     h('button',{class:'wide',onclick:()=>{closePop();deletePage()}},...ib('trash','Borrar esta página')),
     h('button',{class:'wide',onclick:()=>{closePop();exportPNG()}},...ib('image','Guardar página como imagen')),
-    h('button',{class:'wide',onclick:()=>{closePop();exportPDF()}},...ib('pdf','Guardar todas en PDF'))],'above')});
+    h('button',{class:'wide',onclick:()=>{closePop();exportPDF()}},...ib('pdf','Guardar todas en PDF')),
+    ...REG.pageMenu.map(f=>f())],'above')});
   dock.replaceChildren(
     bgBtn,mathBtn,h('span',{id:'tray'}),h('span',{class:'dsep'}),
     h('button',{class:'dbtn nav','aria-label':'Página anterior',onclick:()=>gotoPage(cur-1)},ico('left')),
