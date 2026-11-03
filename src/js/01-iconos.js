@@ -52,6 +52,7 @@ const ICONS={
   rods:'<rect x="3.5" y="4.5" width="6" height="4" rx="1.5"/><rect x="3.5" y="10" width="11" height="4" rx="1.5"/><rect x="3.5" y="15.5" width="17" height="4" rx="1.5"/>',
   tangram:'<rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 3.5l17 17"/><path d="M12 12l8.5-8.5"/><path d="M12 20.5l4.25-4.25"/>',
   chalk:'<path d="M4 17c3-4 5-6 6-6s0 4 2 4 3.5-2 5-3"/>',
+  overlay:'<rect x="3" y="4" width="18" height="14" rx="2.5" stroke-dasharray="3 3"/><path d="M9 20.5l6-6 2 2-6 6H9z" transform="translate(0 -3)"/>',
   play:'<path d="M7.5 4.5v15l12-7.5z"/>',
   pause:'<rect x="6.5" y="4.5" width="3.5" height="15" rx="1.2"/><rect x="14" y="4.5" width="3.5" height="15" rx="1.2"/>',
   hourglass:'<path d="M6.5 3.5h11M6.5 20.5h11"/><path d="M7.5 3.5c0 5 4.5 5.5 4.5 8.5s-4.5 3.500-4.5 8.500"/><path d="M16.5 3.5c0 5-4.5 5.500-4.500 8.500s4.500 3.500 4.500 8.500"/>',

@@ -15,6 +15,7 @@ function openSettings(){
   [1,2,3,4,5].forEach(d=>$('#sd'+d).value=(S.schedule[d]||[]).join('\n'));
   $('#sTheme').value=S.theme;$('#sUi').value=String(S.ui||1);$('#sPauta').value=String(S.pautaSize||1);
   $('#sPictos').checked=S.pictos!==false;
+  $('#sFist').value=String(fistPx());
   $('#sStart').value=S.schoolStart||'';$('#sFest').value=(S.festivos||[]).join('\n');
   dlg.showModal();
 }
@@ -30,7 +31,7 @@ $('#sSave').onclick=()=>{
   readClassUI();
   S.schedule={};[1,2,3,4,5].forEach(d=>S.schedule[d]=lines($('#sd'+d).value));
   S.theme=$('#sTheme').value;S.ui=Number($('#sUi').value);S.pautaSize=Number($('#sPauta').value);
-  S.pictos=$('#sPictos').checked;S.schoolStart=$('#sStart').value||null;S.festivos=lines($('#sFest').value);
+  S.pictos=$('#sPictos').checked;S.fistPx=Number($('#sFist').value);S.schoolStart=$('#sStart').value||null;S.festivos=lines($('#sFest').value);
   const c=S.classes[dlgCls];S.cls=dlgCls;S.students=c.students;S.roles=c.roles;S.offset=c.offset||0;pool=[];
   save();dlg.close();closeAllWins();applyTheme();applyUi();tickClock();renderClassChip();toast('Ajustes guardados');
 };

@@ -318,6 +318,7 @@ dr.addEventListener('pointerdown',e=>{
   if(e.pointerType==='touch'&&pensDown)return; // rechazo de palma: con un lápiz apoyado se ignora el dedo
   closePop();
   const p=pt(e);
+  if(fistDown(e,p))return; // puño o palma: se comporta como un borrador grande (05e-borrar-puno.js)
   if(T.tool==='text'){
     e.preventDefault();
     if(editor){commitEditor();return}
