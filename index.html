@@ -845,6 +845,7 @@ const ICONS={
   rods:'<rect x="3.5" y="4.5" width="6" height="4" rx="1.5"/><rect x="3.5" y="10" width="11" height="4" rx="1.5"/><rect x="3.5" y="15.5" width="17" height="4" rx="1.5"/>',
   tangram:'<rect x="3.5" y="3.5" width="17" height="17" rx="1.5"/><path d="M3.5 3.5l17 17"/><path d="M12 12l8.5-8.5"/><path d="M12 20.5l4.25-4.25"/>',
   chalk:'<path d="M4 17c3-4 5-6 6-6s0 4 2 4 3.5-2 5-3"/>',
+  overlay:'<rect x="3" y="4" width="18" height="14" rx="2.5" stroke-dasharray="3 3"/><path d="M9 20.5l6-6 2 2-6 6H9z" transform="translate(0 -3)"/>',
   play:'<path d="M7.5 4.5v15l12-7.5z"/>',
   pause:'<rect x="6.5" y="4.5" width="3.5" height="15" rx="1.2"/><rect x="14" y="4.5" width="3.5" height="15" rx="1.2"/>',
   hourglass:'<path d="M6.5 3.5h11M6.5 20.5h11"/><path d="M7.5 3.5c0 5 4.5 5.5 4.5 8.5s-4.5 3.500-4.5 8.500"/><path d="M16.5 3.5c0 5-4.5 5.500-4.500 8.500s4.500 3.500 4.500 8.500"/>',
@@ -1255,6 +1256,7 @@ dr.addEventListener('pointerdown',e=>{
   if(e.pointerType==='touch'&&pensDown)return; // rechazo de palma: con un lápiz apoyado se ignora el dedo
   closePop();
   const p=pt(e);
+  if(fistDown(e,p))return; // puño o palma: se comporta como un borrador grande (05e-borrar-puno.js)
   if(T.tool==='text'){
     e.preventDefault();
     if(editor){commitEditor();return}
@@ -1762,6 +1764,81 @@ function placeHandle(){
   resizeHandle.addEventListener('pointerup',end);resizeHandle.addEventListener('pointercancel',end);
 })();
 
+/* ============ Borrar con el puño ============ */
+// Un contacto táctil grande (puño o palma) o tres dedos muy juntos actúan como un borrador grande.
+// Reutiliza el borrador de siempre: crea un trazo 'eraser', así que deshacer/rehacer funcionan igual.
+const FIST_DEFAULT=40;     // px CSS de contacto a partir de los cuales se considera un puño
+const FIST_GROUP_DIST=190; // px: tres contactos así de juntos cuentan como un puño (pantallas que no informan del tamaño)
+const FIST_STALE=15000;    // ms: se olvidan contactos que no llegaron a soltarse
+const fistPx=()=>S.fistPx===undefined?FIST_DEFAULT:(Number(S.fistPx)||0); // 0 = desactivado
+const fistTouches=new Map(); // contactos táctiles apoyados: id -> {x,y,t}
+let fistNow=null;            // gesto en curso: {ids:Set, s:trazo borrador, last:{x,y}}
+
+function fistCenter(ids){
+  const ps=ids.map(i=>fistTouches.get(i)).filter(Boolean);
+  if(!ps.length)return fistNow?fistNow.last:{x:0,y:0};
+  return{x:ps.reduce((a,q)=>a+q.x,0)/ps.length,y:ps.reduce((a,q)=>a+q.y,0)/ps.length};
+}
+function fistBox(ids){
+  const ps=ids.map(i=>fistTouches.get(i)).filter(Boolean);if(!ps.length)return 0;
+  const xs=ps.map(q=>q.x),ys=ps.map(q=>q.y);
+  return Math.max(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys));
+}
+function fistStart(ids,p,contact){
+  commitEditor();setSel(null);
+  const size=clamp(Math.round(contact?contact*1.2:fistBox(ids)+70),70,280);
+  const s={type:'free',tool:'eraser',color:'ink',size,pts:[p]};
+  const zi=zoneAt(p.x);
+  if(zi>=0){const [x0,x1]=zoneRange(zi);s.zone=[x0+3,x1-3]} // en pizarra dividida no se sale de su zona
+  seg(cd,s,p,p);
+  fistNow={ids:new Set(ids),s,last:p};
+}
+// Devuelve true si el contacto es (parte de) un puño y la pizarra no debe tratarlo como un dedo.
+function fistDown(e,p){
+  if(e.pointerType!=='touch'||!fistPx())return false;
+  const now=Date.now();
+  for(const [id,q] of fistTouches)if(now-q.t>FIST_STALE)fistTouches.delete(id);
+  fistTouches.set(e.pointerId,{x:p.x,y:p.y,t:now});
+  if(fistNow){ // otro dedo del mismo puño; uno lejano (otro alumno) se trata como un dedo normal
+    if(Math.hypot(p.x-fistNow.last.x,p.y-fistNow.last.y)>FIST_GROUP_DIST*1.5)return false;
+    fistNow.ids.add(e.pointerId);dr.setPointerCapture(e.pointerId);return true;
+  }
+  const contact=Math.max(e.width||0,e.height||0);
+  if(contact>=fistPx()){fistStart([e.pointerId],p,contact);dr.setPointerCapture(e.pointerId);return true}
+  const near=[...fistTouches].filter(([,q])=>Math.hypot(q.x-p.x,q.y-p.y)<=FIST_GROUP_DIST).map(([id])=>id);
+  if(near.length>=3){
+    for(const id of near){const s=active.get(id);if(s){clearTimeout(s.lp);active.delete(id)}} // descarta los trazos sueltos que ya habían empezado
+    redraw();drawLive();
+    fistStart(near,fistCenter(near),0);dr.setPointerCapture(e.pointerId);return true;
+  }
+  return false;
+}
+dr.addEventListener('pointermove',e=>{
+  if(!fistNow||!fistNow.ids.has(e.pointerId))return;
+  const solo=fistNow.ids.size===1,evs=solo&&e.getCoalescedEvents?e.getCoalescedEvents():[];
+  for(const ev of (evs.length?evs:[e])){
+    const q=pt(ev);fistTouches.set(e.pointerId,{x:q.x,y:q.y,t:Date.now()});
+    let p=solo?q:fistCenter([...fistNow.ids]);
+    const s=fistNow.s;
+    if(s.zone)p={x:clamp(p.x,s.zone[0],s.zone[1]),y:p.y};
+    seg(cd,s,fistNow.last,p);s.pts.push(p);fistNow.last=p;
+  }
+});
+function fistUp(e){
+  fistTouches.delete(e.pointerId);
+  if(!fistNow||!fistNow.ids.has(e.pointerId))return;
+  const s=fistNow.s;fistNow=null; // al soltar el primer dedo termina el gesto
+  delete s.zone;
+  P().strokes.push(s);record({t:'add',s});
+}
+dr.addEventListener('pointerup',fistUp);dr.addEventListener('pointercancel',fistUp);
+
+// Opción en Ajustes (junto al tamaño de pauta)
+(()=>{
+  const a=$('#sPauta');if(!a||!a.closest('label'))return;
+  a.closest('label').after(h('label',{class:'inl'},'Borrar con el puño ',
+    h('select',{id:'sFist'},...[['0','Desactivado'],['30','Muy sensible'],['40','Normal'],['55','Poco sensible']].map(([v,t])=>h('option',{value:v},t)))));
+})();
 /* ============ Ventanas flotantes ============ */
 const floaters=$('#floaters'),wins=new Map();let zTop=10;
 function makeDrag(handle,el){
@@ -3535,6 +3612,7 @@ function openSettings(){
   [1,2,3,4,5].forEach(d=>$('#sd'+d).value=(S.schedule[d]||[]).join('\n'));
   $('#sTheme').value=S.theme;$('#sUi').value=String(S.ui||1);$('#sPauta').value=String(S.pautaSize||1);
   $('#sPictos').checked=S.pictos!==false;
+  $('#sFist').value=String(fistPx());
   $('#sStart').value=S.schoolStart||'';$('#sFest').value=(S.festivos||[]).join('\n');
   dlg.showModal();
 }
@@ -3550,7 +3628,7 @@ $('#sSave').onclick=()=>{
   readClassUI();
   S.schedule={};[1,2,3,4,5].forEach(d=>S.schedule[d]=lines($('#sd'+d).value));
   S.theme=$('#sTheme').value;S.ui=Number($('#sUi').value);S.pautaSize=Number($('#sPauta').value);
-  S.pictos=$('#sPictos').checked;S.schoolStart=$('#sStart').value||null;S.festivos=lines($('#sFest').value);
+  S.pictos=$('#sPictos').checked;S.fistPx=Number($('#sFist').value);S.schoolStart=$('#sStart').value||null;S.festivos=lines($('#sFest').value);
   const c=S.classes[dlgCls];S.cls=dlgCls;S.students=c.students;S.roles=c.roles;S.offset=c.offset||0;pool=[];
   save();dlg.close();closeAllWins();applyTheme();applyUi();tickClock();renderClassChip();toast('Ajustes guardados');
 };
@@ -3936,6 +4014,44 @@ if(document.fonts&&document.fonts.load)document.fonts.load("600 48px Fredoka").t
 loadBoard();
 window.__foriOK=true; // arranque correcto
 if(location.protocol.startsWith('http')&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+/* ============ Modo transparente (solo en Fori Escritorio) ============ */
+// Fori Escritorio (carpeta desktop/) abre dos ventanas sin marco y siempre visibles: una transparente a pantalla
+// completa donde se pinta (esta misma app con ?overlay=1) y otra pequeña con la barra de herramientas, que se mueve libremente.
+const OVERLAY=new URLSearchParams(location.search).get('overlay')==='1';
+const DESK=window.foriDesktop||null;
+if(DESK&&!OVERLAY){ // ventana normal: botón arriba, con pulsación larga como los demás controles delicados
+  const b=h('button',{class:'mini',id:'btnGlass','aria-label':'Modo transparente',title:'Modo transparente: pintar sobre el escritorio (mantén pulsado)'},ico('overlay'));
+  let t=null,fired=false;
+  b.addEventListener('pointerdown',()=>{fired=false;b.classList.add('holding');t=setTimeout(()=>{fired=true;b.classList.remove('holding');DESK.openOverlay()},500)});
+  const cancel=()=>{clearTimeout(t);b.classList.remove('holding')};
+  b.addEventListener('pointerup',()=>{cancel();if(!fired)toast('Mantén pulsado para pintar sobre el escritorio')});
+  b.addEventListener('pointerleave',cancel);b.addEventListener('pointercancel',cancel);
+  const fs=$('#btnFs');if(fs)fs.before(b);
+}
+if(OVERLAY){
+  document.documentElement.classList.add('ov');document.body.classList.add('v-overlay');
+  document.head.append(h('style',{},`
+    html.ov,html.ov body{background:transparent!important}
+    body.v-overlay::before,body.v-overlay #top,body.v-overlay #left,body.v-overlay #right,body.v-overlay #dock,
+    body.v-overlay #bg,body.v-overlay #bgimg,body.v-overlay .zones,body.v-overlay #cornerBtn,body.v-overlay #mini{display:none!important}
+    body.v-overlay #app{grid-template-columns:0 1fr 0!important;grid-template-rows:0 1fr 0!important}
+    body.v-overlay #stage{background:transparent!important;box-shadow:none!important;border-radius:0!important;border:0!important}`));
+  T.tool='pen';T.color='#e03131';T.size=6; // el color «tinta» (negro) no se vería sobre fondos oscuros
+  refreshTools();
+  if(DESK){
+    DESK.onCommand(c=>{
+      switch(c.t){
+        case 'tool':commitEditor();T.tool=c.v;refreshTools();break;
+        case 'color':setColor(c.v);break;
+        case 'size':T.size=c.v;break;
+        case 'undo':undo();break;
+        case 'redo':redo();break;
+        case 'clear':clearBoard();break;
+      }
+    });
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')DESK.closeOverlay()});
+  }
+}
 })();
 </script>
 </body>
