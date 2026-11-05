@@ -19,13 +19,17 @@ const DB={db:null,
 let persistT=null;
 function persist(){
   clearTimeout(persistT);
-  persistT=setTimeout(()=>DB.set('board',{cur,pages:pages.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img,size:p.size||null}))}),600);
+  persistT=setTimeout(()=>DB.set('board',boardData()),600);
+}
+// Lo que se guarda de la pizarra (ch: ficha de Charta con su paso de solución, ver 05f-charta.js)
+function boardData(){
+  return {cur,pages:pages.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img,size:p.size||null,ch:p.ch||null}))};
 }
 async function loadBoard(){
   await DB.open();
   const d=await DB.get('board');
   if(d&&Array.isArray(d.pages)&&d.pages.length){
-    pages=d.pages.map(p=>({strokes:p.strokes||[],bg:p.bg||'plain',img:p.img||null,size:p.size||null,undo:[],redo:[]}));
+    pages=d.pages.map(p=>({strokes:p.strokes||[],bg:p.bg||'plain',img:p.img||null,size:p.size||null,ch:chClean(p.ch),undo:[],redo:[]}));
     cur=clamp(d.cur|0,0,pages.length-1);
   }
   showPage();
@@ -429,7 +433,7 @@ function showPage(){fitPage(P());setSel(null);active.clear();drawBg();redraw();d
 function gotoPage(i){commitEditor();cur=clamp(i,0,pages.length-1);showPage();persist()}
 function addPage(copy){
   commitEditor();
-  const p=copy?{...newPage(P().bg),strokes:structuredClone(P().strokes),img:P().img}:newPage(P().bg);
+  const p=copy?{...newPage(P().bg),strokes:structuredClone(P().strokes),img:P().img,ch:P().ch?{...P().ch}:null}:newPage(P().bg);
   pages.splice(cur+1,0,p);gotoPage(cur+1);
 }
 function deletePage(){
@@ -443,6 +447,7 @@ function updatePageUI(){
   const l=$('#pageLbl');if(l)l.textContent=`Página ${cur+1}/${pages.length} ▾`;
   const u=$('#btnUndo'),r=$('#btnRedo');
   if(u)u.disabled=!P().undo.length;if(r)r.disabled=!P().redo.length;
+  chBar();
 }
 
 /* --- Exportar: imagen PNG de la página o PDF de todas (vía imprimir) --- */

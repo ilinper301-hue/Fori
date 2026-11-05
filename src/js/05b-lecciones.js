@@ -5,7 +5,7 @@
    No toca la clave 'board'. Archivo .fori = JSON {app:'fori',type:'lesson',version:1,name,date,pages}. */
 const LES={KEY:'lessons',VER:1,MAXP:300,sig:null,refresh:null};
 
-const lesPlain=ps=>ps.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img||null,size:p.size||null}));
+const lesPlain=ps=>ps.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img||null,size:p.size||null,ch:p.ch||null}));
 const lesSig=()=>{ // huella del contenido actual, para saber si hay cambios sin guardar como lección
   const s=JSON.stringify(lesPlain(pages));let x=5381;
   for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;
@@ -70,7 +70,7 @@ async function lesOpen(l,add){
   commitEditor();
   const ps=await lesPages(l.id);
   if(!ps||!ps.length){toast('No se ha podido leer la lección');return}
-  const fresh=ps.map(p=>({strokes:structuredClone(p.strokes||[]),bg:p.bg||'plain',img:p.img||null,size:p.size||null,undo:[],redo:[]}));
+  const fresh=ps.map(p=>({strokes:structuredClone(p.strokes||[]),bg:p.bg||'plain',img:p.img||null,size:p.size||null,ch:chClean(p.ch),undo:[],redo:[]}));
   if(add){
     const at=pages.length;pages.push(...fresh);cur=at;
     showPage();persist();toast(`Añadidas ${lesN(fresh.length)} al final`);
@@ -144,7 +144,7 @@ function lesParse(text){
     if(!p||!Array.isArray(p.strokes)||!p.strokes.every(lesCheckStroke))throw new Error(`La página ${i+1} está dañada.`);
     const img=p.img==null?null:p.img;
     if(img!==null&&!(typeof img==='string'&&/^data:image\//.test(img)))throw new Error(`La imagen de fondo de la página ${i+1} no es válida.`);
-    return{strokes:p.strokes,bg:typeof p.bg==='string'?p.bg:'plain',img,size:(p.size&&lesNum(p.size.w)&&lesNum(p.size.h)?{w:p.size.w,h:p.size.h}:null)};
+    return{strokes:p.strokes,bg:typeof p.bg==='string'?p.bg:'plain',img,size:(p.size&&lesNum(p.size.w)&&lesNum(p.size.h)?{w:p.size.w,h:p.size.h}:null),ch:chClean(p.ch)};
   });
   const date=typeof d.date==='string'&&!isNaN(Date.parse(d.date))?d.date:new Date().toISOString();
   return{name:(typeof d.name==='string'&&d.name.trim()?d.name.trim():'Lección importada').slice(0,80),date,pages:pagesOk};

@@ -18,6 +18,7 @@ Pizarra digital y panel de asamblea para la **Pantalla Digital Interactiva (PDI)
 - **Pizarra dividida** en 2, 3 o 4 zonas, cada una con su color y su goma, para que salgan varios alumnos a la vez.
 - **Ruleta** para elegir alumno, **regla** para trazar líneas apoyándose en ella y letra **Fredoka** en la herramienta Texto.
 - **Tabula:** importa clases, alumnos y horario desde Tabula (mismo navegador o archivo de copia). **PIN** opcional para Ajustes.
+- **Charta:** en Charta, «▶ Proyectar en Fori» convierte la ficha en páginas (la actividad entera y un ejercicio por página) para escribir encima; la barra **Solución** muestra las respuestas paso a paso (+ / − / Todo). También `?ficha=ID` o `?comp=…`: Fori se la pide a Charta.
 - **Privacidad:** no hay cuentas ni servidor. Alumnos, ajustes y pizarras se guardan solo en el navegador del equipo. *Ajustes → Exportar datos* hace una copia de seguridad de alumnos y ajustes.
 
 ## Archivos

@@ -552,6 +552,14 @@ dialog.tabdlg.small{width:min(420px,92vw)}
 .tab-meta{font-size:14px;font-weight:500;color:var(--muted)}
 .tab-sch{display:flex;flex-direction:column;gap:8px}
 .tab-sch select{align-self:flex-start;max-width:100%;background:var(--board);color:var(--ink);border:1px solid var(--line)}
+/* Fichas de Charta: barra «Solución» (paso a paso) */
+#chbar{position:absolute;right:16px;bottom:16px;z-index:4;display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--panel);border:2px solid var(--line);border-radius:20px;box-shadow:0 6px 22px rgba(0,0,0,.25);zoom:var(--ui)}
+#chbar[hidden],body.v-clean #chbar{display:none}
+#chbar .ch-t{font-size:18px;font-weight:700;color:var(--muted);padding:0 4px}
+#chbar .ch-n{min-width:64px;text-align:center;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+#chbar button{min-width:56px;height:56px;border-radius:14px;border:0;background:var(--chrome);color:var(--ink);font:700 30px var(--font);padding:0 14px}
+#chbar button.ch-all{font-size:20px;background:#C62828;color:#fff}
+#chbar button:disabled{opacity:.35}
 /* ===== Selector de color moderno: ruleta de color ===== */
 #pop .cp{display:flex;gap:22px;padding:8px}
 #pop .cp-left{display:flex;flex-direction:column;align-items:center;gap:14px}
@@ -957,13 +965,17 @@ const DB={db:null,
 let persistT=null;
 function persist(){
   clearTimeout(persistT);
-  persistT=setTimeout(()=>DB.set('board',{cur,pages:pages.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img,size:p.size||null}))}),600);
+  persistT=setTimeout(()=>DB.set('board',boardData()),600);
+}
+// Lo que se guarda de la pizarra (ch: ficha de Charta con su paso de solución, ver 05f-charta.js)
+function boardData(){
+  return {cur,pages:pages.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img,size:p.size||null,ch:p.ch||null}))};
 }
 async function loadBoard(){
   await DB.open();
   const d=await DB.get('board');
   if(d&&Array.isArray(d.pages)&&d.pages.length){
-    pages=d.pages.map(p=>({strokes:p.strokes||[],bg:p.bg||'plain',img:p.img||null,size:p.size||null,undo:[],redo:[]}));
+    pages=d.pages.map(p=>({strokes:p.strokes||[],bg:p.bg||'plain',img:p.img||null,size:p.size||null,ch:chClean(p.ch),undo:[],redo:[]}));
     cur=clamp(d.cur|0,0,pages.length-1);
   }
   showPage();
@@ -1367,7 +1379,7 @@ function showPage(){fitPage(P());setSel(null);active.clear();drawBg();redraw();d
 function gotoPage(i){commitEditor();cur=clamp(i,0,pages.length-1);showPage();persist()}
 function addPage(copy){
   commitEditor();
-  const p=copy?{...newPage(P().bg),strokes:structuredClone(P().strokes),img:P().img}:newPage(P().bg);
+  const p=copy?{...newPage(P().bg),strokes:structuredClone(P().strokes),img:P().img,ch:P().ch?{...P().ch}:null}:newPage(P().bg);
   pages.splice(cur+1,0,p);gotoPage(cur+1);
 }
 function deletePage(){
@@ -1381,6 +1393,7 @@ function updatePageUI(){
   const l=$('#pageLbl');if(l)l.textContent=`Página ${cur+1}/${pages.length} ▾`;
   const u=$('#btnUndo'),r=$('#btnRedo');
   if(u)u.disabled=!P().undo.length;if(r)r.disabled=!P().redo.length;
+  chBar();
 }
 
 /* --- Exportar: imagen PNG de la página o PDF de todas (vía imprimir) --- */
@@ -1423,7 +1436,7 @@ async function setBgImage(file){
    No toca la clave 'board'. Archivo .fori = JSON {app:'fori',type:'lesson',version:1,name,date,pages}. */
 const LES={KEY:'lessons',VER:1,MAXP:300,sig:null,refresh:null};
 
-const lesPlain=ps=>ps.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img||null,size:p.size||null}));
+const lesPlain=ps=>ps.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img||null,size:p.size||null,ch:p.ch||null}));
 const lesSig=()=>{ // huella del contenido actual, para saber si hay cambios sin guardar como lección
   const s=JSON.stringify(lesPlain(pages));let x=5381;
   for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;
@@ -1488,7 +1501,7 @@ async function lesOpen(l,add){
   commitEditor();
   const ps=await lesPages(l.id);
   if(!ps||!ps.length){toast('No se ha podido leer la lección');return}
-  const fresh=ps.map(p=>({strokes:structuredClone(p.strokes||[]),bg:p.bg||'plain',img:p.img||null,size:p.size||null,undo:[],redo:[]}));
+  const fresh=ps.map(p=>({strokes:structuredClone(p.strokes||[]),bg:p.bg||'plain',img:p.img||null,size:p.size||null,ch:chClean(p.ch),undo:[],redo:[]}));
   if(add){
     const at=pages.length;pages.push(...fresh);cur=at;
     showPage();persist();toast(`Añadidas ${lesN(fresh.length)} al final`);
@@ -1562,7 +1575,7 @@ function lesParse(text){
     if(!p||!Array.isArray(p.strokes)||!p.strokes.every(lesCheckStroke))throw new Error(`La página ${i+1} está dañada.`);
     const img=p.img==null?null:p.img;
     if(img!==null&&!(typeof img==='string'&&/^data:image\//.test(img)))throw new Error(`La imagen de fondo de la página ${i+1} no es válida.`);
-    return{strokes:p.strokes,bg:typeof p.bg==='string'?p.bg:'plain',img,size:(p.size&&lesNum(p.size.w)&&lesNum(p.size.h)?{w:p.size.w,h:p.size.h}:null)};
+    return{strokes:p.strokes,bg:typeof p.bg==='string'?p.bg:'plain',img,size:(p.size&&lesNum(p.size.w)&&lesNum(p.size.h)?{w:p.size.w,h:p.size.h}:null),ch:chClean(p.ch)};
   });
   const date=typeof d.date==='string'&&!isNaN(Date.parse(d.date))?d.date:new Date().toISOString();
   return{name:(typeof d.name==='string'&&d.name.trim()?d.name.trim():'Lección importada').slice(0,80),date,pages:pagesOk};
@@ -1839,6 +1852,66 @@ dr.addEventListener('pointerup',fistUp);dr.addEventListener('pointercancel',fist
   a.closest('label').after(h('label',{class:'inl'},'Borrar con el puño ',
     h('select',{id:'sFist'},...[['0','Desactivado'],['30','Muy sensible'],['40','Normal'],['55','Poco sensible']].map(([v,t])=>h('option',{value:v},t)))));
 })();
+/* ============ Fichas de Charta: un ejercicio por página y la solución paso a paso ============ */
+// Charta (mismo dominio, /Charta/) deja las diapositivas en localStorage «charta:aFori» y abre Fori con ?charta=1:
+//   {v:1, app:'charta', titulo, diapositivas:[{etq, svg, n}]}  (sin nombres de alumnos)
+// Cada diapositiva pasa a ser una página: la ficha de fondo (page.ch = {svg, n, k}) y la tinta encima (anotaciones).
+// En el svg, cada paso de la solución lleva class="cs pK" y el <style> el marcador /*PASOS*/: se muestran k de n pasos.
+// ?ficha=ID o ?comp=… → se pide a Charta, que abre la ficha y la devuelve con ?charta=1.
+const CH_KEY='charta:aFori',CH_URL='../Charta/';
+const chCss=(k,n)=>k>=n?'':'.cs{visibility:hidden}'+(k>0?Array.from({length:k},(_,i)=>'.p'+i).join(',')+'{visibility:visible}':'');
+// (paréntesis y comillas escapados: la imagen va en url(...) de CSS)
+const chImg=ch=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(ch.svg.replace('/*PASOS*/',chCss(ch.k,ch.n))).replace(/[()']/g,c=>'%'+c.charCodeAt(0).toString(16).toUpperCase());
+const chValid=ch=>!!ch&&typeof ch.svg==='string'&&/^<svg[\s>]/.test(ch.svg)&&ch.svg.length<2e6&&ch.svg.includes('/*PASOS*/')
+  &&Number.isInteger(ch.n)&&ch.n>=0&&ch.n<1000&&Number.isInteger(ch.k)&&ch.k>=0&&ch.k<=ch.n;
+const chClean=ch=>chValid(ch)?{svg:ch.svg,n:ch.n,k:ch.k}:null; // para guardar y para leer lecciones
+
+// Barra «Solución» (solo en páginas de Charta con algo que corregir)
+var chBarEl=null;
+function chSet(k){
+  const p=P();if(!p.ch)return;
+  p.ch.k=clamp(k,0,p.ch.n);p.img=chImg(p.ch);drawBg();persist();chBar();
+}
+function chBar(){
+  if(!chBarEl){
+    const b=(lb,title,fn)=>h('button',{type:'button',title,'aria-label':title,onclick:fn},lb);
+    chBarEl=h('div',{id:'chbar',role:'toolbar','aria-label':'Solución de la ficha'},
+      h('span',{class:'ch-t'},'Solución'),
+      b('−','Ocultar el último paso',()=>chSet(P().ch.k-1)),
+      h('span',{class:'ch-n'}),
+      b('+','Mostrar el paso siguiente',()=>chSet(P().ch.k+1)),
+      h('button',{type:'button',class:'ch-all',onclick:()=>chSet(P().ch.k>=P().ch.n?0:P().ch.n)}));
+    stage.append(chBarEl);
+  }
+  const ch=P()&&P().ch,on=!!(ch&&ch.n);
+  chBarEl.hidden=!on;if(!on)return;
+  chBarEl.querySelector('.ch-n').textContent=`${ch.k}/${ch.n}`;
+  const [menos,mas]=chBarEl.querySelectorAll('button');menos.disabled=ch.k<=0;mas.disabled=ch.k>=ch.n;
+  chBarEl.querySelector('.ch-all').textContent=ch.k>=ch.n?'Ocultar':'Todo';
+}
+
+// Entrada desde Charta (se llama al arrancar, después de cargar la pizarra)
+function chEntrada(){
+  const q=new URLSearchParams(location.search);
+  if(q.get('ficha')||q.get('comp')){
+    const r=new URLSearchParams();for(const k of ['ficha','comp'])if(q.get(k))r.set(k,q.get(k).slice(0,8000));r.set('a','fori');
+    location.replace(CH_URL+'?'+r);return;
+  }
+  if(q.get('charta')!=='1')return;
+  history.replaceState(null,'',location.pathname);
+  let d=null;try{d=JSON.parse(localStorage.getItem(CH_KEY))}catch{}
+  try{localStorage.removeItem(CH_KEY)}catch{}
+  const ds=d&&d.v===1&&d.app==='charta'&&Array.isArray(d.diapositivas)?d.diapositivas.map(x=>x&&chClean({svg:x.svg,n:x.n,k:0})).filter(Boolean):[];
+  if(!ds.length){toast('No ha llegado ninguna ficha de Charta. Vuelve a pulsar «Proyectar en Fori» en Charta.');return}
+  commitEditor();
+  const list=ds.map(ch=>{const pg=newPage('plain');pg.ch=ch;pg.img=chImg(ch);return pg});
+  const vacia=pages.length===1&&!pages[0].strokes.length&&!pages[0].img;
+  const at=vacia?0:cur+1;
+  if(vacia)pages=list;else pages.splice(at,0,...list);
+  gotoPage(at);
+  const t=typeof d.titulo==='string'?d.titulo.slice(0,80):'Ficha';
+  toast(`«${t}»: ${list.length===1?'1 página':list.length+' páginas'}. Escribe encima y corrige con «Solución» (+).`);
+}
 /* ============ Ventanas flotantes ============ */
 const floaters=$('#floaters'),wins=new Map();let zTop=10;
 function makeDrag(handle,el){
@@ -3999,7 +4072,7 @@ document.addEventListener('gesturestart',e=>e.preventDefault());
 // tocar fuera cierra el menú; si el toque cae en la pizarra, no se dibuja nada
 document.addEventListener('pointerdown',e=>{if(pop.style.display==='grid'&&!e.target.closest('#pop,[data-pop]')){closePop();if(e.target===dr)e.stopPropagation()}},true);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closePop();if(sp.on)toggleSpot(false);else if(S.view==='clean')setView('full');setSel(null)}});
-window.addEventListener('pagehide',()=>{commitEditor();clearTimeout(persistT);DB.set('board',{cur,pages:pages.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img,size:p.size||null}))})});
+window.addEventListener('pagehide',()=>{commitEditor();clearTimeout(persistT);DB.set('board',boardData())});
 
 $('#btnSettings').replaceChildren(ico('settings'));$('#btnView').replaceChildren(ico('view'));$('#btnFs').replaceChildren(ico('full'));$('#cornerBtn').replaceChildren(ico('view'));
 applyUi();
@@ -4011,7 +4084,7 @@ fit();tickClock();setInterval(tickClock,1000);
 setView(S.view||'full');
 renderZoneBars();
 if(document.fonts&&document.fonts.load)document.fonts.load("600 48px Fredoka").then(()=>redraw()).catch(()=>{});
-loadBoard();
+loadBoard().then(chEntrada);
 window.__foriOK=true; // arranque correcto
 if(location.protocol.startsWith('http')&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 /* ============ Modo transparente (solo en Fori Escritorio) ============ */

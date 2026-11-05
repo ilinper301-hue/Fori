@@ -1,0 +1,8 @@
+/* Fichas de Charta: barra «Solución» (paso a paso) */
+#chbar{position:absolute;right:16px;bottom:16px;z-index:4;display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--panel);border:2px solid var(--line);border-radius:20px;box-shadow:0 6px 22px rgba(0,0,0,.25);zoom:var(--ui)}
+#chbar[hidden],body.v-clean #chbar{display:none}
+#chbar .ch-t{font-size:18px;font-weight:700;color:var(--muted);padding:0 4px}
+#chbar .ch-n{min-width:64px;text-align:center;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+#chbar button{min-width:56px;height:56px;border-radius:14px;border:0;background:var(--chrome);color:var(--ink);font:700 30px var(--font);padding:0 14px}
+#chbar button.ch-all{font-size:20px;background:#C62828;color:#fff}
+#chbar button:disabled{opacity:.35}
