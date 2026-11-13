@@ -55,3 +55,6 @@ node tools/test.js       # prueba rápida (necesita Playwright)
 ```
 
 No edites `index.html` a mano: se sobrescribe al generar.
+
+## Ecosistema
+Antes de tocar algo que una app lea o deje para otra (alumnado, resultados, enlaces entre apps), lee `ECOSISTEMA.md`: es el contrato común de las seis apps.
