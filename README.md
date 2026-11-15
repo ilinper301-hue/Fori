@@ -7,7 +7,7 @@ Pizarra digital y panel de asamblea para la **Pantalla Digital Interactiva (PDI)
 ## Qué incluye
 - **Pizarra:** lápiz, fluorescente, borrador, formas (con o sin relleno), texto y herramienta para mover, duplicar o borrar lo dibujado. Paleta de 24 colores más color personalizado. Deshacer y rehacer. El borrador quita de verdad lo que toca: corta los trazos y las formas sin relleno por donde pasa y borra enteros los textos y las formas con relleno (las imágenes se borran con Mover).
 - **Fondos:** liso, cuadrícula, puntos, pauta de doble línea, pauta Montessori y cuadrovía, en tres tamaños, e imagen de fondo.
-- **Páginas:** varias páginas con guardado automático. Exportar una página como imagen o todas en PDF.
+- **Páginas:** varias páginas con guardado automático (cada página se guarda por separado, y las imágenes y fichas una sola vez, así que escribir no se vuelve lento aunque haya muchas páginas con PDF). Exportar una página como imagen o todas en PDF.
 - **Tres modos de pantalla:** completa (todas las herramientas), mínima (pantalla libre con una barra pequeña) y libre (sin herramientas).
 - **Asamblea:** calendario, tiempo, estación, emociones de la clase y días de cole.
 - **Gestión del aula:** alumno al azar, parejas y grupos, encargados, horario del día (con pictogramas de ARASAAC), semáforo de trabajo, temporizador y cronómetro, medidor de ruido y contadores de puntos. Varias clases con su propia lista.
