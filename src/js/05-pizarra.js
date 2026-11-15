@@ -39,25 +39,7 @@ const DB={db:null,
   get(k){return new Promise(r=>{if(!this.db)return r(null);try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result===undefined?null:q.result);q.onerror=()=>r(null)}catch{r(null)}})},
   set(k,v){return new Promise(r=>{if(!this.db)return r(false);try{const t=this.db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>r(true);t.onerror=()=>r(false)}catch{r(false)}})}
 };
-let persistT=null;
-function persist(){
-  clearTimeout(persistT);
-  persistT=setTimeout(()=>DB.set('board',boardData()),600);
-}
-// Lo que se guarda de la pizarra (ch: ficha de Charta con su paso de solución, ver 05f-charta.js)
-function boardData(){
-  return {cur,pages:pages.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img,size:p.size||null,v:p.v||null,ch:p.ch||null}))};
-}
-async function loadBoard(){
-  await DB.open();
-  const d=await DB.get('board');
-  if(d&&Array.isArray(d.pages)&&d.pages.length){
-    // v: vista con la que se guardaron los trazos (las copias antiguas no la traen: sus trazos valen para p.size tal cual)
-    pages=d.pages.map(p=>({strokes:p.strokes||[],bg:p.bg||'plain',img:p.img||null,size:p.size||null,v:viewOk(p.v)?{k:p.v.k,ox:p.v.ox,oy:p.v.oy}:null,ch:chClean(p.ch),undo:[],redo:[]}));
-    cur=clamp(d.cur|0,0,pages.length-1);
-  }
-  showPage();
-}
+// El guardado de la pizarra (persist, loadBoard) está en 05a-guardado.js
 
 /* --- Fondos y pautas --- */
 function fit(){
@@ -494,13 +476,13 @@ function fitPage(p){
   const W=stage.clientWidth,H=stage.clientHeight;if(!W||!H)return;
   if(!p.size||!(p.size.w>0)||!(p.size.h>0)){p.size={w:W,h:H};p.v=viewId()}
   const ov=viewOk(p.v)?p.v:viewId(),nv=viewFor(p.size);
-  if(Math.abs(nv.k-ov.k)>1e-9||Math.abs(nv.ox-ov.ox)>1e-6||Math.abs(nv.oy-ov.oy)>1e-6){remapPage(p,ov,nv);persist()}
+  if(Math.abs(nv.k-ov.k)>1e-9||Math.abs(nv.ox-ov.ox)>1e-6||Math.abs(nv.oy-ov.oy)>1e-6){remapPage(p,ov,nv);persist(p)}
   p.v=nv;
   // una página sin nada dibujado toma el tamaño de la pizarra en la que está (no se mueve nada)
   if(!p.strokes.length&&!(editor&&p===P())){p.size={w:W,h:H};p.v=viewId()}
 }
 function showPage(){fitPage(P());setSel(null);active.clear();drawBg();redraw();drawLive();updatePageUI()}
-function gotoPage(i){commitEditor();cur=clamp(i,0,pages.length-1);showPage();persist()}
+function gotoPage(i){commitEditor();cur=clamp(i,0,pages.length-1);showPage();persist(null)}
 function addPage(copy){
   commitEditor();
   const p=copy?{...newPage(P().bg),strokes:structuredClone(P().strokes),img:P().img,size:P().size?{...P().size}:null,v:P().v?{...P().v}:null,ch:P().ch?{...P().ch}:null}:newPage(P().bg);
@@ -555,6 +537,7 @@ async function exportPDF(){
   toast('En el cuadro de impresión elige «Guardar como PDF»');
 }
 async function setBgImage(file){
-  try{P().img=await shrinkImage(file,1920);drawBg();persist()}catch{toast('No se pudo cargar la imagen')}
+  const p=P(); // la página en la que se pidió, aunque se cambie de página mientras se prepara la imagen
+  try{p.img=await shrinkImage(file,1920);drawBg();persist(p)}catch{toast('No se pudo cargar la imagen')}
 }
 

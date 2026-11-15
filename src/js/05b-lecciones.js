@@ -2,7 +2,7 @@
 /* Biblioteca en IndexedDB (base 'fori', almacén 'kv'):
    'lessons'      -> lista ligera [{id,name,date,n,thumb}]
    'lesson:<id>'  -> páginas de esa lección [{strokes,bg,img,size}] (trazos en coordenadas de la página, de tamaño size)
-   No toca la clave 'board'. Archivo .fori = JSON {app:'fori',type:'lesson',version:1,name,date,pages}. */
+   No toca las claves de la pizarra ('board2', 'page:…', 'img:…', ver 05a-guardado.js). Archivo .fori = JSON {app:'fori',type:'lesson',version:1,name,date,pages}. */
 const LES={KEY:'lessons',VER:1,MAXP:300,sig:null,refresh:null};
 
 const lesPlain=ps=>ps.map(pagePlain); // coordenadas lógicas: la lección no depende de la pantalla en que se guardó

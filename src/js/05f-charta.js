@@ -7,7 +7,12 @@
 const CH_KEY='charta:aFori',CH_URL='../Charta/';
 const chCss=(k,n)=>k>=n?'':'.cs{visibility:hidden}'+(k>0?Array.from({length:k},(_,i)=>'.p'+i).join(',')+'{visibility:visible}':'');
 // (paréntesis y comillas escapados: la imagen va en url(...) de CSS)
-const chImg=ch=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(ch.svg.replace('/*PASOS*/',chCss(ch.k,ch.n))).replace(/[()']/g,c=>'%'+c.charCodeAt(0).toString(16).toUpperCase());
+const chMemo=new WeakMap(); // la última imagen generada de cada ficha (al guardar se compara con la de la página, ver 05a-guardado.js)
+const chImg=ch=>{
+  const m=chMemo.get(ch);if(m&&m.k===ch.k&&m.n===ch.n&&m.s===ch.svg)return m.u;
+  const u='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(ch.svg.replace('/*PASOS*/',chCss(ch.k,ch.n))).replace(/[()']/g,c=>'%'+c.charCodeAt(0).toString(16).toUpperCase());
+  chMemo.set(ch,{k:ch.k,n:ch.n,s:ch.svg,u});return u;
+};
 const chValid=ch=>!!ch&&typeof ch.svg==='string'&&/^<svg[\s>]/.test(ch.svg)&&ch.svg.length<2e6&&ch.svg.includes('/*PASOS*/')
   &&Number.isInteger(ch.n)&&ch.n>=0&&ch.n<1000&&Number.isInteger(ch.k)&&ch.k>=0&&ch.k<=ch.n;
 const chClean=ch=>chValid(ch)?{svg:ch.svg,n:ch.n,k:ch.k}:null; // para guardar y para leer lecciones
