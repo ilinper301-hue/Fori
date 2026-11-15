@@ -64,4 +64,4 @@ function mLine(body){
       h('button',{class:'btn ghost',onclick:()=>{marks=[];draw()}},...ib('eraser','Borrar saltos'))));
   draw();
 }
-
+tool({id:'line',group:'mates',order:80,icon:'numline',label:'Recta numérica',title:'Recta numérica',build:mLine,w:900});

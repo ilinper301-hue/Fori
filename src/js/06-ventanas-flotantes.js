@@ -13,14 +13,18 @@ function makeDrag(handle,el){
   });
   const end=()=>d=null;handle.addEventListener('pointerup',end);handle.addEventListener('pointercancel',end);
 }
-function refreshRail(){if(typeof renderTray==='function')setTimeout(renderTray);$$('[data-win]').forEach(b=>{const id=b.dataset.win;b.classList.toggle('on',wins.has(id)||(id==='spot'&&sp.on))})}
+const WIN_COLOR={mates:'var(--coral)',aula:'var(--yellow)'}; // color de la cabecera según el grupo de la herramienta
+const toolOn=t=>t.on?t.on():wins.has(t.id);
+const toolRun=t=>t.run?t.run():openWin(t.id,t.title,t.build,t.w);
+const openTool=id=>toolRun(toolById(id));
+function refreshRail(){setTimeout(renderTray);$$('[data-win]').forEach(b=>{const t=toolById(b.dataset.win);b.classList.toggle('on',t?toolOn(t):wins.has(b.dataset.win))})}
 function openWin(id,title,build,w=400){
   if(wins.has(id)){const w=wins.get(id);if(w.min)restoreWin(id);else closeWin(id);return}
   const n=wins.size%6,ui=S.ui||1;
   const body=h('div',{class:'body'});
   const win=h('div',{class:'win',style:`width:${Math.round(w*ui)}px;left:${40+n*34}px;top:${24+n*34}px;z-index:${++zTop}`},
     h('header',{},h('span',{},title),h('button',{class:'x','aria-label':'Minimizar',title:'Minimizar',onclick:()=>minimizeWin(id)},ico('minus')),h('button',{class:'x','aria-label':'Cerrar',onclick:()=>closeWin(id)},ico('x'))),body);
-  win.style.setProperty('--wc',/^(b10|clock|eur|cuis|tan|line|frac|hundred|dice|geo|ruler-set)$/.test(id)?'var(--coral)':/^(picker|groups|roles|sched|asam|sema|timer|noise|score)$/.test(id)?'var(--yellow)':'var(--teal)');
+  win.style.setProperty('--wc',WIN_COLOR[(toolById(id)||{}).group]||'var(--teal)');
   floaters.append(win);
   makeDrag($('header',win),win);
   win.addEventListener('pointerdown',()=>win.style.zIndex=++zTop);
@@ -32,10 +36,10 @@ function minimizeWin(id){const w=wins.get(id);if(!w)return;w.min=true;w.win.styl
 function restoreWin(id){const w=wins.get(id);if(!w)return;w.min=false;w.win.style.display='';w.win.style.zIndex=++zTop;refreshRail();renderTray()}
 // Barra inferior: un botón por cada herramienta de matemáticas abierta (minimizar / recuperar con un toque)
 function renderTray(){
-  const tray=$('#tray');if(!tray||typeof mathTools!=='function')return;
-  const items=mathTools().filter(m=>m.on());
+  const tray=$('#tray');if(!tray)return;
+  const items=toolsOf('mates').filter(toolOn);
   tray.replaceChildren(...items.map(m=>{
-    const w=wins.get(m.id),obj=m.id==='ruler'?ruler:m.id==='prot'?prot:null;
+    const w=wins.get(m.id),obj=m.obj?m.obj():null;
     const hidden=w?w.min:obj?obj.el.style.display==='none':false;
     return h('button',{class:'dbtn tray'+(hidden?' min':' on'),title:hidden?'Mostrar':'Minimizar',onclick:()=>{
       if(w){w.min?restoreWin(m.id):minimizeWin(m.id)}

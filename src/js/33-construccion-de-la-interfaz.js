@@ -68,40 +68,12 @@ function buildLeft(){
     ...[[3,'Fino',6],[6,'Medio',12],[12,'Grueso',22]].map(([s,n,d])=>h('button',{class:'sz','data-s':s,'aria-label':n,onclick:()=>{T.size=s;refreshTools();if(editor){editor.fs=FS[s];editor.ta.style.fontSize=FS[s]+'px';sizeEditor()}}},h('i',{style:`width:${d}px;height:${d}px`}))));
   renderRecent();refreshTools();updatePageUI();
 }
-const pick=(a,b)=>typeof a==='function'?a:b; // usa la versión con pictogramas si está disponible
-const RAIL=[
-  ['picker','dice','Elegir','Alumno al azar',mPicker,440],
-  ['groups','users','Grupos','Parejas y grupos',mGroups,560],
-  ['roles','roles','Encargados','Encargados del día',pick(typeof mRolesP!=='undefined'&&mRolesP,mRoles),500],
-  ['sched','calendar','Horario','Horario de hoy',pick(typeof mScheduleP!=='undefined'&&mScheduleP,mSchedule),540],
-  ['asam','sun','Asamblea','Asamblea',typeof mAsamblea!=='undefined'?mAsamblea:null,640],
-  ['sema','traffic','Semáforo','Semáforo de trabajo',typeof mSemaforo!=='undefined'?mSemaforo:null,520],
-  ['timer','timer','Tiempo','Temporizador',mTimer,400],
-  ['noise','sound','Ruido','Medidor de ruido',mNoise,420],
-  ['score','trophy','Puntos','Contadores de equipos',mScore,560]
-].filter(r=>r[4]);
+// Barra derecha: las herramientas del aula y, tras la raya, las de apoyo (ver el registro en 00-base.js)
 function buildRight(){
-  $('#right').replaceChildren(
-    ...RAIL.map(([id,ic,lb,title,fn,w])=>h('button',{class:'tool','data-win':id,onclick:()=>openWin(id,title,fn,w)},ico(ic),h('small',{},lb))),
-    h('div',{class:'sep'}),
-    h('button',{class:'tool','data-win':'spot',onclick:()=>toggleSpot()},ico('spot'),h('small',{},'Foco')),
-    h('button',{class:'tool',onclick:addNote},ico('note'),h('small',{},'Nota')));
+  const btn=t=>h('button',{class:'tool',...(t.build||t.on?{'data-win':t.id}:{}),onclick:()=>toolRun(t)},ico(t.icon),h('small',{},t.label));
+  $('#right').replaceChildren(...toolsOf('aula').map(btn),h('div',{class:'sep'}),...toolsOf('apoyo').map(btn));
 }
 const BGS=[['plain','Liso'],['grid','Cuadrícula'],['dots','Puntos'],['lines','Pauta doble línea'],['montessori','Pauta Montessori'],['cuadrovia','Cuadrovía']];
-// Herramientas de matemáticas: [id, etiqueta, acción, ¿activa?]
-function mathTools(){
-  const W=(id,label,title,fn,w,icon)=>({id,icon,label,run:()=>openWin(id,title,fn,w),on:()=>wins.has(id)});
-  const MI={prot:'protractor',line:'numline',frac:'frac',hundred:'grid',dice:'dice',geo:'geo'};
-  const list=[
-    W('b10','Base 10','Base 10',mB10,580,'b10'),
-    W('clock','Reloj','Reloj',mClock,460,'clock'),
-    {id:'ruler',icon:'ruler',label:'Regla',run:toggleRuler,on:()=>!!ruler},
-    W('eur','Dinero','Monedas y billetes',mEur,640,'euro'),
-    W('cuis','Regletas','Regletas de Cuisenaire',mCuis,620,'rods'),
-    W('tan','Tangram','Tangram',mTangram,640,'tangram')];
-  if(typeof MATH_EXTRA!=='undefined')MATH_EXTRA.forEach(m=>{const lb=m.label;list.push(m.toggle?{id:m.id,icon:MI[m.id]||'sigma',label:lb,run:m.toggle,on:m.isOn}:W(m.id,lb,m.title,m.build,m.w,MI[m.id]||'sigma'))});
-  return list;
-}
 function buildDock(){
   const dock=$('#dock');
   const bgLabel=()=>`${BGS.find(b=>b[0]===P().bg)[1]}${P().img?' + imagen':''} ▾`;
@@ -120,7 +92,7 @@ function buildDock(){
     await setBgImage(f);setBg();
   });
   const mathBtn=h('button',{class:'dbtn','data-pop':'math',onclick:e=>openPop('math',e.currentTarget,2,
-    mathTools().map(m=>h('button',{class:'wide'+(m.on()?' on':''),style:'grid-column:auto;text-align:left;padding:0 16px',onclick:()=>{closePop();m.run();refreshRail()}},...ib(m.icon,m.label))),'above')},...ib('sigma','Matemáticas ▾'));
+    toolsOf('mates').map(m=>h('button',{class:'wide'+(toolOn(m)?' on':''),style:'grid-column:auto;text-align:left;padding:0 16px',onclick:()=>{closePop();toolRun(m);refreshRail()}},...ib(m.icon,m.label))),'above')},...ib('sigma','Matemáticas ▾'));
   const pageBtn=h('button',{class:'dbtn','data-pop':'page',id:'pageLbl',onclick:e=>openPop('page',e.currentTarget,1,[
     h('button',{class:'wide',onclick:()=>{closePop();addPage(false)}},...ib('plus','Página nueva')),
     h('button',{class:'wide',onclick:()=>{closePop();addPage(true)}},...ib('copy','Duplicar esta página')),
@@ -135,13 +107,11 @@ function buildDock(){
     h('button',{class:'dbtn nav','aria-label':'Página siguiente',onclick:()=>cur<pages.length-1?gotoPage(cur+1):addPage(false)},ico('right')),
     h('span',{class:'sp'}),
     h('button',{class:'dbtn',onclick:()=>{
-      commitEditor();closeAllWins();b10Clear();eurClear();if(ruler)toggleRuler();
-      if(typeof mathExtraClear==='function')mathExtraClear();cuisClear();tanClear();
-      $$('.note').forEach(n=>n.remove());if(sp.on)toggleSpot(false);closePop();setSel(null);refreshRail();toast('Herramientas reiniciadas');
+      commitEditor();closeAllWins();REG.tools.forEach(t=>t.clear&&t.clear());
+      closePop();setSel(null);refreshRail();toast('Herramientas reiniciadas');
     }},...ib('reset','Reiniciar')),
     h('button',{class:'dbtn danger',onclick:clearBoard},...ib('trash','Limpiar')));
-  // al cambiar de página se actualiza la etiqueta del fondo
-  const upd=updatePageUI;updatePageUI=()=>{upd();setBg()};
+  REG.pageUI.push(setBg); // al cambiar de página se actualiza la etiqueta del fondo
   updatePageUI();
 }
 

@@ -73,4 +73,4 @@ function mClock(body){
   const iv=setInterval(()=>{if(live){syncNow();draw()}},1000);
   return()=>clearInterval(iv);
 }
-
+tool({id:'clock',group:'mates',order:20,icon:'clock',label:'Reloj',title:'Reloj',build:mClock,w:460});

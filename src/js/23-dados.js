@@ -33,4 +33,4 @@ function mDice(body){
   draw();
   return()=>clearInterval(iv);
 }
-
+tool({id:'dice',group:'mates',order:110,icon:'dice',label:'Dados',title:'Dados',build:mDice,w:560});

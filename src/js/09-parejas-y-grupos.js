@@ -20,4 +20,4 @@ function mGroups(body){
   }
   body.append(sg,step,h('div',{class:'row c',style:'margin-top:12px'},h('button',{class:'btn',onclick:mix},...ib('shuffle','Mezclar'))),res);
 }
-
+tool({id:'groups',group:'aula',order:20,icon:'users',label:'Grupos',title:'Parejas y grupos',build:mGroups,w:560});

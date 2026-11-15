@@ -123,4 +123,4 @@ function mB10(body){
   updateB10();
   return()=>{b10ui=null};
 }
-
+tool({id:'b10',group:'mates',order:10,icon:'b10',label:'Base 10',title:'Base 10',build:mB10,w:580,clear:b10Clear});

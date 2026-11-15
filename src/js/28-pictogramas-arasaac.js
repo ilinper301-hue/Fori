@@ -66,5 +66,5 @@ function mRolesP(body){
   body.append(list,h('div',{class:'row c',style:'margin-top:14px'},h('button',{class:'btn',onclick:()=>{S.offset=(S.offset+1)%Math.max(1,S.students.length);save();draw()}},...ib('rotate','Rotar encargados'))),pictoCredit());
   draw();
 }
-
-
+// con pictogramas: mismas herramientas, otra forma de pintarlas
+tool({id:'sched',build:mScheduleP});tool({id:'roles',build:mRolesP});

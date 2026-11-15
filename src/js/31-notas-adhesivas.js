@@ -10,4 +10,4 @@ function addNote(){
   n.append(head,nb);floaters.append(n);makeDrag(head,n);
   n.addEventListener('pointerdown',()=>n.style.zIndex=++zTop);nb.focus();
 }
-
+tool({id:'note',group:'apoyo',order:20,icon:'note',label:'Nota',run:addNote,clear:()=>$$('.note').forEach(n=>n.remove())});

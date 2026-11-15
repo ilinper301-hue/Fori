@@ -104,7 +104,7 @@ function asDays(){
     h('div',{class:'muted'},'de cole'+(isLective(now)?'':' · hoy no es día lectivo')),
     h('div',{class:'pv'},cell(c,'Centenas','#2f9e44'),cell(d,'Decenas','#e03131'),cell(u,'Unidades','#1e6fe0'),h('div',{class:'tot'},h('b',{},String(n)),h('span',{},'Total'))),
     h('div',{class:'row c'},h('button',{class:'btn',onclick:()=>{
-      if(!wins.has('b10'))openWin('b10','Base 10',mB10,580);
+      if(!wins.has('b10'))openTool('b10');
       makeNumber(n);if(n>999)toast('Base 10 llega hasta 999');
     }},...ib('b10','Representar en base 10'))),
     h('p',{class:'muted',style:'margin:12px 0 0'},`Desde el ${st.toLocaleDateString('es-ES',{day:'numeric',month:'long'})} · de lunes a viernes, sin festivos`));
@@ -118,4 +118,4 @@ function mAsamblea(body){
   function go(i){asTab=i;$$('button',sg).forEach((b,j)=>b.classList.toggle('on',j===i));view.replaceChildren(tabs[i][2]())}
   body.append(sg,view);go(clamp(asTab,0,3));
 }
-
+tool({id:'asam',group:'aula',order:50,icon:'sun',label:'Asamblea',title:'Asamblea',build:mAsamblea,w:640});

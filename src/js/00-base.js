@@ -16,6 +16,22 @@ function h(tag,props={},...kids){
 }
 
 
-// Puntos de enganche para que otros módulos añadan opciones a los menús sin tocar la interfaz.
+// Puntos de enganche para que cada módulo se apunte solo, sin que la interfaz tenga que saber cuáles hay.
 // pageMenu: funciones que devuelven botones para el menú de «Página».
-const REG={pageMenu:[]};
+// pageUI: funciones que se llaman cada vez que cambia lo que se ve de la página (etiquetas, barras).
+// tools: las herramientas, apuntadas con tool().
+const REG={pageMenu:[],pageUI:[],tools:[]};
+/* Registro de herramientas. Cada módulo apunta la suya al final de su archivo con tool({...}):
+     id            el de su botón y su ventana
+     group         'aula' y 'apoyo' (barra derecha) o 'mates' (menú Matemáticas); decide también el color de la ventana
+     order         posición dentro del grupo
+     icon, label   icono y texto del botón
+     title, build, w   título, constructor y ancho de su ventana
+     run, on       para las que no son una ventana (regla, transportador, foco, nota): qué hacen y si están puestas
+     obj           para esas mismas, si se pueden esconder desde la bandeja: función que devuelve su objeto (con .el)
+     clear         qué hace «Reiniciar» con ella
+     hidden        es del grupo pero no tiene botón (ajustes de la regla)
+   Apuntar otra vez un id ya apuntado cambia solo lo que se indique (así los pictogramas sustituyen al horario y a los encargados). */
+function tool(t){const o=toolById(t.id);if(o)Object.assign(o,t);else REG.tools.push(t)}
+const toolById=id=>REG.tools.find(t=>t.id===id);
+const toolsOf=g=>REG.tools.filter(t=>t.group===g&&!t.hidden).sort((a,b)=>a.order-b.order);

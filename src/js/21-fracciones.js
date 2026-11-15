@@ -34,4 +34,4 @@ function mFrac(body){
     h('p',{class:'muted',style:'margin:10px 0 0'},'Toca una parte para colorearla o quitarle el color'));
   draw();
 }
-
+tool({id:'frac',group:'mates',order:90,icon:'frac',label:'Fracciones',title:'Fracciones',build:mFrac,w:640});

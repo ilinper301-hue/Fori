@@ -22,4 +22,4 @@ spot.addEventListener('pointerdown',e=>{spDrag=true;spot.setPointerCapture(e.poi
 spot.addEventListener('pointermove',e=>{if(spDrag){sp.x=e.clientX;sp.y=e.clientY;spDraw()}});
 spot.addEventListener('pointerup',()=>spDrag=false);
 spot.addEventListener('pointercancel',()=>spDrag=false);
-
+tool({id:'spot',group:'apoyo',order:10,icon:'spot',label:'Foco',run:()=>toggleSpot(),on:()=>sp.on,clear:()=>{if(sp.on)toggleSpot(false)}});

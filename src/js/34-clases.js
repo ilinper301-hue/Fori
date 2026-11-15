@@ -6,7 +6,7 @@ function syncClass(){const c=S.classes[S.cls];if(c){c.students=S.students;c.role
 function switchClass(i){
   syncClass();S.cls=i;const c=S.classes[i];
   S.students=c.students||[];S.roles=c.roles||[];S.offset=c.offset||0;pool=[];save();
-  ['picker','groups','roles'].forEach(id=>{if(wins.has(id)){const w=RAIL.find(r=>r[0]===id);closeWin(id);openWin(id,w[3],w[4],w[5])}});
+  ['picker','groups','roles'].forEach(id=>{if(wins.has(id)){closeWin(id);openTool(id)}});
   renderClassChip();toast('Clase: '+c.name);
 }
 function renderClassChip(){

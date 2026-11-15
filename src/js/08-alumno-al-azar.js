@@ -150,3 +150,4 @@ function mPicker(body){
   upd();setMode(mode());
   return()=>{clearInterval(iv);if(raf)cancelAnimationFrame(raf)};
 }
+tool({id:'picker',group:'aula',order:10,icon:'dice',label:'Elegir',title:'Alumno al azar',build:mPicker,w:440});

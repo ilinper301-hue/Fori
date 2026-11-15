@@ -796,9 +796,25 @@ function h(tag,props={},...kids){
 }
 
 
-// Puntos de enganche para que otros módulos añadan opciones a los menús sin tocar la interfaz.
+// Puntos de enganche para que cada módulo se apunte solo, sin que la interfaz tenga que saber cuáles hay.
 // pageMenu: funciones que devuelven botones para el menú de «Página».
-const REG={pageMenu:[]};
+// pageUI: funciones que se llaman cada vez que cambia lo que se ve de la página (etiquetas, barras).
+// tools: las herramientas, apuntadas con tool().
+const REG={pageMenu:[],pageUI:[],tools:[]};
+/* Registro de herramientas. Cada módulo apunta la suya al final de su archivo con tool({...}):
+     id            el de su botón y su ventana
+     group         'aula' y 'apoyo' (barra derecha) o 'mates' (menú Matemáticas); decide también el color de la ventana
+     order         posición dentro del grupo
+     icon, label   icono y texto del botón
+     title, build, w   título, constructor y ancho de su ventana
+     run, on       para las que no son una ventana (regla, transportador, foco, nota): qué hacen y si están puestas
+     obj           para esas mismas, si se pueden esconder desde la bandeja: función que devuelve su objeto (con .el)
+     clear         qué hace «Reiniciar» con ella
+     hidden        es del grupo pero no tiene botón (ajustes de la regla)
+   Apuntar otra vez un id ya apuntado cambia solo lo que se indique (así los pictogramas sustituyen al horario y a los encargados). */
+function tool(t){const o=toolById(t.id);if(o)Object.assign(o,t);else REG.tools.push(t)}
+const toolById=id=>REG.tools.find(t=>t.id===id);
+const toolsOf=g=>REG.tools.filter(t=>t.group===g&&!t.hidden).sort((a,b)=>a.order-b.order);
 /* ============ Iconos de línea (propios, 24×24, trazo redondeado) ============ */
 const ICONS={
   camera:'<path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
@@ -989,7 +1005,7 @@ const DB={db:null,
 
 /* --- Fondos y pautas --- */
 function fit(){
-  if(typeof pages!=='undefined'&&pages[cur])fitPage(P());
+  if(pages[cur])fitPage(P());
   const dpr=window.devicePixelRatio||1,w=stage.clientWidth,hh=stage.clientHeight;
   for(const [c,x] of [[bg,cb],[dr,cd],[lv,cl]]){c.width=Math.round(w*dpr);c.height=Math.round(hh*dpr);x.setTransform(dpr,0,0,dpr,0,0)}
   drawBg();redraw();
@@ -1445,7 +1461,7 @@ function updatePageUI(){
   const l=$('#pageLbl');if(l)l.textContent=`Página ${cur+1}/${pages.length} ▾`;
   const u=$('#btnUndo'),r=$('#btnRedo');
   if(u)u.disabled=!P().undo.length;if(r)r.disabled=!P().redo.length;
-  chBar();
+  REG.pageUI.forEach(f=>f());
 }
 
 /* --- Exportar: imagen PNG de la página o PDF de todas (vía imprimir) --- */
@@ -2164,6 +2180,7 @@ function chBar(){
   const [menos,mas]=chBarEl.querySelectorAll('button');menos.disabled=ch.k<=0;mas.disabled=ch.k>=ch.n;
   chBarEl.querySelector('.ch-all').textContent=ch.k>=ch.n?'Ocultar':'Todo';
 }
+REG.pageUI.push(chBar); // se actualiza con la página
 
 // Entrada desde Charta (se llama al arrancar, después de cargar la pizarra)
 function chEntrada(){
@@ -2294,14 +2311,18 @@ function makeDrag(handle,el){
   });
   const end=()=>d=null;handle.addEventListener('pointerup',end);handle.addEventListener('pointercancel',end);
 }
-function refreshRail(){if(typeof renderTray==='function')setTimeout(renderTray);$$('[data-win]').forEach(b=>{const id=b.dataset.win;b.classList.toggle('on',wins.has(id)||(id==='spot'&&sp.on))})}
+const WIN_COLOR={mates:'var(--coral)',aula:'var(--yellow)'}; // color de la cabecera según el grupo de la herramienta
+const toolOn=t=>t.on?t.on():wins.has(t.id);
+const toolRun=t=>t.run?t.run():openWin(t.id,t.title,t.build,t.w);
+const openTool=id=>toolRun(toolById(id));
+function refreshRail(){setTimeout(renderTray);$$('[data-win]').forEach(b=>{const t=toolById(b.dataset.win);b.classList.toggle('on',t?toolOn(t):wins.has(b.dataset.win))})}
 function openWin(id,title,build,w=400){
   if(wins.has(id)){const w=wins.get(id);if(w.min)restoreWin(id);else closeWin(id);return}
   const n=wins.size%6,ui=S.ui||1;
   const body=h('div',{class:'body'});
   const win=h('div',{class:'win',style:`width:${Math.round(w*ui)}px;left:${40+n*34}px;top:${24+n*34}px;z-index:${++zTop}`},
     h('header',{},h('span',{},title),h('button',{class:'x','aria-label':'Minimizar',title:'Minimizar',onclick:()=>minimizeWin(id)},ico('minus')),h('button',{class:'x','aria-label':'Cerrar',onclick:()=>closeWin(id)},ico('x'))),body);
-  win.style.setProperty('--wc',/^(b10|clock|eur|cuis|tan|line|frac|hundred|dice|geo|ruler-set)$/.test(id)?'var(--coral)':/^(picker|groups|roles|sched|asam|sema|timer|noise|score)$/.test(id)?'var(--yellow)':'var(--teal)');
+  win.style.setProperty('--wc',WIN_COLOR[(toolById(id)||{}).group]||'var(--teal)');
   floaters.append(win);
   makeDrag($('header',win),win);
   win.addEventListener('pointerdown',()=>win.style.zIndex=++zTop);
@@ -2313,10 +2334,10 @@ function minimizeWin(id){const w=wins.get(id);if(!w)return;w.min=true;w.win.styl
 function restoreWin(id){const w=wins.get(id);if(!w)return;w.min=false;w.win.style.display='';w.win.style.zIndex=++zTop;refreshRail();renderTray()}
 // Barra inferior: un botón por cada herramienta de matemáticas abierta (minimizar / recuperar con un toque)
 function renderTray(){
-  const tray=$('#tray');if(!tray||typeof mathTools!=='function')return;
-  const items=mathTools().filter(m=>m.on());
+  const tray=$('#tray');if(!tray)return;
+  const items=toolsOf('mates').filter(toolOn);
   tray.replaceChildren(...items.map(m=>{
-    const w=wins.get(m.id),obj=m.id==='ruler'?ruler:m.id==='prot'?prot:null;
+    const w=wins.get(m.id),obj=m.obj?m.obj():null;
     const hidden=w?w.min:obj?obj.el.style.display==='none':false;
     return h('button',{class:'dbtn tray'+(hidden?' min':' on'),title:hidden?'Mostrar':'Minimizar',onclick:()=>{
       if(w){w.min?restoreWin(m.id):minimizeWin(m.id)}
@@ -2364,7 +2385,7 @@ function mTimer(body){
   draw();
   return()=>clearInterval(iv);
 }
-
+tool({id:'timer',group:'aula',order:70,icon:'timer',label:'Tiempo',title:'Temporizador',build:mTimer,w:400});
 /* ============ Módulo: alumno al azar (nombres + ruleta) ============ */
 let pool=[];
 const RL={cx:200,cy:210,R:170,hub:40,
@@ -2517,6 +2538,7 @@ function mPicker(body){
   upd();setMode(mode());
   return()=>{clearInterval(iv);if(raf)cancelAnimationFrame(raf)};
 }
+tool({id:'picker',group:'aula',order:10,icon:'dice',label:'Elegir',title:'Alumno al azar',build:mPicker,w:440});
 /* ============ Módulo: parejas y grupos ============ */
 function mGroups(body){
   let mode='pairs',n=3;
@@ -2539,7 +2561,7 @@ function mGroups(body){
   }
   body.append(sg,step,h('div',{class:'row c',style:'margin-top:12px'},h('button',{class:'btn',onclick:mix},...ib('shuffle','Mezclar'))),res);
 }
-
+tool({id:'groups',group:'aula',order:20,icon:'users',label:'Grupos',title:'Parejas y grupos',build:mGroups,w:560});
 /* ============ Módulo: encargados ============ */
 function mRoles(body){
   const list=h('div');
@@ -2547,7 +2569,7 @@ function mRoles(body){
   body.append(list,h('div',{class:'row c',style:'margin-top:14px'},h('button',{class:'btn',onclick:()=>{S.offset=(S.offset+1)%Math.max(1,S.students.length);save();draw()}},...ib('rotate','Rotar encargados'))));
   draw();
 }
-
+tool({id:'roles',group:'aula',order:30,icon:'roles',label:'Encargados',title:'Encargados del día',build:mRoles,w:500});
 /* ============ Módulo: horario ============ */
 function mSchedule(body){
   const draw=()=>{
@@ -2557,7 +2579,7 @@ function mSchedule(body){
   draw();const iv=setInterval(draw,30000);
   return()=>clearInterval(iv);
 }
-
+tool({id:'sched',group:'aula',order:40,icon:'calendar',label:'Horario',title:'Horario de hoy',build:mSchedule,w:540});
 /* ============ Módulo: contadores de equipos ============ */
 const TEAM_COLORS=['#e03131','#1e6fe0','#2f9e44','#f08c00','#7048e8','#0ca678'];
 function mScore(body){
@@ -2577,7 +2599,7 @@ function mScore(body){
     h('button',{class:'btn ghost',onclick:()=>{S.counters.forEach(t=>t.v=0);save();draw()}},...ib('reset','A cero'))));
   draw();
 }
-
+tool({id:'score',group:'aula',order:90,icon:'trophy',label:'Puntos',title:'Contadores de equipos',build:mScore,w:560});
 /* ============ Módulo: medidor de ruido ============ */
 function mNoise(body){
   let ctx,stream,raf,an,buf,sm=0,dead=false;
@@ -2606,7 +2628,7 @@ function mNoise(body){
   }
   return()=>{dead=true;cancelAnimationFrame(raf);stream&&stream.getTracks().forEach(t=>t.stop());ctx&&ctx.close()};
 }
-
+tool({id:'noise',group:'aula',order:80,icon:'sound',label:'Ruido',title:'Medidor de ruido',build:mNoise,w:420});
 /* ============ Base 10 ============ */
 const manip=$('#manip'),mat=$('#mat'),trash=$('#trash');
 const U=22; // lado de una unidad en px
@@ -2732,7 +2754,7 @@ function mB10(body){
   updateB10();
   return()=>{b10ui=null};
 }
-
+tool({id:'b10',group:'mates',order:10,icon:'b10',label:'Base 10',title:'Base 10',build:mB10,w:580,clear:b10Clear});
 /* ============ Reloj analógico y digital ============ */
 const HW=['doce','una','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez','once','doce'];
 const MW=['','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez','once','doce','trece','catorce','quince','dieciséis','diecisiete','dieciocho','diecinueve','veinte','veintiuno','veintidós','veintitrés','veinticuatro','veinticinco','veintiséis','veintisiete','veintiocho','veintinueve'];
@@ -2808,7 +2830,7 @@ function mClock(body){
   const iv=setInterval(()=>{if(live){syncNow();draw()}},1000);
   return()=>clearInterval(iv);
 }
-
+tool({id:'clock',group:'mates',order:20,icon:'clock',label:'Reloj',title:'Reloj',build:mClock,w:460});
 /* ============ Regla graduada ============ */
 const RUL=Object.assign({len:20,ppc:40,snap:true},S.ruler||{});
 const RPAD=18,RH=112;
@@ -2830,7 +2852,7 @@ function toggleRuler(){
   if(ruler){ruler.el.remove();ruler=null;closeWin('ruler-set');refreshRail();return}
   const el=h('div',{class:'ruler'}),body=h('div'),rot=h('div',{class:'rrot','aria-label':'Girar la regla'},ico('rotate')),ang=h('div',{class:'rang'});
   const btns=h('div',{class:'rbtns'},
-    h('button',{'aria-label':'Ajustes de la regla',onclick:()=>openWin('ruler-set','Regla',mRuler,460)},ico('settings')),
+    h('button',{'aria-label':'Ajustes de la regla',onclick:()=>openTool('ruler-set')},ico('settings')),
     h('button',{'aria-label':'Quitar la regla',onclick:toggleRuler},ico('x')));
   el.append(body,rot,btns,ang);el.style.transformOrigin=`${RPAD}px 0px`; // gira alrededor del 0
   ruler={el,body,rot,ang,x:0,y:0,a:0,W:0};manip.append(el);renderRuler();
@@ -2890,6 +2912,8 @@ function rulerSnap(p,size){
   if(k<0&&k>-36)off=-(size/2+2);else if(k>RH&&k<RH+36)off=RH+size/2+2;else return null;
   return q=>{const w={x:q.x-O.x,y:q.y-O.y},tt=w.x*d.x+w.y*d.y;return{x:O.x+d.x*tt+n.x*off,y:O.y+d.y*tt+n.y*off}};
 }
+tool({id:'ruler',group:'mates',order:30,icon:'ruler',label:'Regla',run:toggleRuler,on:()=>!!ruler,obj:()=>ruler,clear:()=>{if(ruler)toggleRuler()}});
+tool({id:'ruler-set',group:'mates',hidden:true,title:'Regla',build:mRuler,w:460});
 /* ============ Monedas y billetes de euro ============ */
 // Diámetros reales en mm y tamaños de billete en mm, para respetar las proporciones entre piezas
 const COINS=[[1,16.25],[2,18.75],[5,21.25],[10,19.75],[20,22.25],[50,24.25],[100,23.25],[200,25.75]];
@@ -3025,7 +3049,7 @@ function mEur(body){
   updateEur();updInfo();
   return()=>{eurui=null};
 }
-
+tool({id:'eur',group:'mates',order:40,icon:'euro',label:'Dinero',title:'Monedas y billetes',build:mEur,w:640,clear:eurClear});
 /* ============ Matemáticas: utilidades ============ */
 const mFmt=v=>(Math.round(v*1e6)/1e6||0).toLocaleString('es-ES',{maximumFractionDigits:6,useGrouping:false}).replace('-','−'); // coma decimal
 const mNum=s=>{const v=parseFloat(String(s).replace(',','.').replace('−','-'));return isFinite(v)?v:NaN};
@@ -3099,7 +3123,7 @@ function toggleProt(){
   x.addEventListener('pointerdown',e=>e.stopPropagation());
   refreshRail();
 }
-
+tool({id:'prot',group:'mates',order:70,icon:'protractor',label:'Transportador',run:toggleProt,on:()=>!!prot,obj:()=>prot,clear:()=>{if(prot)toggleProt()}});
 /* ============ Recta numérica ============ */
 function mLine(body){
   const L=S.mathLine=S.mathLine||{from:0,to:10,step:1};
@@ -3166,7 +3190,7 @@ function mLine(body){
       h('button',{class:'btn ghost',onclick:()=>{marks=[];draw()}},...ib('eraser','Borrar saltos'))));
   draw();
 }
-
+tool({id:'line',group:'mates',order:80,icon:'numline',label:'Recta numérica',title:'Recta numérica',build:mLine,w:900});
 /* ============ Fracciones ============ */
 function mFrac(body){
   let den=4;const on=new Set();
@@ -3203,7 +3227,7 @@ function mFrac(body){
     h('p',{class:'muted',style:'margin:10px 0 0'},'Toca una parte para colorearla o quitarle el color'));
   draw();
 }
-
+tool({id:'frac',group:'mates',order:90,icon:'frac',label:'Fracciones',title:'Fracciones',build:mFrac,w:640});
 /* ============ Tabla del 100 ============ */
 function mHundred(body){
   const col=Array(101).fill(0),rev=new Set(),cells=[];
@@ -3233,7 +3257,7 @@ function mHundred(body){
     h('p',{class:'muted',style:'margin:10px 0 0'},'Toca una casilla para cambiar su color: amarillo, azul, verde'));
   paint();
 }
-
+tool({id:'hundred',group:'mates',order:100,icon:'grid',label:'Tabla del 100',title:'Tabla del 100',build:mHundred,w:640});
 /* ============ Dados ============ */
 const DIE_PIPS=[[],[4],[0,8],[0,4,8],[0,2,6,8],[0,2,4,6,8],[0,2,3,5,6,8]];
 const DIE_SHAPE={4:'50,6 96,90 4,90',8:'50,3 95,50 50,97 5,50',10:'50,3 94,40 78,94 22,94 6,40',12:'50,3 94,35 77,90 23,90 6,35',20:'50,3 91,26 91,74 50,97 9,74 9,26'}; // formas sencillas que sugieren cada dado
@@ -3269,7 +3293,7 @@ function mDice(body){
   draw();
   return()=>clearInterval(iv);
 }
-
+tool({id:'dice',group:'mates',order:110,icon:'dice',label:'Dados',title:'Dados',build:mDice,w:560});
 /* ============ Geoplano ============ */
 function mGeo(body){
   let n=7,bands=[];
@@ -3323,19 +3347,7 @@ function mGeo(body){
       h('button',{class:'btn danger',onclick:()=>{bands=[];draw()}},...ib('trash','Borrar todo'))));
   draw();
 }
-
-/* ============ Registro de herramientas de mates ============ */
-const MATH_EXTRA=[
-  {id:'prot',label:'Transportador',toggle:toggleProt,isOn:()=>!!prot},
-  {id:'line',label:'Recta numérica',title:'Recta numérica',build:mLine,w:900},
-  {id:'frac',label:'Fracciones',title:'Fracciones',build:mFrac,w:640},
-  {id:'hundred',label:'Tabla del 100',title:'Tabla del 100',build:mHundred,w:640},
-  {id:'dice',label:'Dados',title:'Dados',build:mDice,w:560},
-  {id:'geo',label:'Geoplano',title:'Geoplano',build:mGeo,w:620}
-];
-function mathExtraClear(){if(prot)toggleProt()}
-
-
+tool({id:'geo',group:'mates',order:120,icon:'geo',label:'Geoplano',title:'Geoplano',build:mGeo,w:620});
 /* ============ Asamblea: calendario, tiempo, emociones y días de cole ============ */
 const ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const dayOnly=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
@@ -3442,7 +3454,7 @@ function asDays(){
     h('div',{class:'muted'},'de cole'+(isLective(now)?'':' · hoy no es día lectivo')),
     h('div',{class:'pv'},cell(c,'Centenas','#2f9e44'),cell(d,'Decenas','#e03131'),cell(u,'Unidades','#1e6fe0'),h('div',{class:'tot'},h('b',{},String(n)),h('span',{},'Total'))),
     h('div',{class:'row c'},h('button',{class:'btn',onclick:()=>{
-      if(!wins.has('b10'))openWin('b10','Base 10',mB10,580);
+      if(!wins.has('b10'))openTool('b10');
       makeNumber(n);if(n>999)toast('Base 10 llega hasta 999');
     }},...ib('b10','Representar en base 10'))),
     h('p',{class:'muted',style:'margin:12px 0 0'},`Desde el ${st.toLocaleDateString('es-ES',{day:'numeric',month:'long'})} · de lunes a viernes, sin festivos`));
@@ -3456,7 +3468,7 @@ function mAsamblea(body){
   function go(i){asTab=i;$$('button',sg).forEach((b,j)=>b.classList.toggle('on',j===i));view.replaceChildren(tabs[i][2]())}
   body.append(sg,view);go(clamp(asTab,0,3));
 }
-
+tool({id:'asam',group:'aula',order:50,icon:'sun',label:'Asamblea',title:'Asamblea',build:mAsamblea,w:640});
 /* ============ Semáforo de trabajo ============ */
 const SEMA=[['silencio','🤫','Silencio','#d9363e','#fff','Trabajo individual'],['susurro','🤭','Susurro','#f08c00','#1b1f24','Trabajo en parejas'],
   ['vozbaja','💬','Voz baja','#2b8a3e','#fff','Trabajo en grupo'],['escuchamos','👂','Escuchamos','#1e6fe0','#fff','Atención a quien habla']];
@@ -3468,7 +3480,7 @@ function renderModeChip(){
   c.style.cssText=`display:inline-flex;background:${m[3]};color:${m[4]}`;
   c.textContent=`${m[1]} ${m[2]}`;c.setAttribute('role','button');c.tabIndex=0;c.setAttribute('aria-label','Semáforo de trabajo: '+m[2]);
 }
-const chipOpen=()=>openWin('sema','Semáforo de trabajo',mSemaforo,520);
+const chipOpen=()=>openTool('sema');
 document.addEventListener('click',e=>{if(e.target.closest('#modeChip'))chipOpen()});
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.id==='modeChip'){e.preventDefault();chipOpen()}});
 function mSemaforo(body){
@@ -3484,6 +3496,7 @@ function mSemaforo(body){
   body.append(circle,name,desc,h('div',{class:'as-sg'},...btns),h('div',{class:'row c',style:'margin-top:14px'},h('button',{class:'btn ghost',onclick:()=>{S.semaforo='';save();draw();renderModeChip()}},...ib('power','Apagar semáforo'))));
   draw();
 }
+tool({id:'sema',group:'aula',order:60,icon:'traffic',label:'Semáforo',title:'Semáforo de trabajo',build:mSemaforo,w:520});
 renderModeChip();
 
 /* ============ Pictogramas ARASAAC ============ */
@@ -3554,8 +3567,8 @@ function mRolesP(body){
   body.append(list,h('div',{class:'row c',style:'margin-top:14px'},h('button',{class:'btn',onclick:()=>{S.offset=(S.offset+1)%Math.max(1,S.students.length);save();draw()}},...ib('rotate','Rotar encargados'))),pictoCredit());
   draw();
 }
-
-
+// con pictogramas: mismas herramientas, otra forma de pintarlas
+tool({id:'sched',build:mScheduleP});tool({id:'roles',build:mRolesP});
 /* ============ Regletas de Cuisenaire ============ */
 const CU=40; // px por unidad (la regleta de 10 mide 400 px)
 // [relleno, borde, color del número]
@@ -3598,7 +3611,7 @@ function mCuis(body){
   updateCuis();
   return()=>{cuisui=null};
 }
-
+tool({id:'cuis',group:'mates',order:50,icon:'rods',label:'Regletas',title:'Regletas de Cuisenaire',build:mCuis,w:620,clear:cuisClear});
 /* ============ Tangram ============ */
 const TK=65; // px por unidad: el cuadrado completo mide 4 × 4 unidades
 // Piezas en la posición del cuadrado resuelto: 2 triángulos grandes, 1 mediano, 2 pequeños, cuadrado y romboide
@@ -3673,7 +3686,7 @@ function tanChallenge(arr,name){
   const W=stage.clientWidth,H=stage.clientHeight,ox=Math.min(W*.75-fw/2,W-fw-20),oy=(H-fh)/2;
   tanAct={name:name||'',arr,ox,oy,polys:arr.map((a,i)=>({id:a.id,pts:polys[i].map(([x,y])=>[x+ox,y+oy])})),
     box:[ox+Math.min(...all.map(p=>p[0]))-16,oy+Math.min(...all.map(p=>p[1]))-16,ox+fw+16,oy+fh+16]};
-  if(typeof minimizeWin==='function')minimizeWin('tan');
+  minimizeWin('tan');
   tanSil.innerHTML=`<svg width="${W}" height="${H}"><g fill="rgba(110,110,110,.38)" stroke="rgba(110,110,110,.38)" stroke-width="1.5" stroke-linejoin="round">${polys.map(p=>`<polygon points="${p.map(([x,y])=>`${(x+ox).toFixed(1)},${(y+oy).toFixed(1)}`).join(' ')}"/>`).join('')}</g></svg>`;
   tanScatter();
   toast('Reto «'+(name||'Cuadrado')+'»: coloca las piezas sobre la silueta');
@@ -3725,7 +3738,7 @@ function mTangram(body){
     h('p',{class:'muted',style:'font-size:15px;margin:12px 0 0'},'Arrastra las piezas · Toca dos veces una pieza para girarla 45° · Para crear un reto, forma una figura y pulsa «Guardar figura actual»'));
   renderList();
 }
-
+tool({id:'tan',group:'mates',order:60,icon:'tangram',label:'Tangram',title:'Tangram',build:mTangram,w:640,clear:tanClear});
 /* ============ Notas adhesivas ============ */
 const NOTE_COLORS=['#ffe66d','#ff9fb2','#9be7a5','#9fd3ff','#ffc078','#d0bfff'];let noteN=0;
 function addNote(){
@@ -3738,7 +3751,7 @@ function addNote(){
   n.append(head,nb);floaters.append(n);makeDrag(head,n);
   n.addEventListener('pointerdown',()=>n.style.zIndex=++zTop);nb.focus();
 }
-
+tool({id:'note',group:'apoyo',order:20,icon:'note',label:'Nota',run:addNote,clear:()=>$$('.note').forEach(n=>n.remove())});
 /* ============ Foco de atención ============ */
 const spot=$('#spot'),spotCtl=$('#spotCtl');
 const sp={on:false,x:innerWidth/2,y:innerHeight/2,r:170,shape:'circle'};
@@ -3763,7 +3776,7 @@ spot.addEventListener('pointerdown',e=>{spDrag=true;spot.setPointerCapture(e.poi
 spot.addEventListener('pointermove',e=>{if(spDrag){sp.x=e.clientX;sp.y=e.clientY;spDraw()}});
 spot.addEventListener('pointerup',()=>spDrag=false);
 spot.addEventListener('pointercancel',()=>spDrag=false);
-
+tool({id:'spot',group:'apoyo',order:10,icon:'spot',label:'Foco',run:()=>toggleSpot(),on:()=>sp.on,clear:()=>{if(sp.on)toggleSpot(false)}});
 /* ============ Construcción de la interfaz ============ */
 const SHAPES=[['line','╱','Línea'],['rect','▭','Rectángulo'],['square','□','Cuadrado'],['circle','◯','Círculo'],['ellipse','⬭','Elipse'],['triangle','△','Triángulo'],['pentagon','⬠','Pentágono'],['hexagon','⬡','Hexágono']];
 const PALETTE=['ink','#000000','#ffffff','#868e96','#8d5524','#f783ac',
@@ -3834,40 +3847,12 @@ function buildLeft(){
     ...[[3,'Fino',6],[6,'Medio',12],[12,'Grueso',22]].map(([s,n,d])=>h('button',{class:'sz','data-s':s,'aria-label':n,onclick:()=>{T.size=s;refreshTools();if(editor){editor.fs=FS[s];editor.ta.style.fontSize=FS[s]+'px';sizeEditor()}}},h('i',{style:`width:${d}px;height:${d}px`}))));
   renderRecent();refreshTools();updatePageUI();
 }
-const pick=(a,b)=>typeof a==='function'?a:b; // usa la versión con pictogramas si está disponible
-const RAIL=[
-  ['picker','dice','Elegir','Alumno al azar',mPicker,440],
-  ['groups','users','Grupos','Parejas y grupos',mGroups,560],
-  ['roles','roles','Encargados','Encargados del día',pick(typeof mRolesP!=='undefined'&&mRolesP,mRoles),500],
-  ['sched','calendar','Horario','Horario de hoy',pick(typeof mScheduleP!=='undefined'&&mScheduleP,mSchedule),540],
-  ['asam','sun','Asamblea','Asamblea',typeof mAsamblea!=='undefined'?mAsamblea:null,640],
-  ['sema','traffic','Semáforo','Semáforo de trabajo',typeof mSemaforo!=='undefined'?mSemaforo:null,520],
-  ['timer','timer','Tiempo','Temporizador',mTimer,400],
-  ['noise','sound','Ruido','Medidor de ruido',mNoise,420],
-  ['score','trophy','Puntos','Contadores de equipos',mScore,560]
-].filter(r=>r[4]);
+// Barra derecha: las herramientas del aula y, tras la raya, las de apoyo (ver el registro en 00-base.js)
 function buildRight(){
-  $('#right').replaceChildren(
-    ...RAIL.map(([id,ic,lb,title,fn,w])=>h('button',{class:'tool','data-win':id,onclick:()=>openWin(id,title,fn,w)},ico(ic),h('small',{},lb))),
-    h('div',{class:'sep'}),
-    h('button',{class:'tool','data-win':'spot',onclick:()=>toggleSpot()},ico('spot'),h('small',{},'Foco')),
-    h('button',{class:'tool',onclick:addNote},ico('note'),h('small',{},'Nota')));
+  const btn=t=>h('button',{class:'tool',...(t.build||t.on?{'data-win':t.id}:{}),onclick:()=>toolRun(t)},ico(t.icon),h('small',{},t.label));
+  $('#right').replaceChildren(...toolsOf('aula').map(btn),h('div',{class:'sep'}),...toolsOf('apoyo').map(btn));
 }
 const BGS=[['plain','Liso'],['grid','Cuadrícula'],['dots','Puntos'],['lines','Pauta doble línea'],['montessori','Pauta Montessori'],['cuadrovia','Cuadrovía']];
-// Herramientas de matemáticas: [id, etiqueta, acción, ¿activa?]
-function mathTools(){
-  const W=(id,label,title,fn,w,icon)=>({id,icon,label,run:()=>openWin(id,title,fn,w),on:()=>wins.has(id)});
-  const MI={prot:'protractor',line:'numline',frac:'frac',hundred:'grid',dice:'dice',geo:'geo'};
-  const list=[
-    W('b10','Base 10','Base 10',mB10,580,'b10'),
-    W('clock','Reloj','Reloj',mClock,460,'clock'),
-    {id:'ruler',icon:'ruler',label:'Regla',run:toggleRuler,on:()=>!!ruler},
-    W('eur','Dinero','Monedas y billetes',mEur,640,'euro'),
-    W('cuis','Regletas','Regletas de Cuisenaire',mCuis,620,'rods'),
-    W('tan','Tangram','Tangram',mTangram,640,'tangram')];
-  if(typeof MATH_EXTRA!=='undefined')MATH_EXTRA.forEach(m=>{const lb=m.label;list.push(m.toggle?{id:m.id,icon:MI[m.id]||'sigma',label:lb,run:m.toggle,on:m.isOn}:W(m.id,lb,m.title,m.build,m.w,MI[m.id]||'sigma'))});
-  return list;
-}
 function buildDock(){
   const dock=$('#dock');
   const bgLabel=()=>`${BGS.find(b=>b[0]===P().bg)[1]}${P().img?' + imagen':''} ▾`;
@@ -3886,7 +3871,7 @@ function buildDock(){
     await setBgImage(f);setBg();
   });
   const mathBtn=h('button',{class:'dbtn','data-pop':'math',onclick:e=>openPop('math',e.currentTarget,2,
-    mathTools().map(m=>h('button',{class:'wide'+(m.on()?' on':''),style:'grid-column:auto;text-align:left;padding:0 16px',onclick:()=>{closePop();m.run();refreshRail()}},...ib(m.icon,m.label))),'above')},...ib('sigma','Matemáticas ▾'));
+    toolsOf('mates').map(m=>h('button',{class:'wide'+(toolOn(m)?' on':''),style:'grid-column:auto;text-align:left;padding:0 16px',onclick:()=>{closePop();toolRun(m);refreshRail()}},...ib(m.icon,m.label))),'above')},...ib('sigma','Matemáticas ▾'));
   const pageBtn=h('button',{class:'dbtn','data-pop':'page',id:'pageLbl',onclick:e=>openPop('page',e.currentTarget,1,[
     h('button',{class:'wide',onclick:()=>{closePop();addPage(false)}},...ib('plus','Página nueva')),
     h('button',{class:'wide',onclick:()=>{closePop();addPage(true)}},...ib('copy','Duplicar esta página')),
@@ -3901,13 +3886,11 @@ function buildDock(){
     h('button',{class:'dbtn nav','aria-label':'Página siguiente',onclick:()=>cur<pages.length-1?gotoPage(cur+1):addPage(false)},ico('right')),
     h('span',{class:'sp'}),
     h('button',{class:'dbtn',onclick:()=>{
-      commitEditor();closeAllWins();b10Clear();eurClear();if(ruler)toggleRuler();
-      if(typeof mathExtraClear==='function')mathExtraClear();cuisClear();tanClear();
-      $$('.note').forEach(n=>n.remove());if(sp.on)toggleSpot(false);closePop();setSel(null);refreshRail();toast('Herramientas reiniciadas');
+      commitEditor();closeAllWins();REG.tools.forEach(t=>t.clear&&t.clear());
+      closePop();setSel(null);refreshRail();toast('Herramientas reiniciadas');
     }},...ib('reset','Reiniciar')),
     h('button',{class:'dbtn danger',onclick:clearBoard},...ib('trash','Limpiar')));
-  // al cambiar de página se actualiza la etiqueta del fondo
-  const upd=updatePageUI;updatePageUI=()=>{upd();setBg()};
+  REG.pageUI.push(setBg); // al cambiar de página se actualiza la etiqueta del fondo
   updatePageUI();
 }
 
@@ -3983,7 +3966,7 @@ function syncClass(){const c=S.classes[S.cls];if(c){c.students=S.students;c.role
 function switchClass(i){
   syncClass();S.cls=i;const c=S.classes[i];
   S.students=c.students||[];S.roles=c.roles||[];S.offset=c.offset||0;pool=[];save();
-  ['picker','groups','roles'].forEach(id=>{if(wins.has(id)){const w=RAIL.find(r=>r[0]===id);closeWin(id);openWin(id,w[3],w[4],w[5])}});
+  ['picker','groups','roles'].forEach(id=>{if(wins.has(id)){closeWin(id);openTool(id)}});
   renderClassChip();toast('Clase: '+c.name);
 }
 function renderClassChip(){
@@ -4446,7 +4429,6 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 $('#btnSettings').replaceChildren(ico('settings'));$('#btnView').replaceChildren(ico('view'));$('#btnFs').replaceChildren(ico('full'));$('#cornerBtn').replaceChildren(ico('view'));
 applyUi();
 buildLeft();buildRight();buildDock();renderClassChip();
-if(typeof renderModeChip==='function')renderModeChip();
 document.documentElement.dataset.theme=S.theme;
 new ResizeObserver(fit).observe(stage);
 fit();tickClock();setInterval(tickClock,1000);
@@ -4455,7 +4437,7 @@ renderZoneBars();
 if(document.fonts&&document.fonts.load)document.fonts.load("600 48px Fredoka").then(()=>redraw()).catch(()=>{});
 loadBoard().then(chEntrada);
 window.__foriOK=true; // arranque correcto
-window.__fori={BD,get pages(){return pages},get cur(){return cur}}; // para las pruebas (tools/test.js)
+window.__fori={BD,REG,get pages(){return pages},get cur(){return cur}}; // para las pruebas (tools/test.js)
 if(location.protocol.startsWith('http')&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 /* ============ Modo transparente (solo en Fori Escritorio) ============ */
 // Fori Escritorio (carpeta desktop/) abre dos ventanas sin marco y siempre visibles: una transparente a pantalla

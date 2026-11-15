@@ -270,6 +270,76 @@ async function guardado(b,url){
   ok(errs.length===0,'sin errores en el guardado'+(errs.length?': '+errs.join(' | '):''));
   await ctx.close();
 }
+/* Registro de herramientas: la barra derecha, el menú Matemáticas, la bandeja y «Reiniciar» salen del registro (REG.tools) */
+async function registro(b,url){
+  console.log('\nRegistro de herramientas');
+  const ctx=await b.newContext({viewport:{width:1920,height:1080}});
+  const p=await ctx.newPage();
+  const errs=[];p.on('pageerror',e=>errs.push(e.message));
+  await p.goto(url);await p.waitForTimeout(800);
+  const mates=async l=>{await p.click('[data-pop=math]');await p.locator('#pop button',{hasText:l}).first().click();await p.waitForTimeout(80)};
+  const wc=()=>p.evaluate(()=>[...document.querySelectorAll('.win')].pop().style.getPropertyValue('--wc'));
+  const n=sel=>p.locator(sel).count();
+
+  // 1. Lo que hay apuntado está completo
+  const reg=await p.evaluate(()=>__fori.REG.tools.map(t=>({id:t.id,group:t.group,icon:t.icon,label:t.label,hidden:!!t.hidden,hace:typeof(t.build||t.run),ico:!!t.hidden||!!document.querySelector('#i-'+t.icon)})));
+  ok(reg.length>=24&&new Set(reg.map(t=>t.id)).size===reg.length,`hay ${reg.length} herramientas apuntadas y ninguna repetida`);
+  ok(reg.every(t=>t.id&&['aula','apoyo','mates'].includes(t.group)&&t.hace==='function'&&(t.hidden||(t.icon&&t.label))),'cada una tiene id, grupo, icono, texto y algo que hacer');
+  ok(reg.every(t=>t.ico),'todos sus iconos existen'+(reg.every(t=>t.ico)?'':': '+reg.filter(t=>!t.ico).map(t=>t.id).join()));
+
+  // 2. Quien usa la pizarra ve lo de siempre: mismos botones, mismo orden
+  const rail=await p.$$eval('#right > *',es=>es.map(e=>e.className==='sep'?'|':(e.dataset.win||'-')+':'+e.textContent.trim()).join(' '));
+  ok(rail==='picker:Elegir groups:Grupos roles:Encargados sched:Horario asam:Asamblea sema:Semáforo timer:Tiempo noise:Ruido score:Puntos | spot:Foco -:Nota','la barra derecha tiene los botones de siempre, en su orden');
+  await p.click('[data-pop=math]');
+  const menu=await p.$$eval('#pop button',bs=>bs.map(b=>b.textContent.trim()).join(', '));await p.mouse.click(1000,600);
+  ok(menu==='Base 10, Reloj, Regla, Dinero, Regletas, Tangram, Transportador, Recta numérica, Fracciones, Tabla del 100, Dados, Geoplano','el menú Matemáticas tiene las herramientas de siempre, en su orden');
+
+  // 3. El color de la ventana sale del grupo
+  await p.click('#right [data-win=timer]');const cAula=await wc();await p.click('#right [data-win=timer]');
+  await mates('Reloj');const cMates=await wc();await mates('Reloj');
+  await p.click('#pageLbl');await p.click('#pop >> text=Mis lecciones');const cOtra=await wc();await p.click('.win .x[aria-label=Cerrar]');
+  ok(cAula==='var(--yellow)'&&cMates==='var(--coral)'&&cOtra==='var(--teal)','ventanas del aula en amarillo, de matemáticas en coral y el resto en verde');
+
+  // 4. Los pictogramas sustituyen a encargados y horario sin duplicar el botón
+  await p.click('#right [data-win=roles]');const conP=await n('.win .rrow.p');await p.click('#right [data-win=roles]');
+  ok(conP>0&&reg.filter(t=>t.id==='roles'||t.id==='sched').length===2,'encargados se abre en su versión con pictogramas');
+
+  // 5. Bandeja: regla y transportador se esconden y vuelven; una ventana se minimiza
+  await mates('Regla');await mates('Transportador');await mates('Base 10');
+  ok(await n('#tray button')===3&&await n('.ruler')===1&&await n('.prot')===1,'la bandeja muestra las tres herramientas de matemáticas abiertas');
+  ok((await p.$$eval('#tray button',bs=>bs.map(b=>b.textContent.trim()).join())==='Base 10,Regla,Transportador'),'en el orden del menú');
+  await p.locator('#tray button',{hasText:'Regla'}).click();
+  ok(await p.isHidden('.ruler')&&await p.isVisible('.prot'),'un toque en la bandeja esconde la regla');
+  await p.locator('#tray button',{hasText:'Regla'}).click();
+  await p.locator('#tray button',{hasText:'Base 10'}).click();
+  ok(await p.isVisible('.ruler')&&await p.isHidden('.win'),'otro toque la devuelve; y la ventana de Base 10 se minimiza');
+  await p.locator('#tray button',{hasText:'Base 10'}).click();
+  await p.click('.ruler [aria-label="Ajustes de la regla"]');
+  ok(await wc()==='var(--coral)'&&await n('#tray button')===3,'los ajustes de la regla son una ventana de matemáticas sin botón propio');
+
+  // 6. «Reiniciar» quita todo lo que cada herramienta ha puesto
+  await p.locator('#right button',{hasText:'Nota'}).click();await p.locator('#right button',{hasText:'Nota'}).click();
+  await p.click('#right [data-win=picker]');await p.click('#right [data-win=spot]');
+  ok(await n('.note')===2&&await p.isVisible('#spot')&&await p.evaluate(()=>document.querySelector('#right [data-win=spot]').classList.contains('on')),'notas y foco puestos (el botón del foco queda marcado)');
+  await p.locator('#dock button',{hasText:'Reiniciar'}).dispatchEvent('click');await p.waitForTimeout(150);
+  ok(await n('.win')===0&&await n('.ruler')===0&&await n('.prot')===0&&await n('.note')===0&&await p.isHidden('#spot')&&await p.isHidden('#tray')&&await n('[data-win].on')===0,'«Reiniciar» lo quita todo: ventanas, regla, transportador, notas y foco');
+
+  // 7. Lo que depende de la página se actualiza al cambiar de página (sin parchear updatePageUI)
+  await p.click('#dock [data-pop=bg]');await p.click('#pop >> text=Cuadrícula');
+  await p.click('#pageLbl');await p.click('#pop >> text=Página nueva');
+  await p.click('#dock [data-pop=bg]');await p.click('#pop >> text=Puntos');
+  const b2=await p.textContent('#bgBtn');
+  await p.click('#dock [aria-label="Página anterior"]');
+  ok(/Puntos/.test(b2)&&/Cuadrícula/.test(await p.textContent('#bgBtn'))&&(await p.textContent('#pageLbl')).includes('1/2'),'la etiqueta del fondo sigue a la página');
+  ok(await p.isHidden('#chbar'),'la barra Solución no aparece en páginas que no son de Charta');
+  // cambiar de clase vuelve a abrir las ventanas que dependen de los alumnos
+  await p.evaluate(()=>{const k='fori-v1',s=JSON.parse(localStorage.getItem(k));s.classes=[{name:'A',students:['Ana','Luis'],roles:['Luz'],offset:0},{name:'B',students:['Eva','Hugo'],roles:['Agua'],offset:0}];s.cls=0;s.students=s.classes[0].students;s.roles=s.classes[0].roles;localStorage.setItem(k,JSON.stringify(s))});
+  await p.reload();await p.waitForTimeout(800);
+  await p.click('#right [data-win=roles]');await p.click('#clsChip');await p.click('#pop >> text=B');await p.waitForTimeout(100);
+  ok(await n('.win')===1&&(await p.textContent('.win .body')).includes('Agua')&&(await p.textContent('.win .body')).includes('Eva'),'al cambiar de clase, la ventana de encargados se vuelve a abrir con la clase nueva');
+  ok(errs.length===0,'sin errores en el registro'+(errs.length?': '+errs.join(' | '):''));
+  await ctx.close();
+}
 server.listen(0,async()=>{
   const url=`http://localhost:${server.address().port}/`;
   // FORI_CHROME=1 usa el Chrome instalado en el equipo en vez del navegador de Playwright
@@ -303,6 +373,7 @@ server.listen(0,async()=>{
       await p.reload();await p.waitForTimeout(700);p.off('pageerror',h);
       ok(await p.evaluate(()=>window.__foriOK===true)&&!e2.length,'arranca con '+JSON.stringify(extra)+(e2.length?': '+e2.join(' | '):''));
     }
+    await registro(b,url);
     await pizarra(b,url);
     await guardado(b,url);
   }catch(e){fails.push(String(e));console.log(e)}

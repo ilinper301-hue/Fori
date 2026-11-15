@@ -72,7 +72,7 @@ function tanChallenge(arr,name){
   const W=stage.clientWidth,H=stage.clientHeight,ox=Math.min(W*.75-fw/2,W-fw-20),oy=(H-fh)/2;
   tanAct={name:name||'',arr,ox,oy,polys:arr.map((a,i)=>({id:a.id,pts:polys[i].map(([x,y])=>[x+ox,y+oy])})),
     box:[ox+Math.min(...all.map(p=>p[0]))-16,oy+Math.min(...all.map(p=>p[1]))-16,ox+fw+16,oy+fh+16]};
-  if(typeof minimizeWin==='function')minimizeWin('tan');
+  minimizeWin('tan');
   tanSil.innerHTML=`<svg width="${W}" height="${H}"><g fill="rgba(110,110,110,.38)" stroke="rgba(110,110,110,.38)" stroke-width="1.5" stroke-linejoin="round">${polys.map(p=>`<polygon points="${p.map(([x,y])=>`${(x+ox).toFixed(1)},${(y+oy).toFixed(1)}`).join(' ')}"/>`).join('')}</g></svg>`;
   tanScatter();
   toast('Reto «'+(name||'Cuadrado')+'»: coloca las piezas sobre la silueta');
@@ -124,4 +124,4 @@ function mTangram(body){
     h('p',{class:'muted',style:'font-size:15px;margin:12px 0 0'},'Arrastra las piezas · Toca dos veces una pieza para girarla 45° · Para crear un reto, forma una figura y pulsa «Guardar figura actual»'));
   renderList();
 }
-
+tool({id:'tan',group:'mates',order:60,icon:'tangram',label:'Tangram',title:'Tangram',build:mTangram,w:640,clear:tanClear});

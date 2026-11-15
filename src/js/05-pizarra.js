@@ -43,7 +43,7 @@ const DB={db:null,
 
 /* --- Fondos y pautas --- */
 function fit(){
-  if(typeof pages!=='undefined'&&pages[cur])fitPage(P());
+  if(pages[cur])fitPage(P());
   const dpr=window.devicePixelRatio||1,w=stage.clientWidth,hh=stage.clientHeight;
   for(const [c,x] of [[bg,cb],[dr,cd],[lv,cl]]){c.width=Math.round(w*dpr);c.height=Math.round(hh*dpr);x.setTransform(dpr,0,0,dpr,0,0)}
   drawBg();redraw();
@@ -499,7 +499,7 @@ function updatePageUI(){
   const l=$('#pageLbl');if(l)l.textContent=`Página ${cur+1}/${pages.length} ▾`;
   const u=$('#btnUndo'),r=$('#btnRedo');
   if(u)u.disabled=!P().undo.length;if(r)r.disabled=!P().redo.length;
-  chBar();
+  REG.pageUI.forEach(f=>f());
 }
 
 /* --- Exportar: imagen PNG de la página o PDF de todas (vía imprimir) --- */
