@@ -5,7 +5,7 @@ Pizarra digital y panel de asamblea para la **Pantalla Digital Interactiva (PDI)
 **Abrir la app:** https://ilinper301-hue.github.io/fori/
 
 ## Qué incluye
-- **Pizarra:** lápiz, fluorescente, borrador, formas (con o sin relleno), texto y herramienta para mover, duplicar o borrar lo dibujado. Paleta de 24 colores más color personalizado. Deshacer y rehacer.
+- **Pizarra:** lápiz, fluorescente, borrador, formas (con o sin relleno), texto y herramienta para mover, duplicar o borrar lo dibujado. Paleta de 24 colores más color personalizado. Deshacer y rehacer. El borrador quita de verdad lo que toca: corta los trazos y las formas sin relleno por donde pasa y borra enteros los textos y las formas con relleno (las imágenes se borran con Mover).
 - **Fondos:** liso, cuadrícula, puntos, pauta de doble línea, pauta Montessori y cuadrovía, en tres tamaños, e imagen de fondo.
 - **Páginas:** varias páginas con guardado automático. Exportar una página como imagen o todas en PDF.
 - **Tres modos de pantalla:** completa (todas las herramientas), mínima (pantalla libre con una barra pequeña) y libre (sin herramientas).
@@ -14,7 +14,7 @@ Pizarra digital y panel de asamblea para la **Pantalla Digital Interactiva (PDI)
 - **Apoyo a la explicación:** foco de atención y notas adhesivas.
 - **Matemáticas:** base 10, reloj analógico y digital (con la hora en palabras), regla y transportador, monedas y billetes de euro, recta numérica, fracciones, tabla del 100, dados, geoplano, regletas de Cuisenaire y tangram con retos.
 - **Insertar:** imágenes y fotos (que se mueven y se agrandan) y fichas o libros en PDF (cada página del PDF pasa a ser una página de la pizarra para escribir encima).
-- **Lecciones:** guarda las páginas como lección para prepararla en casa y abrirla en la PDI; se pueden exportar e importar como archivo `.fori`. Las páginas se adaptan al tamaño de la pantalla donde se abren.
+- **Lecciones:** guarda las páginas como lección para prepararla en casa y abrirla en la PDI; se pueden exportar e importar como archivo `.fori`. Cada página tiene un tamaño propio y se ve entera, centrada y sin deformar en cualquier pantalla; la pauta y la ficha de fondo acompañan a lo escrito, y cambiar de modo o de pantalla no encoge ni mueve nada.
 - **Pizarra dividida** en 2, 3 o 4 zonas, cada una con su color y su goma, para que salgan varios alumnos a la vez.
 - **Ruleta** para elegir alumno, **regla** para trazar líneas apoyándose en ella y letra **Fredoka** en la herramienta Texto.
 - **Tabula:** importa clases, alumnos y horario desde Tabula (mismo navegador o archivo de copia). **PIN** opcional para Ajustes.
