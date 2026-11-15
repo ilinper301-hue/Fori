@@ -26,4 +26,4 @@ function mNoise(body){
   }
   return()=>{dead=true;cancelAnimationFrame(raf);stream&&stream.getTracks().forEach(t=>t.stop());ctx&&ctx.close()};
 }
-
+tool({id:'noise',group:'aula',order:80,icon:'sound',label:'Ruido',title:'Medidor de ruido',build:mNoise,w:420});

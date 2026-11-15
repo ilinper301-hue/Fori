@@ -17,4 +17,4 @@ function mScore(body){
     h('button',{class:'btn ghost',onclick:()=>{S.counters.forEach(t=>t.v=0);save();draw()}},...ib('reset','A cero'))));
   draw();
 }
-
+tool({id:'score',group:'aula',order:90,icon:'trophy',label:'Puntos',title:'Contadores de equipos',build:mScore,w:560});

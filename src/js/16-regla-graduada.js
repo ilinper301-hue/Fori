@@ -19,7 +19,7 @@ function toggleRuler(){
   if(ruler){ruler.el.remove();ruler=null;closeWin('ruler-set');refreshRail();return}
   const el=h('div',{class:'ruler'}),body=h('div'),rot=h('div',{class:'rrot','aria-label':'Girar la regla'},ico('rotate')),ang=h('div',{class:'rang'});
   const btns=h('div',{class:'rbtns'},
-    h('button',{'aria-label':'Ajustes de la regla',onclick:()=>openWin('ruler-set','Regla',mRuler,460)},ico('settings')),
+    h('button',{'aria-label':'Ajustes de la regla',onclick:()=>openTool('ruler-set')},ico('settings')),
     h('button',{'aria-label':'Quitar la regla',onclick:toggleRuler},ico('x')));
   el.append(body,rot,btns,ang);el.style.transformOrigin=`${RPAD}px 0px`; // gira alrededor del 0
   ruler={el,body,rot,ang,x:0,y:0,a:0,W:0};manip.append(el);renderRuler();
@@ -79,3 +79,5 @@ function rulerSnap(p,size){
   if(k<0&&k>-36)off=-(size/2+2);else if(k>RH&&k<RH+36)off=RH+size/2+2;else return null;
   return q=>{const w={x:q.x-O.x,y:q.y-O.y},tt=w.x*d.x+w.y*d.y;return{x:O.x+d.x*tt+n.x*off,y:O.y+d.y*tt+n.y*off}};
 }
+tool({id:'ruler',group:'mates',order:30,icon:'ruler',label:'Regla',run:toggleRuler,on:()=>!!ruler,obj:()=>ruler,clear:()=>{if(ruler)toggleRuler()}});
+tool({id:'ruler-set',group:'mates',hidden:true,title:'Regla',build:mRuler,w:460});

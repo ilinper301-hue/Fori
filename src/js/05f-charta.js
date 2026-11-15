@@ -40,6 +40,7 @@ function chBar(){
   const [menos,mas]=chBarEl.querySelectorAll('button');menos.disabled=ch.k<=0;mas.disabled=ch.k>=ch.n;
   chBarEl.querySelector('.ch-all').textContent=ch.k>=ch.n?'Ocultar':'Todo';
 }
+REG.pageUI.push(chBar); // se actualiza con la página
 
 // Entrada desde Charta (se llama al arrancar, después de cargar la pizarra)
 function chEntrada(){

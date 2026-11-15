@@ -9,7 +9,7 @@ function renderModeChip(){
   c.style.cssText=`display:inline-flex;background:${m[3]};color:${m[4]}`;
   c.textContent=`${m[1]} ${m[2]}`;c.setAttribute('role','button');c.tabIndex=0;c.setAttribute('aria-label','Semáforo de trabajo: '+m[2]);
 }
-const chipOpen=()=>openWin('sema','Semáforo de trabajo',mSemaforo,520);
+const chipOpen=()=>openTool('sema');
 document.addEventListener('click',e=>{if(e.target.closest('#modeChip'))chipOpen()});
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.id==='modeChip'){e.preventDefault();chipOpen()}});
 function mSemaforo(body){
@@ -25,5 +25,6 @@ function mSemaforo(body){
   body.append(circle,name,desc,h('div',{class:'as-sg'},...btns),h('div',{class:'row c',style:'margin-top:14px'},h('button',{class:'btn ghost',onclick:()=>{S.semaforo='';save();draw();renderModeChip()}},...ib('power','Apagar semáforo'))));
   draw();
 }
+tool({id:'sema',group:'aula',order:60,icon:'traffic',label:'Semáforo',title:'Semáforo de trabajo',build:mSemaforo,w:520});
 renderModeChip();
 

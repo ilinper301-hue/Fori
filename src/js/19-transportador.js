@@ -66,4 +66,4 @@ function toggleProt(){
   x.addEventListener('pointerdown',e=>e.stopPropagation());
   refreshRail();
 }
-
+tool({id:'prot',group:'mates',order:70,icon:'protractor',label:'Transportador',run:toggleProt,on:()=>!!prot,obj:()=>prot,clear:()=>{if(prot)toggleProt()}});

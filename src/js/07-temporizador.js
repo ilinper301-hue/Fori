@@ -35,4 +35,4 @@ function mTimer(body){
   draw();
   return()=>clearInterval(iv);
 }
-
+tool({id:'timer',group:'aula',order:70,icon:'timer',label:'Tiempo',title:'Temporizador',build:mTimer,w:400});

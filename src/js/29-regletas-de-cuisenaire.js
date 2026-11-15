@@ -40,4 +40,4 @@ function mCuis(body){
   updateCuis();
   return()=>{cuisui=null};
 }
-
+tool({id:'cuis',group:'mates',order:50,icon:'rods',label:'Regletas',title:'Regletas de Cuisenaire',build:mCuis,w:620,clear:cuisClear});

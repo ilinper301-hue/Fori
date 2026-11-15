@@ -133,4 +133,4 @@ function mEur(body){
   updateEur();updInfo();
   return()=>{eurui=null};
 }
-
+tool({id:'eur',group:'mates',order:40,icon:'euro',label:'Dinero',title:'Monedas y billetes',build:mEur,w:640,clear:eurClear});

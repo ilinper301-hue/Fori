@@ -27,4 +27,4 @@ function mHundred(body){
     h('p',{class:'muted',style:'margin:10px 0 0'},'Toca una casilla para cambiar su color: amarillo, azul, verde'));
   paint();
 }
-
+tool({id:'hundred',group:'mates',order:100,icon:'grid',label:'Tabla del 100',title:'Tabla del 100',build:mHundred,w:640});

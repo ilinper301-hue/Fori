@@ -7,4 +7,4 @@ function mSchedule(body){
   draw();const iv=setInterval(draw,30000);
   return()=>clearInterval(iv);
 }
-
+tool({id:'sched',group:'aula',order:40,icon:'calendar',label:'Horario',title:'Horario de hoy',build:mSchedule,w:540});

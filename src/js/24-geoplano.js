@@ -51,4 +51,4 @@ function mGeo(body){
       h('button',{class:'btn danger',onclick:()=>{bands=[];draw()}},...ib('trash','Borrar todo'))));
   draw();
 }
-
+tool({id:'geo',group:'mates',order:120,icon:'geo',label:'Geoplano',title:'Geoplano',build:mGeo,w:620});

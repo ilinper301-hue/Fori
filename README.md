@@ -47,6 +47,8 @@ El código está separado en partes dentro de `src/` y se junta en un único `in
 - `src/css/`: estilos (`base.css`, `estilo-fori.css`, `modulos.css`).
 - `src/js/`: un archivo por módulo (pizarra, herramientas del aula, matemáticas, asamblea, interfaz…). Se juntan en orden alfabético, por eso empiezan por un número.
 
+**Herramientas.** Cada herramienta (barra derecha y menú Matemáticas) se apunta sola al final de su archivo con `tool({id, group, order, icon, label, title, build, w})`; la interfaz, la bandeja y «Reiniciar» leen ese registro (`REG.tools`, explicado en `src/js/00-base.js`). Para añadir una herramienta basta con crear su archivo y apuntarla: no hay que tocar la interfaz.
+
 Después de cambiar algo en `src/`:
 
 ```
