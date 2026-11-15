@@ -1,11 +1,11 @@
 /* ============ Lecciones: preparar la clase en casa y abrirla en la PDI ============ */
 /* Biblioteca en IndexedDB (base 'fori', almacén 'kv'):
    'lessons'      -> lista ligera [{id,name,date,n,thumb}]
-   'lesson:<id>'  -> páginas de esa lección [{strokes,bg,img}]
+   'lesson:<id>'  -> páginas de esa lección [{strokes,bg,img,size}] (trazos en coordenadas de la página, de tamaño size)
    No toca la clave 'board'. Archivo .fori = JSON {app:'fori',type:'lesson',version:1,name,date,pages}. */
 const LES={KEY:'lessons',VER:1,MAXP:300,sig:null,refresh:null};
 
-const lesPlain=ps=>ps.map(p=>({strokes:p.strokes,bg:p.bg,img:p.img||null,size:p.size||null,ch:p.ch||null}));
+const lesPlain=ps=>ps.map(pagePlain); // coordenadas lógicas: la lección no depende de la pantalla en que se guardó
 const lesSig=()=>{ // huella del contenido actual, para saber si hay cambios sin guardar como lección
   const s=JSON.stringify(lesPlain(pages));let x=5381;
   for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;
@@ -35,7 +35,7 @@ const lesPages=async id=>{const d=await DB.get('lesson:'+id);return Array.isArra
 
 async function lesThumb(p){
   try{
-    const c=await renderPage({strokes:p.strokes,bg:p.bg,img:p.img},Math.min(1,220/Math.max(1,stage.clientWidth)));
+    const c=await renderPage({strokes:p.strokes,bg:p.bg,img:p.img,size:p.size||null,v:p.v||null},Math.min(1,220/Math.max(1,stage.clientWidth)));
     return c.toDataURL('image/jpeg',.6);
   }catch{return null}
 }

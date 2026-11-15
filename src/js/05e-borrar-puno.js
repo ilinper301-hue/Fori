@@ -1,12 +1,12 @@
 /* ============ Borrar con el puño ============ */
 // Un contacto táctil grande (puño o palma) o tres dedos muy juntos actúan como un borrador grande.
-// Reutiliza el borrador de siempre: crea un trazo 'eraser', así que deshacer/rehacer funcionan igual.
+// Reutiliza el borrador de siempre (05g-borrado-real.js), así que deshacer/rehacer funcionan igual.
 const FIST_DEFAULT=40;     // px CSS de contacto a partir de los cuales se considera un puño
 const FIST_GROUP_DIST=190; // px: tres contactos así de juntos cuentan como un puño (pantallas que no informan del tamaño)
 const FIST_STALE=15000;    // ms: se olvidan contactos que no llegaron a soltarse
 const fistPx=()=>S.fistPx===undefined?FIST_DEFAULT:(Number(S.fistPx)||0); // 0 = desactivado
 const fistTouches=new Map(); // contactos táctiles apoyados: id -> {x,y,t}
-let fistNow=null;            // gesto en curso: {ids:Set, s:trazo borrador, last:{x,y}}
+// el gesto en curso (fistNow) está declarado en 05-pizarra.js, que lo repinta
 
 function fistCenter(ids){
   const ps=ids.map(i=>fistTouches.get(i)).filter(Boolean);
@@ -63,7 +63,7 @@ function fistUp(e){
   if(!fistNow||!fistNow.ids.has(e.pointerId))return;
   const s=fistNow.s;fistNow=null; // al soltar el primer dedo termina el gesto
   delete s.zone;
-  P().strokes.push(s);record({t:'add',s});
+  eraseApply(s);
 }
 dr.addEventListener('pointerup',fistUp);dr.addEventListener('pointercancel',fistUp);
 
