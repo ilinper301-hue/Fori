@@ -372,6 +372,10 @@ async function pantallas(b,url){
   ok(e.lay==='d0'&&entero(e)&&e.sz===3&&e.szc===0&&e.rec===6,'PDI: las barras salen enteras, con los tres grosores y los seis colores recientes');
   ok(e.favs.join()===DE_SIEMPRE.join(),'PDI: sin tocar nada, en la barra derecha están las once herramientas de siempre');
   ok(await p.locator('[data-pop=math]').count()===0&&await p.isVisible('#btnTools')&&await p.isHidden('#dock .d-tools'),'PDI: «Matemáticas» ya no está abajo; el cajón se abre desde la barra derecha');
+  // accesos a las otras apps, arriba: Lectori, Barri y Calculi (con su icono, que se carga y está en la caché sin conexión)
+  const apps=await p.$$eval('#top a.appbtn',as=>as.map(a=>[a.title,a.href,a.querySelector('img').naturalWidth]));
+  ok(apps.map(x=>x[0]).join()==='Abrir Lectori,Abrir Barri,Abrir Calculi'&&/\/Calculi\/$/.test(apps[2][1])&&apps.every(x=>x[2]>0),'arriba están los accesos a Lectori, Barri y Calculi, con su icono');
+  ok(require('fs').readFileSync(ROOT+'/sw.js','utf8').includes("'./apps/calculi.png'"),'el icono de Calculi está en la caché sin conexión');
   await cajon(p);
   ok(await p.locator('#pop .tile').count()===23&&await p.locator('#pop .tile.fav').count()===11&&await dentro(p,'#pop'),'el cajón enseña las 23 herramientas y marca con estrella las once de la barra');
   // un toque abre la herramienta y cierra el cajón; al volver a abrirlo, sale marcada
