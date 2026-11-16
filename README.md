@@ -8,6 +8,8 @@ Pizarra digital y panel de asamblea para la **Pantalla Digital Interactiva (PDI)
 - **Pizarra:** lápiz, fluorescente, borrador, formas (con o sin relleno), texto y herramienta para mover, duplicar o borrar lo dibujado. Paleta de 24 colores más color personalizado. Deshacer y rehacer. El borrador quita de verdad lo que toca: corta los trazos y las formas sin relleno por donde pasa y borra enteros los textos y las formas con relleno (las imágenes se borran con Mover).
 - **Fondos:** liso, cuadrícula, puntos, pauta de doble línea, pauta Montessori y cuadrovía, en tres tamaños, e imagen de fondo.
 - **Páginas:** varias páginas con guardado automático (cada página se guarda por separado, y las imágenes y fichas una sola vez, así que escribir no se vuelve lento aunque haya muchas páginas con PDF). Exportar una página como imagen o todas en PDF.
+- **Cajón de herramientas:** el botón «Herramientas» abre todas las herramientas por grupos (Aula, Apoyo y Matemáticas). Manteniendo pulsada una, se pone en la barra derecha o se quita: así cada docente tiene a mano las que usa.
+- **Cualquier pantalla:** las barras se adaptan solas para que no se corte ningún botón. En pantallas bajas los grosores pasan a un solo botón; en tabletas y móviles la barra de dibujo se estrecha y la pizarra gana sitio (en el móvil en vertical ocupa todo el ancho).
 - **Tres modos de pantalla:** completa (todas las herramientas), mínima (pantalla libre con una barra pequeña) y libre (sin herramientas).
 - **Asamblea:** calendario, tiempo, estación, emociones de la clase y días de cole.
 - **Gestión del aula:** alumno al azar, parejas y grupos, encargados, horario del día (con pictogramas de ARASAAC), semáforo de trabajo, temporizador y cronómetro, medidor de ruido y contadores de puntos. Varias clases con su propia lista.
@@ -47,7 +49,9 @@ El código está separado en partes dentro de `src/` y se junta en un único `in
 - `src/css/`: estilos (`base.css`, `estilo-fori.css`, `modulos.css`).
 - `src/js/`: un archivo por módulo (pizarra, herramientas del aula, matemáticas, asamblea, interfaz…). Se juntan en orden alfabético, por eso empiezan por un número.
 
-**Herramientas.** Cada herramienta (barra derecha y menú Matemáticas) se apunta sola al final de su archivo con `tool({id, group, order, icon, label, title, build, w})`; la interfaz, la bandeja y «Reiniciar» leen ese registro (`REG.tools`, explicado en `src/js/00-base.js`). Para añadir una herramienta basta con crear su archivo y apuntarla: no hay que tocar la interfaz.
+**Herramientas.** Cada herramienta (barra derecha y menú Matemáticas) se apunta sola al final de su archivo con `tool({id, group, order, icon, label, title, build, w})`; la interfaz, la bandeja y «Reiniciar» leen ese registro (`REG.tools`, explicado en `src/js/00-base.js`). Para añadir una herramienta basta con crear su archivo y apuntarla: no hay que tocar la interfaz, y sale sola en el cajón (`33c-cajon-de-herramientas.js`).
+
+**Tamaños de pantalla.** `layout()` (`35b-pantallas-pequenas.js`) decide la colocación según lo que cabe y la apunta en `<body data-lay>`; los estilos de cada colocación están en `src/css/extra-pantallas.css`.
 
 Después de cambiar algo en `src/`:
 

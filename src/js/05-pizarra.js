@@ -496,7 +496,7 @@ function deletePage(){
   toast('Página borrada',{label:ib('undo','Deshacer'),fn:()=>{if(pages.length===1&&!pages[0].strokes.length&&pages[0]!==removed)pages=[removed];else pages.splice(at,0,removed);gotoPage(at)}});
 }
 function updatePageUI(){
-  const l=$('#pageLbl');if(l)l.textContent=`Página ${cur+1}/${pages.length} ▾`;
+  const l=$('#pageLbl');if(l)l.replaceChildren(h('span',{},h('span',{class:'lbl-t'},'Página '),`${cur+1}/${pages.length}`,h('span',{class:'lbl-t'},' ▾')));
   const u=$('#btnUndo'),r=$('#btnRedo');
   if(u)u.disabled=!P().undo.length;if(r)r.disabled=!P().redo.length;
   REG.pageUI.forEach(f=>f());

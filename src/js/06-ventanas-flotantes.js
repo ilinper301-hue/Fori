@@ -22,7 +22,8 @@ function openWin(id,title,build,w=400){
   if(wins.has(id)){const w=wins.get(id);if(w.min)restoreWin(id);else closeWin(id);return}
   const n=wins.size%6,ui=S.ui||1;
   const body=h('div',{class:'body'});
-  const win=h('div',{class:'win',style:`width:${Math.round(w*ui)}px;left:${40+n*34}px;top:${24+n*34}px;z-index:${++zTop}`},
+  const ww=Math.round(w*ui),x=Math.max(4,Math.min(40+n*34,stage.clientWidth-ww-8)); // en pantallas estrechas, que no nazca fuera
+  const win=h('div',{class:'win',style:`width:${ww}px;left:${x}px;top:${24+n*34}px;z-index:${++zTop}`},
     h('header',{},h('span',{},title),h('button',{class:'x','aria-label':'Minimizar',title:'Minimizar',onclick:()=>minimizeWin(id)},ico('minus')),h('button',{class:'x','aria-label':'Cerrar',onclick:()=>closeWin(id)},ico('x'))),body);
   win.style.setProperty('--wc',WIN_COLOR[(toolById(id)||{}).group]||'var(--teal)');
   floaters.append(win);
@@ -47,6 +48,7 @@ function renderTray(){
     }},...ib(m.icon,m.label));
   }));
   tray.style.display=items.length?'flex':'none';
+  fitDock();
 }
 const closeAllWins=()=>[...wins.keys()].forEach(closeWin);
 

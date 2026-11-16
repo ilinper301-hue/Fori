@@ -9,7 +9,7 @@ function applyTheme(){
   $('meta[name=theme-color]').content=S.theme==='dark'?'#0B1430':'#13214A';
   drawBg();redraw();
 }
-function applyUi(){document.documentElement.style.setProperty('--ui',String(S.ui||1))}
+function applyUi(){document.documentElement.style.setProperty('--ui',String(S.ui||1));layout()}
 let wl=null;
 async function lock(){try{wl=await navigator.wakeLock.request('screen')}catch{}}
 document.addEventListener('pointerdown',()=>{if(!wl)lock()},{once:true});
@@ -25,7 +25,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 
 $('#btnSettings').replaceChildren(ico('settings'));$('#btnView').replaceChildren(ico('view'));$('#btnFs').replaceChildren(ico('full'));$('#cornerBtn').replaceChildren(ico('view'));
 applyUi();
-buildLeft();buildRight();buildDock();renderClassChip();
+buildLeft();buildDock();renderClassChip(); // la barra derecha la monta layout(), que sabe cuántas herramientas caben
 document.documentElement.dataset.theme=S.theme;
 new ResizeObserver(fit).observe(stage);
 fit();tickClock();setInterval(tickClock,1000);
