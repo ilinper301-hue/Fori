@@ -672,6 +672,10 @@ body[data-lay=p] #top{gap:6px;padding-left:6px;padding-right:6px}
 body[data-lay=p] #dock .d-reset,body[data-lay=p] #dock .dsep{display:none} /* «Reiniciar» está dentro del cajón */
 /* menús en pantallas estrechas: el selector de color se pone en vertical */
 @media (max-width:560px){#pop .cp{flex-direction:column;gap:14px;align-items:center}}
+/* barra superior del móvil: botones algo más pequeños para que quepan los tres accesos a las otras apps */
+body[data-lay=p] #top .mini{width:36px;height:40px}
+body[data-lay=p] #top .appbtn{width:32px;height:32px}
+body[data-lay=p] #top .chip{padding:0 10px}
 /* letra Fredoka para la herramienta Texto */
 @font-face{font-family:'Fredoka';src:url(fonts/fredoka.woff) format('woff');font-weight:400 700;font-display:swap}
 @font-face{font-family:'Fredoka';src:url(fonts/fredoka-ext.woff) format('woff');font-weight:400 600;font-display:swap;unicode-range:U+0131,U+0152-0153,U+2122,U+2212}
@@ -737,6 +741,7 @@ body[data-lay=p] #dock .d-reset,body[data-lay=p] #dock .dsep{display:none} /* «
     <!-- Accesos directos a las otras apps de la familia: se abren en su propia ventana, no dentro de Fori -->
     <a class="appbtn" href="https://ilinper301-hue.github.io/Lectori/" target="_blank" rel="noopener" title="Abrir Lectori" aria-label="Abrir Lectori"><img src="apps/lectori.png" alt=""></a>
     <a class="appbtn" href="https://ilinper301-hue.github.io/barri/" target="_blank" rel="noopener" title="Abrir Barri" aria-label="Abrir Barri"><img src="apps/barri.png" alt=""></a>
+    <a class="appbtn" href="https://ilinper301-hue.github.io/Calculi/" target="_blank" rel="noopener" title="Abrir Calculi" aria-label="Abrir Calculi"><img src="apps/calculi.png" alt=""></a>
     <span class="brand-sep"></span>
     <button class="mini" id="btnView" data-pop="view" aria-label="Modo de pantalla">▣</button>
     <button class="mini" id="btnFs" aria-label="Pantalla completa">⛶</button>
