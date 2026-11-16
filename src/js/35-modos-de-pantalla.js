@@ -5,6 +5,7 @@ const viewNodes=()=>VIEWS.map(([v,ic,lb])=>h('button',{class:'wide'+((S.view||'f
 function setView(v){
   commitEditor();S.view=v;save();
   document.body.classList.remove('v-mini','v-clean');if(v!=='full')document.body.classList.add('v-'+v);
+  layout();
   if(v==='mini')renderMini();
   if(v==='clean')toast('Mantén pulsado el botón de abajo a la derecha para volver a ver las herramientas');
 }

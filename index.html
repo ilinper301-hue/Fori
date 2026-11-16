@@ -612,6 +612,66 @@ dialog.tabdlg.small{width:min(420px,92vw)}
 .les-empty .les-sub{font-size:14px;color:var(--muted)}
 @media (max-width:640px){.les-item{flex-direction:column}.les-th{width:100%}}
 .win:has(.les-bar){max-width:calc(100% - 24px)}
+/* ============ Cajón de herramientas ============ */
+#pop{max-height:calc(100% - 16px);overflow-y:auto;overscroll-behavior:contain}
+#btnTools{margin-top:auto;background:var(--frame2);color:var(--on-frame)} /* siempre abajo y a la vista */
+#btnTools:hover{background:var(--frame3)}
+#dock .d-tools{display:none}
+#pop .tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:82px;min-width:0;padding:4px;font-size:28px}
+#pop .tile small{font-size:12.5px;font-weight:600;line-height:1.15;text-align:center}
+#pop .tile .fstar{display:none;position:absolute;top:8px;left:calc(50% + 16px);font-size:14px;color:var(--yellow)}
+#pop .tile.fav .fstar{display:inline-grid}
+#pop .tile.holding::after{content:"";position:absolute;inset:0;border-radius:10px;border:3px solid var(--accent);animation:hold .6s linear}
+#pop .popsep.grp{grid-column:1/-1}
+#pop .popsep.grp:first-child{border-top:0;margin-top:0;padding-top:4px}
+#pop .pophint{grid-column:1/-1;margin:2px 8px 4px;font-size:13.5px;line-height:1.35;color:var(--muted)}
+#pop .pophint .ico{color:var(--yellow);font-size:14px;vertical-align:-2px}
+
+/* ============ Grosor en un solo botón ============ */
+.szc{display:none}
+.szc i{display:block;border-radius:50%;background:var(--on-frame2)}
+
+/* ============ Falta alto (d1, d2, d3): la barra izquierda se aprieta en vez de cortarse ============ */
+body[data-lay=d1] .sz,body[data-lay=d2] .sz,body[data-lay=d3] .sz{display:none}
+body[data-lay=d1] .szc,body[data-lay=d2] .szc,body[data-lay=d3] .szc{display:flex;min-height:46px}
+body[data-lay=d1] #recent .sw:nth-child(n+5),body[data-lay=d2] #recent .sw:nth-child(n+3),body[data-lay=d3] #recent .sw:nth-child(n+3){display:none}
+body[data-lay=d3] #left .tool small{display:none}
+body[data-lay=d3] #left .tool{min-height:46px}
+body[data-lay=d3] #left .tool.half{min-height:40px}
+body[data-lay=d3] #left .sep{margin:3px 0}
+
+/* ============ Barra de abajo: si no cabe, los botones se quedan en su icono ============ */
+#dock.dk1 #tray .lbl-t,#dock.dk2 .lbl-t,body[data-lay=c] #dock .lbl-t,body[data-lay=p] #dock .lbl-t{display:none}
+#dock.dk1 #tray .dbtn,#dock.dk2 .dbtn,body[data-lay=c] #dock .dbtn,body[data-lay=p] #dock .dbtn{padding:0 13px}
+
+/* ============ Compacta (c) y móvil en vertical (p) ============ */
+body[data-lay=c] #app{grid-template-columns:calc((var(--lc,1)*50px + 8px)*var(--ui)) minmax(0,1fr);grid-template-rows:calc(46px*var(--ui)) 1fr calc(60px*var(--ui));grid-template-areas:"top top" "left stage" "dock dock"}
+body[data-lay=p] #app{grid-template-columns:minmax(0,1fr);grid-template-rows:calc(46px*var(--ui)) 1fr auto calc(58px*var(--ui));grid-template-areas:"top" "stage" "left" "dock"}
+body[data-lay=c] #right,body[data-lay=p] #right{display:none}
+body[data-lay=c] #dock .d-tools,body[data-lay=p] #dock .d-tools{display:inline-flex}
+body[data-lay=c] #top,body[data-lay=p] #top{padding-top:2px}
+/* la barra de dibujo pasa a ser una rejilla de casillas iguales, sin rótulos */
+body[data-lay=c] #left,body[data-lay=p] #left{display:grid;gap:4px;overflow:hidden;align-content:start;justify-content:center}
+body[data-lay=c] #left{grid-template-columns:repeat(var(--lc,1),46px);grid-auto-rows:46px;padding:4px}
+body[data-lay=p] #left{grid-template-columns:repeat(auto-fill,minmax(44px,1fr));grid-auto-rows:44px;padding:6px 8px 2px;justify-content:stretch}
+body[data-lay=c] #left .pair,body[data-lay=p] #left .pair,body[data-lay=c] #recent,body[data-lay=p] #recent{display:contents}
+body[data-lay=c] #left .sep,body[data-lay=p] #left .sep,body[data-lay=c] .sz,body[data-lay=p] .sz,body[data-lay=c] #left .tool small,body[data-lay=p] #left .tool small{display:none}
+body[data-lay=c] #left .tool,body[data-lay=p] #left .tool{width:auto;min-height:0;padding:0;font-size:24px}
+body[data-lay=c] #left .tool.on::before,body[data-lay=p] #left .tool.on::before{display:none}
+body[data-lay=c] .szc,body[data-lay=p] .szc{display:flex}
+body[data-lay=c] #left .sw,body[data-lay=p] #left .sw{width:32px;height:32px;place-self:center}
+body[data-lay=c] #recent .sw:nth-child(n+3),body[data-lay=c].norec #recent .sw,body[data-lay=p] #recent .sw:nth-child(n+5){display:none}
+/* barra de abajo */
+body[data-lay=c] #dock,body[data-lay=p] #dock{gap:6px;padding:0 6px}
+body[data-lay=c] #dock .dbtn,body[data-lay=p] #dock .dbtn{min-height:46px}
+body[data-lay=p] #dock{gap:4px;justify-content:space-between}
+body[data-lay=p] #dock .dbtn{flex:1 1 34px;min-width:34px;max-width:54px;padding:0 4px;justify-content:center}
+body[data-lay=p] #dock .sp{display:none}
+body[data-lay=p] #top{gap:6px;padding-left:6px;padding-right:6px}
+@media (max-width:420px){body[data-lay=p] .brand,body[data-lay=p] .brand-sep{display:none}}
+body[data-lay=p] #dock .d-reset,body[data-lay=p] #dock .dsep{display:none} /* «Reiniciar» está dentro del cajón */
+/* menús en pantallas estrechas: el selector de color se pone en vertical */
+@media (max-width:560px){#pop .cp{flex-direction:column;gap:14px;align-items:center}}
 /* letra Fredoka para la herramienta Texto */
 @font-face{font-family:'Fredoka';src:url(fonts/fredoka.woff) format('woff');font-weight:400 700;font-display:swap}
 @font-face{font-family:'Fredoka';src:url(fonts/fredoka-ext.woff) format('woff');font-weight:400 600;font-display:swap;unicode-range:U+0131,U+0152-0153,U+2122,U+2212}
@@ -898,6 +958,8 @@ const ICONS={
   power:'<path d="M12 3.500v8"/><path d="M7 6.500a7.500 7.500 0 1 0 10 0"/>',
   pair:'<circle cx="8.500" cy="8" r="3"/><circle cx="15.500" cy="8" r="3"/><path d="M3 19.500a5.500 5.500 0 0 1 11 0"/><path d="M10.500 14.600A5.500 5.500 0 0 1 21 19.500"/>',
   share:'<circle cx="6" cy="12" r="2.6"/><circle cx="17.5" cy="5.5" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/><path d="M8.3 10.7l7-3.9"/><path d="M8.3 13.3l7 3.9"/>',
+  apps:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/>',
+  star:'<path fill="currentColor" d="M12 3.6l2.5 5.3 5.8.8-4.2 4 1 5.8-5.1-2.8-5.1 2.800 1-5.800-4.200-4 5.800-.800z"/>',
   lock:'<rect x="5" y="10.5" width="14" height="10" rx="2.500"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.500"/><path d="M12 14.500v2.500"/>',
   backspace:'<path d="M9 5.500h10a1.500 1.500 0 0 1 1.500 1.500v10a1.500 1.500 0 0 1-1.500 1.500H9L3 12z"/><path d="M12.500 9.500l5 5M17.500 9.500l-5 5"/>',
 };
@@ -1458,7 +1520,7 @@ function deletePage(){
   toast('Página borrada',{label:ib('undo','Deshacer'),fn:()=>{if(pages.length===1&&!pages[0].strokes.length&&pages[0]!==removed)pages=[removed];else pages.splice(at,0,removed);gotoPage(at)}});
 }
 function updatePageUI(){
-  const l=$('#pageLbl');if(l)l.textContent=`Página ${cur+1}/${pages.length} ▾`;
+  const l=$('#pageLbl');if(l)l.replaceChildren(h('span',{},h('span',{class:'lbl-t'},'Página '),`${cur+1}/${pages.length}`,h('span',{class:'lbl-t'},' ▾')));
   const u=$('#btnUndo'),r=$('#btnRedo');
   if(u)u.disabled=!P().undo.length;if(r)r.disabled=!P().redo.length;
   REG.pageUI.forEach(f=>f());
@@ -2320,7 +2382,8 @@ function openWin(id,title,build,w=400){
   if(wins.has(id)){const w=wins.get(id);if(w.min)restoreWin(id);else closeWin(id);return}
   const n=wins.size%6,ui=S.ui||1;
   const body=h('div',{class:'body'});
-  const win=h('div',{class:'win',style:`width:${Math.round(w*ui)}px;left:${40+n*34}px;top:${24+n*34}px;z-index:${++zTop}`},
+  const ww=Math.round(w*ui),x=Math.max(4,Math.min(40+n*34,stage.clientWidth-ww-8)); // en pantallas estrechas, que no nazca fuera
+  const win=h('div',{class:'win',style:`width:${ww}px;left:${x}px;top:${24+n*34}px;z-index:${++zTop}`},
     h('header',{},h('span',{},title),h('button',{class:'x','aria-label':'Minimizar',title:'Minimizar',onclick:()=>minimizeWin(id)},ico('minus')),h('button',{class:'x','aria-label':'Cerrar',onclick:()=>closeWin(id)},ico('x'))),body);
   win.style.setProperty('--wc',WIN_COLOR[(toolById(id)||{}).group]||'var(--teal)');
   floaters.append(win);
@@ -2345,6 +2408,7 @@ function renderTray(){
     }},...ib(m.icon,m.label));
   }));
   tray.style.display=items.length?'flex':'none';
+  fitDock();
 }
 const closeAllWins=()=>[...wins.keys()].forEach(closeWin);
 
@@ -3786,16 +3850,20 @@ const PALETTE=['ink','#000000','#ffffff','#868e96','#8d5524','#f783ac',
 const cssColor=c=>c==='ink'?'var(--ink)':c;
 const pop=$('#pop');let popOwner=null;
 function closePop(){pop.style.display='none';popOwner=null}
-// place: 'right' (barra izquierda), 'above' (barra inferior) o 'below' (barra superior)
+// place: 'right' (barra izquierda), 'left' (barra derecha), 'above' (barra inferior) o 'below' (barra superior)
 function openPop(owner,anchor,cols,nodes,place){
   if(popOwner===owner){closePop();return}
   if(place===true)place='above';
   pop.replaceChildren(...nodes);pop.style.gridTemplateColumns=`repeat(${cols},auto)`;
   pop.style.display='grid';popOwner=owner;
   const r=anchor.getBoundingClientRect();
+  if(!place&&r.right+10+pop.offsetWidth>innerWidth-8)place='above'; // sin sitio a la derecha (barra de dibujo abajo, en el móvil): encima
   if(place==='above'||place==='below'){
     pop.style.left=clamp(r.left,8,innerWidth-pop.offsetWidth-8)+'px';
     pop.style.top=(place==='above'?Math.max(8,r.top-pop.offsetHeight-10):r.bottom+10)+'px';
+  }else if(place==='left'){
+    pop.style.left=Math.max(8,r.left-pop.offsetWidth-10)+'px';
+    pop.style.top=clamp(r.bottom-pop.offsetHeight,8,Math.max(8,innerHeight-pop.offsetHeight-8))+'px';
   }else{
     pop.style.left=(r.right+10)+'px';
     pop.style.top=clamp(r.top,8,innerHeight-pop.offsetHeight-8)+'px';
@@ -3817,9 +3885,11 @@ function refreshTools(){
   $$('.sw').forEach(b=>b.classList.toggle('on',b.dataset.c===T.color));
   $$('.sz').forEach(b=>b.classList.toggle('on',Number(b.dataset.s)===T.size));
   const cc=$('.curc');if(cc)cc.style.setProperty('--c',cssColor(T.color));
+  const sc=$('.szc i');if(sc)sc.style.width=sc.style.height=(T.size*1.6+4)+'px';
   dr.style.cursor=T.tool==='text'?'text':T.tool==='select'?'move':'crosshair';
   if(T.tool!=='select')setSel(null);
 }
+function setSize(s){T.size=s;refreshTools();if(editor){editor.fs=FS[s];editor.ta.style.fontSize=FS[s]+'px';sizeEditor()}}
 const fillLabel=()=>T.fill?'◼ Con relleno':'◻ Sin relleno';
 const shapeNodes=()=>[
   ...SHAPES.map(([id,ic,nm])=>h('button',{title:nm,'aria-label':nm,class:id===T.shape?'on':'',onclick:()=>{T.shape=id;T.tool='shape';refreshTools();closePop()}},ic)),
@@ -3844,20 +3914,21 @@ function buildLeft(){
     h('button',{class:'tool','data-pop':'color',onclick:e=>openPop('color',e.currentTarget,1,colorNodes())},h('span',{class:'curc'}),h('small',{},'Colores')),
     h('div',{class:'grid2',id:'recent'}),
     h('div',{class:'sep'}),
-    ...[[3,'Fino',6],[6,'Medio',12],[12,'Grueso',22]].map(([s,n,d])=>h('button',{class:'sz','data-s':s,'aria-label':n,onclick:()=>{T.size=s;refreshTools();if(editor){editor.fs=FS[s];editor.ta.style.fontSize=FS[s]+'px';sizeEditor()}}},h('i',{style:`width:${d}px;height:${d}px`}))));
+    ...[[3,'Fino',6],[6,'Medio',12],[12,'Grueso',22]].map(([s,n,d])=>h('button',{class:'sz','data-s':s,'aria-label':n,onclick:()=>setSize(s)},h('i',{style:`width:${d}px;height:${d}px`}))),
+    // cuando no caben los tres grosores (ver 35b-pantallas-pequenas.js), este botón los recorre
+    h('button',{class:'tool szc','aria-label':'Grosor',title:'Grosor',onclick:()=>setSize(T.size===3?6:T.size===6?12:3)},h('i')));
   renderRecent();refreshTools();updatePageUI();
 }
-// Barra derecha: las herramientas del aula y, tras la raya, las de apoyo (ver el registro en 00-base.js)
-function buildRight(){
-  const btn=t=>h('button',{class:'tool',...(t.build||t.on?{'data-win':t.id}:{}),onclick:()=>toolRun(t)},ico(t.icon),h('small',{},t.label));
-  $('#right').replaceChildren(...toolsOf('aula').map(btn),h('div',{class:'sep'}),...toolsOf('apoyo').map(btn));
-}
 const BGS=[['plain','Liso'],['grid','Cuadrícula'],['dots','Puntos'],['lines','Pauta doble línea'],['montessori','Pauta Montessori'],['cuadrovia','Cuadrovía']];
+function resetTools(){
+  commitEditor();closeAllWins();REG.tools.forEach(t=>t.clear&&t.clear());
+  closePop();setSel(null);refreshRail();toast('Herramientas reiniciadas');
+}
 function buildDock(){
   const dock=$('#dock');
   const bgLabel=()=>`${BGS.find(b=>b[0]===P().bg)[1]}${P().img?' + imagen':''} ▾`;
   const setBg=()=>bgBtn.replaceChildren(...ib('layers',bgLabel()));
-  const bgBtn=h('button',{class:'dbtn','data-pop':'bg',id:'bgBtn',onclick:e=>openPop('bg',e.currentTarget,1,[
+  const bgBtn=h('button',{class:'dbtn','data-pop':'bg',id:'bgBtn',title:'Fondo',onclick:e=>openPop('bg',e.currentTarget,1,[
     ...BGS.map(([id,lb])=>h('button',{class:'wide'+(P().bg===id?' on':''),onclick:()=>{P().bg=id;drawBg();persist();setBg();closePop()}},lb)),
     h('button',{class:'wide',onclick:()=>{
       closePop();
@@ -3870,8 +3941,6 @@ function buildDock(){
     const f=e.target.files[0];if(!f)return;e.target.value='';
     await setBgImage(f);setBg();
   });
-  const mathBtn=h('button',{class:'dbtn','data-pop':'math',onclick:e=>openPop('math',e.currentTarget,2,
-    toolsOf('mates').map(m=>h('button',{class:'wide'+(toolOn(m)?' on':''),style:'grid-column:auto;text-align:left;padding:0 16px',onclick:()=>{closePop();toolRun(m);refreshRail()}},...ib(m.icon,m.label))),'above')},...ib('sigma','Matemáticas ▾'));
   const pageBtn=h('button',{class:'dbtn','data-pop':'page',id:'pageLbl',onclick:e=>openPop('page',e.currentTarget,1,[
     h('button',{class:'wide',onclick:()=>{closePop();addPage(false)}},...ib('plus','Página nueva')),
     h('button',{class:'wide',onclick:()=>{closePop();addPage(true)}},...ib('copy','Duplicar esta página')),
@@ -3880,17 +3949,17 @@ function buildDock(){
     h('button',{class:'wide',onclick:()=>{closePop();exportPDF()}},...ib('pdf','Guardar todas en PDF')),
     ...REG.pageMenu.map(f=>f())],'above')});
   dock.replaceChildren(
-    bgBtn,h('button',{class:'dbtn','data-pop':'ins',onclick:e=>openPop('ins',e.currentTarget,1,insertNodes(),'above')},...ib('plus','Insertar ▾')),mathBtn,h('span',{id:'tray'}),h('span',{class:'dsep'}),
+    bgBtn,h('button',{class:'dbtn','data-pop':'ins',title:'Insertar',onclick:e=>openPop('ins',e.currentTarget,1,insertNodes(),'above')},...ib('plus','Insertar ▾')),
+    // el cajón de herramientas se abre desde la barra derecha; aquí solo se ve cuando esa barra no está (pantallas pequeñas)
+    h('button',{class:'dbtn d-tools','data-pop':'tools',title:'Herramientas',onclick:e=>openDrawer(e.currentTarget)},...ib('apps','Herramientas')),
+    h('span',{id:'tray'}),h('span',{class:'dsep'}),
     h('button',{class:'dbtn nav','aria-label':'Página anterior',onclick:()=>gotoPage(cur-1)},ico('left')),
     pageBtn,
     h('button',{class:'dbtn nav','aria-label':'Página siguiente',onclick:()=>cur<pages.length-1?gotoPage(cur+1):addPage(false)},ico('right')),
     h('span',{class:'sp'}),
-    h('button',{class:'dbtn',onclick:()=>{
-      commitEditor();closeAllWins();REG.tools.forEach(t=>t.clear&&t.clear());
-      closePop();setSel(null);refreshRail();toast('Herramientas reiniciadas');
-    }},...ib('reset','Reiniciar')),
-    h('button',{class:'dbtn danger',onclick:clearBoard},...ib('trash','Limpiar')));
-  REG.pageUI.push(setBg); // al cambiar de página se actualiza la etiqueta del fondo
+    h('button',{class:'dbtn d-reset',title:'Reiniciar herramientas',onclick:resetTools},...ib('reset','Reiniciar')),
+    h('button',{class:'dbtn danger',title:'Limpiar la página',onclick:clearBoard},...ib('trash','Limpiar')));
+  REG.pageUI.push(setBg,fitDock); // al cambiar de página se actualiza la etiqueta del fondo (y puede cambiar lo que cabe)
   updatePageUI();
 }
 
@@ -3958,6 +4027,61 @@ function colorPicker(){
   return box;
 }
 
+/* ============ Cajón de herramientas, favoritas y barra derecha ============ */
+// El cajón enseña todas las herramientas del registro por grupos. Las favoritas son las que salen en la barra derecha.
+// S.favs: lista de ids (ajuste nuevo y opcional). Si no existe, son las de siempre: las del aula y las de apoyo.
+const TOOL_GROUPS=[['aula','Aula'],['apoyo','Apoyo'],['mates','Matemáticas']];
+const favIds=()=>Array.isArray(S.favs)?S.favs:[...toolsOf('aula'),...toolsOf('apoyo')].map(t=>t.id);
+const favTools=()=>{const f=new Set(favIds());return TOOL_GROUPS.flatMap(([g])=>toolsOf(g).filter(t=>f.has(t.id)))}; // en el orden del cajón
+let favShown=[]; // las favoritas que caben ahora mismo en la barra
+const isCompact=()=>/^[cp]$/.test(document.body.dataset.lay||''); // sin barra derecha (ver 35b-pantallas-pequenas.js)
+// Barra derecha: las favoritas que quepan (con una raya entre grupos) y, siempre a la vista, el botón del cajón
+function buildRight(){
+  const right=$('#right'),all=favTools();
+  const btn=t=>h('button',{class:'tool',...(t.build||t.on?{'data-win':t.id}:{}),'data-fav':t.id,onclick:()=>toolRun(t)},ico(t.icon),h('small',{},t.label));
+  const draw=n=>{
+    const list=all.slice(0,n),nodes=[];
+    list.forEach((t,i)=>{if(i&&t.group!==list[i-1].group)nodes.push(h('div',{class:'sep'}));nodes.push(btn(t))});
+    right.replaceChildren(...nodes,h('button',{class:'tool',id:'btnTools','data-pop':'tools',title:'Todas las herramientas',onclick:e=>openDrawer(e.currentTarget)},ico('apps'),h('small',{},'Herramientas')));
+  };
+  let n=all.length;draw(n);
+  while(n>0&&right.scrollHeight>right.clientHeight+1)draw(--n); // si no caben todas, se quedan en el cajón las últimas
+  favShown=all.slice(0,n).map(t=>t.id);
+  refreshRail();
+}
+// Pulsación larga sobre una herramienta del cajón: la pone o la quita de la barra. La barra es lo que se ve:
+// se parte de las favoritas que caben en esta pantalla, y si no cabe ninguna más, se avisa.
+function toggleFav(t,b){
+  const shown=favShown.slice(),prev=S.favs;
+  if(shown.includes(t.id)){S.favs=shown.filter(i=>i!==t.id);save();buildRight();toast(`«${t.label}» quitada de la barra`)}
+  else{
+    S.favs=[...shown,t.id];buildRight();
+    if(favShown.includes(t.id)){save();toast(`«${t.label}» puesta en la barra`)}
+    else{S.favs=prev;if(prev===undefined)delete S.favs;buildRight();toast('No caben más en la barra: quita antes alguna')}
+  }
+  $$('#pop .tile').forEach(x=>x.classList.toggle('fav',favShown.includes(x.dataset.tid)));
+}
+function toolTile(t,canFav,tw){
+  const b=h('button',{class:'tile'+(toolOn(t)?' on':'')+(canFav&&favShown.includes(t.id)?' fav':''),'data-tid':t.id,title:t.title||t.label,style:`width:${tw}px`},
+    ico(t.icon),h('small',{},t.label),ico('star','fstar'));
+  let timer=null,held=false,x0=0,y0=0;
+  const cancel=()=>{clearTimeout(timer);timer=null;b.classList.remove('holding')};
+  if(canFav){
+    b.addEventListener('pointerdown',e=>{held=false;x0=e.clientX;y0=e.clientY;b.classList.add('holding');timer=setTimeout(()=>{held=true;cancel();toggleFav(t,b)},600)});
+    b.addEventListener('pointermove',e=>{if(timer&&Math.hypot(e.clientX-x0,e.clientY-y0)>12)cancel()}); // si el dedo se mueve, es que está deslizando la lista
+    for(const ev of ['pointerup','pointerleave','pointercancel'])b.addEventListener(ev,cancel);
+  }
+  b.addEventListener('click',()=>{if(held){held=false;return}closePop();toolRun(t);refreshRail()});
+  return b;
+}
+function openDrawer(anchor){
+  const compact=isCompact(),ui=S.ui||1,W=innerWidth/ui,H=innerHeight/ui,cols=W<480?3:W>=760&&H<880?6:4, // en pantallas bajas, más ancho y menos alto
+    tw=Math.min(112,Math.floor((W-34-(cols-1)*6)/cols)),nodes=[]; // que quepa a lo ancho en cualquier móvil
+  TOOL_GROUPS.forEach(([g,name])=>{const ts=toolsOf(g);if(ts.length)nodes.push(h('div',{class:'popsep grp'},name),...ts.map(t=>toolTile(t,!compact,tw)))});
+  if(!compact)nodes.push(h('p',{class:'pophint',style:`max-width:${cols*tw+(cols-1)*6}px`},ico('star'),' Mantén pulsada una herramienta para ponerla en la barra derecha o quitarla.'));
+  nodes.push(h('button',{class:'wide',onclick:resetTools},...ib('reset','Reiniciar herramientas')));
+  openPop('tools',anchor,cols,nodes,compact?'above':'left');
+}
 /* ============ Clases (varias listas de alumnos) ============ */
 // La clase activa vive en S.students / S.roles / S.offset; S.classes guarda todas.
 if(!Array.isArray(S.classes)||!S.classes.length){S.classes=[{name:'Mi clase',students:S.students,roles:S.roles,offset:S.offset||0}];S.cls=0}
@@ -3983,6 +4107,7 @@ const viewNodes=()=>VIEWS.map(([v,ic,lb])=>h('button',{class:'wide'+((S.view||'f
 function setView(v){
   commitEditor();S.view=v;save();
   document.body.classList.remove('v-mini','v-clean');if(v!=='full')document.body.classList.add('v-'+v);
+  layout();
   if(v==='mini')renderMini();
   if(v==='clean')toast('Mantén pulsado el botón de abajo a la derecha para volver a ver las herramientas');
 }
@@ -4018,6 +4143,40 @@ $('#btnView').addEventListener('click',e=>openPop('view',e.currentTarget,1,viewN
   b.addEventListener('pointerleave',cancel);b.addEventListener('pointercancel',cancel);
 })();
 
+/* ============ Pantallas pequeñas: la interfaz se coloca sola según lo que cabe ============ */
+// <body data-lay="…"> decide la colocación (los estilos están en extra-pantallas.css):
+//   d0  todo, como en la PDI
+//   d1  falta algo de alto: los tres grosores pasan a un solo botón y se ven 4 colores recientes
+//   d2  falta más: 2 colores recientes
+//   d3  falta más aún: además, la barra izquierda va sin rótulos
+//   c   compacta (menos de 900 px de ancho, o ni así cabe): barra izquierda estrecha, sin barra derecha, barra de abajo solo con iconos
+//   p   móvil en vertical: las herramientas de dibujo van en una franja abajo y la pizarra ocupa todo el ancho
+// Las medidas se dividen por el «Tamaño de botones» (--ui): con botones más grandes cabe menos.
+function layout(){
+  const b=document.body,left=$('#left');
+  if(!left.children.length)return; // todavía no se ha montado la interfaz
+  if((S.view||'full')!=='full'){delete b.dataset.lay;return} // en los modos Mínima y Libre no hay barras
+  const ui=S.ui||1,W=innerWidth/ui,H=innerHeight/ui;
+  let lay='c';
+  if(W>=900)for(const d of ['d0','d1','d2','d3']){b.dataset.lay=d;if(left.scrollHeight<=left.clientHeight+1){lay=d;break}}
+  if(lay==='c'){
+    if(W<600&&H>W)lay='p';
+    else{ // barra izquierda de casillas iguales: tantas columnas como hagan falta para que no haya que deslizar
+      const rows=Math.max(1,Math.floor((H-46-60-8+4)/50)),norec=rows<12; // 10 casillas fijas + 2 colores recientes si caben en una columna
+      b.classList.toggle('norec',norec);
+      b.style.setProperty('--lc',String(Math.ceil((norec?10:12)/rows)));
+    }
+  }
+  b.dataset.lay=lay;
+  buildRight();fitDock();
+}
+// Barra de abajo: si no cabe todo, primero pierden el texto los botones de la bandeja y después todos
+function fitDock(){
+  const d=$('#dock');if(!d||!d.children.length)return;
+  d.classList.remove('dk1','dk2');
+  if(d.scrollWidth>d.clientWidth+1){d.classList.add('dk1');if(d.scrollWidth>d.clientWidth+1)d.classList.add('dk2')}
+}
+addEventListener('resize',layout);
 /* ============ Ajustes ============ */
 const dlg=$('#settings');
 ['Lunes','Martes','Miércoles','Jueves','Viernes'].forEach((n,i)=>$('#sSched').append(h('div',{},h('label',{for:'sd'+(i+1)},n),h('textarea',{id:'sd'+(i+1),rows:8,spellcheck:'false'}))));
@@ -4412,7 +4571,7 @@ function applyTheme(){
   $('meta[name=theme-color]').content=S.theme==='dark'?'#0B1430':'#13214A';
   drawBg();redraw();
 }
-function applyUi(){document.documentElement.style.setProperty('--ui',String(S.ui||1))}
+function applyUi(){document.documentElement.style.setProperty('--ui',String(S.ui||1));layout()}
 let wl=null;
 async function lock(){try{wl=await navigator.wakeLock.request('screen')}catch{}}
 document.addEventListener('pointerdown',()=>{if(!wl)lock()},{once:true});
@@ -4428,7 +4587,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 
 $('#btnSettings').replaceChildren(ico('settings'));$('#btnView').replaceChildren(ico('view'));$('#btnFs').replaceChildren(ico('full'));$('#cornerBtn').replaceChildren(ico('view'));
 applyUi();
-buildLeft();buildRight();buildDock();renderClassChip();
+buildLeft();buildDock();renderClassChip(); // la barra derecha la monta layout(), que sabe cuántas herramientas caben
 document.documentElement.dataset.theme=S.theme;
 new ResizeObserver(fit).observe(stage);
 fit();tickClock();setInterval(tickClock,1000);

@@ -1,0 +1,60 @@
+/* ============ Cajón de herramientas ============ */
+#pop{max-height:calc(100% - 16px);overflow-y:auto;overscroll-behavior:contain}
+#btnTools{margin-top:auto;background:var(--frame2);color:var(--on-frame)} /* siempre abajo y a la vista */
+#btnTools:hover{background:var(--frame3)}
+#dock .d-tools{display:none}
+#pop .tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:82px;min-width:0;padding:4px;font-size:28px}
+#pop .tile small{font-size:12.5px;font-weight:600;line-height:1.15;text-align:center}
+#pop .tile .fstar{display:none;position:absolute;top:8px;left:calc(50% + 16px);font-size:14px;color:var(--yellow)}
+#pop .tile.fav .fstar{display:inline-grid}
+#pop .tile.holding::after{content:"";position:absolute;inset:0;border-radius:10px;border:3px solid var(--accent);animation:hold .6s linear}
+#pop .popsep.grp{grid-column:1/-1}
+#pop .popsep.grp:first-child{border-top:0;margin-top:0;padding-top:4px}
+#pop .pophint{grid-column:1/-1;margin:2px 8px 4px;font-size:13.5px;line-height:1.35;color:var(--muted)}
+#pop .pophint .ico{color:var(--yellow);font-size:14px;vertical-align:-2px}
+
+/* ============ Grosor en un solo botón ============ */
+.szc{display:none}
+.szc i{display:block;border-radius:50%;background:var(--on-frame2)}
+
+/* ============ Falta alto (d1, d2, d3): la barra izquierda se aprieta en vez de cortarse ============ */
+body[data-lay=d1] .sz,body[data-lay=d2] .sz,body[data-lay=d3] .sz{display:none}
+body[data-lay=d1] .szc,body[data-lay=d2] .szc,body[data-lay=d3] .szc{display:flex;min-height:46px}
+body[data-lay=d1] #recent .sw:nth-child(n+5),body[data-lay=d2] #recent .sw:nth-child(n+3),body[data-lay=d3] #recent .sw:nth-child(n+3){display:none}
+body[data-lay=d3] #left .tool small{display:none}
+body[data-lay=d3] #left .tool{min-height:46px}
+body[data-lay=d3] #left .tool.half{min-height:40px}
+body[data-lay=d3] #left .sep{margin:3px 0}
+
+/* ============ Barra de abajo: si no cabe, los botones se quedan en su icono ============ */
+#dock.dk1 #tray .lbl-t,#dock.dk2 .lbl-t,body[data-lay=c] #dock .lbl-t,body[data-lay=p] #dock .lbl-t{display:none}
+#dock.dk1 #tray .dbtn,#dock.dk2 .dbtn,body[data-lay=c] #dock .dbtn,body[data-lay=p] #dock .dbtn{padding:0 13px}
+
+/* ============ Compacta (c) y móvil en vertical (p) ============ */
+body[data-lay=c] #app{grid-template-columns:calc((var(--lc,1)*50px + 8px)*var(--ui)) minmax(0,1fr);grid-template-rows:calc(46px*var(--ui)) 1fr calc(60px*var(--ui));grid-template-areas:"top top" "left stage" "dock dock"}
+body[data-lay=p] #app{grid-template-columns:minmax(0,1fr);grid-template-rows:calc(46px*var(--ui)) 1fr auto calc(58px*var(--ui));grid-template-areas:"top" "stage" "left" "dock"}
+body[data-lay=c] #right,body[data-lay=p] #right{display:none}
+body[data-lay=c] #dock .d-tools,body[data-lay=p] #dock .d-tools{display:inline-flex}
+body[data-lay=c] #top,body[data-lay=p] #top{padding-top:2px}
+/* la barra de dibujo pasa a ser una rejilla de casillas iguales, sin rótulos */
+body[data-lay=c] #left,body[data-lay=p] #left{display:grid;gap:4px;overflow:hidden;align-content:start;justify-content:center}
+body[data-lay=c] #left{grid-template-columns:repeat(var(--lc,1),46px);grid-auto-rows:46px;padding:4px}
+body[data-lay=p] #left{grid-template-columns:repeat(auto-fill,minmax(44px,1fr));grid-auto-rows:44px;padding:6px 8px 2px;justify-content:stretch}
+body[data-lay=c] #left .pair,body[data-lay=p] #left .pair,body[data-lay=c] #recent,body[data-lay=p] #recent{display:contents}
+body[data-lay=c] #left .sep,body[data-lay=p] #left .sep,body[data-lay=c] .sz,body[data-lay=p] .sz,body[data-lay=c] #left .tool small,body[data-lay=p] #left .tool small{display:none}
+body[data-lay=c] #left .tool,body[data-lay=p] #left .tool{width:auto;min-height:0;padding:0;font-size:24px}
+body[data-lay=c] #left .tool.on::before,body[data-lay=p] #left .tool.on::before{display:none}
+body[data-lay=c] .szc,body[data-lay=p] .szc{display:flex}
+body[data-lay=c] #left .sw,body[data-lay=p] #left .sw{width:32px;height:32px;place-self:center}
+body[data-lay=c] #recent .sw:nth-child(n+3),body[data-lay=c].norec #recent .sw,body[data-lay=p] #recent .sw:nth-child(n+5){display:none}
+/* barra de abajo */
+body[data-lay=c] #dock,body[data-lay=p] #dock{gap:6px;padding:0 6px}
+body[data-lay=c] #dock .dbtn,body[data-lay=p] #dock .dbtn{min-height:46px}
+body[data-lay=p] #dock{gap:4px;justify-content:space-between}
+body[data-lay=p] #dock .dbtn{flex:1 1 34px;min-width:34px;max-width:54px;padding:0 4px;justify-content:center}
+body[data-lay=p] #dock .sp{display:none}
+body[data-lay=p] #top{gap:6px;padding-left:6px;padding-right:6px}
+@media (max-width:420px){body[data-lay=p] .brand,body[data-lay=p] .brand-sep{display:none}}
+body[data-lay=p] #dock .d-reset,body[data-lay=p] #dock .dsep{display:none} /* «Reiniciar» está dentro del cajón */
+/* menús en pantallas estrechas: el selector de color se pone en vertical */
+@media (max-width:560px){#pop .cp{flex-direction:column;gap:14px;align-items:center}}

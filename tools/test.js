@@ -277,7 +277,8 @@ async function registro(b,url){
   const p=await ctx.newPage();
   const errs=[];p.on('pageerror',e=>errs.push(e.message));
   await p.goto(url);await p.waitForTimeout(800);
-  const mates=async l=>{await p.click('[data-pop=math]');await p.locator('#pop button',{hasText:l}).first().click();await p.waitForTimeout(80)};
+  const MATES={'Regla':'ruler','Transportador':'prot','Base 10':'b10','Reloj':'clock'};
+  const mates=async l=>{await p.click('#btnTools');await p.click(`#pop [data-tid=${MATES[l]}]`);await p.waitForTimeout(80)};
   const wc=()=>p.evaluate(()=>[...document.querySelectorAll('.win')].pop().style.getPropertyValue('--wc'));
   const n=sel=>p.locator(sel).count();
 
@@ -289,10 +290,10 @@ async function registro(b,url){
 
   // 2. Quien usa la pizarra ve lo de siempre: mismos botones, mismo orden
   const rail=await p.$$eval('#right > *',es=>es.map(e=>e.className==='sep'?'|':(e.dataset.win||'-')+':'+e.textContent.trim()).join(' '));
-  ok(rail==='picker:Elegir groups:Grupos roles:Encargados sched:Horario asam:Asamblea sema:Semáforo timer:Tiempo noise:Ruido score:Puntos | spot:Foco -:Nota','la barra derecha tiene los botones de siempre, en su orden');
-  await p.click('[data-pop=math]');
-  const menu=await p.$$eval('#pop button',bs=>bs.map(b=>b.textContent.trim()).join(', '));await p.mouse.click(1000,600);
-  ok(menu==='Base 10, Reloj, Regla, Dinero, Regletas, Tangram, Transportador, Recta numérica, Fracciones, Tabla del 100, Dados, Geoplano','el menú Matemáticas tiene las herramientas de siempre, en su orden');
+  ok(rail==='picker:Elegir groups:Grupos roles:Encargados sched:Horario asam:Asamblea sema:Semáforo timer:Tiempo noise:Ruido score:Puntos | spot:Foco -:Nota -:Herramientas','la barra derecha tiene los botones de siempre, en su orden, y al final el del cajón');
+  await p.click('#btnTools');
+  const menu=await p.$$eval('#pop .popsep.grp, #pop .tile',es=>es.map(e=>e.classList.contains('tile')?e.textContent.trim():'['+e.textContent.trim()+']').join(', '));await p.mouse.click(600,600);
+  ok(menu==='[Aula], Elegir, Grupos, Encargados, Horario, Asamblea, Semáforo, Tiempo, Ruido, Puntos, [Apoyo], Foco, Nota, [Matemáticas], Base 10, Reloj, Regla, Dinero, Regletas, Tangram, Transportador, Recta numérica, Fracciones, Tabla del 100, Dados, Geoplano','el cajón tiene todas las herramientas por grupos, en su orden');
 
   // 3. El color de la ventana sale del grupo
   await p.click('#right [data-win=timer]');const cAula=await wc();await p.click('#right [data-win=timer]');
@@ -340,6 +341,172 @@ async function registro(b,url){
   ok(errs.length===0,'sin errores en el registro'+(errs.length?': '+errs.join(' | '):''));
   await ctx.close();
 }
+/* Pantallas pequeñas y cajón de herramientas: en ningún tamaño se corta nada, y las favoritas se eligen con pulsación larga */
+async function pantallas(b,url){
+  console.log('\nPantallas pequeñas y cajón');
+  const errs=[];
+  // abre Fori en una pantalla de w×h; «ini» son ajustes guardados de antes (solo se ponen la primera vez, no al recargar)
+  const abrir=async(w,h,ini)=>{
+    const ctx=await b.newContext({viewport:{width:w,height:h}});const p=await ctx.newPage();p.on('pageerror',e=>errs.push(`${w}x${h}: ${e.message}`));
+    if(ini)await p.addInitScript(x=>{if(!sessionStorage.getItem('ini')){sessionStorage.setItem('ini','1');localStorage.setItem('fori-v1',JSON.stringify(x))}},ini);
+    await p.goto(url);await p.waitForTimeout(700);return p};
+  // cómo ha quedado colocada la interfaz: qué botones se salen de su barra o de la pantalla, favoritas a la vista, tamaño de la pizarra
+  const est=p=>p.evaluate(()=>{const q=s=>document.querySelector(s),R=e=>e.getBoundingClientRect(),st=R(q('#stage'));
+    const cut=sel=>{const c=q(sel);if(getComputedStyle(c).display==='none')return null;const cr=R(c);
+      return [...c.querySelectorAll('button,.sw')].filter(e=>{const r=R(e);return r.width&&r.height&&(r.right>Math.min(innerWidth,cr.right)+1||r.bottom>Math.min(innerHeight,cr.bottom)+1||r.left<cr.left-1||r.top<cr.top-1)}).map(e=>e.textContent.trim()||e.getAttribute('aria-label')||e.title||e.className)};
+    const vis=s=>[...document.querySelectorAll(s)].filter(e=>e.getBoundingClientRect().width>0);
+    return {lay:document.body.dataset.lay,w:Math.round(st.width),h:Math.round(st.height),izq:cut('#left'),der:cut('#right'),abajo:cut('#dock'),arriba:cut('#top'),
+      favs:vis('#right [data-fav]').map(e=>e.dataset.fav),sz:vis('#left .sz').length,szc:vis('#left .szc').length,rec:vis('#recent .sw').length,rot:vis('#left .tool small').length,
+      stage:[st.left,st.top,st.right,st.bottom].map(Math.round),leftTop:Math.round(R(q('#left')).top)}});
+  const entero=e=>['izq','der','abajo','arriba'].every(k=>e[k]===null||e[k].length===0);
+  const cortes=e=>['izq','der','abajo','arriba'].filter(k=>e[k]&&e[k].length).map(k=>k+': '+e[k].join(', ')).join(' · ');
+  const cajon=async p=>{if(await p.isHidden('#pop'))await p.locator('[data-pop=tools]:visible').first().click();await p.waitForTimeout(120)};
+  const dentro=(p,sel)=>p.evaluate(s=>{const r=document.querySelector(s).getBoundingClientRect();return r.left>=0&&r.top>=0&&r.right<=innerWidth+.5&&r.bottom<=innerHeight+.5},sel);
+  const larga=async(p,id)=>{await cajon(p);await p.hover(`#pop [data-tid=${id}]`);await p.mouse.down();await p.waitForTimeout(800);await p.mouse.up();await p.waitForTimeout(120)};
+  const guardadas=p=>p.evaluate(()=>JSON.parse(localStorage.getItem('fori-v1')||'{}').favs);
+  const aviso=p=>p.textContent('#toast');
+  const DE_SIEMPRE=['picker','groups','roles','sched','asam','sema','timer','noise','score','spot','note'];
+
+  // 1. PDI (1920×1080): todo como estaba, salvo que Matemáticas ya no está abajo y hay un botón «Herramientas»
+  let p=await abrir(1920,1080),e=await est(p);
+  ok(e.lay==='d0'&&entero(e)&&e.sz===3&&e.szc===0&&e.rec===6,'PDI: las barras salen enteras, con los tres grosores y los seis colores recientes');
+  ok(e.favs.join()===DE_SIEMPRE.join(),'PDI: sin tocar nada, en la barra derecha están las once herramientas de siempre');
+  ok(await p.locator('[data-pop=math]').count()===0&&await p.isVisible('#btnTools')&&await p.isHidden('#dock .d-tools'),'PDI: «Matemáticas» ya no está abajo; el cajón se abre desde la barra derecha');
+  await cajon(p);
+  ok(await p.locator('#pop .tile').count()===23&&await p.locator('#pop .tile.fav').count()===11&&await dentro(p,'#pop'),'el cajón enseña las 23 herramientas y marca con estrella las once de la barra');
+  // un toque abre la herramienta y cierra el cajón; al volver a abrirlo, sale marcada
+  await p.click('#pop [data-tid=ruler]');
+  ok(await p.locator('.ruler').count()===1&&await p.isHidden('#pop'),'un toque en el cajón pone la regla y lo cierra');
+  await cajon(p);ok(await p.locator('#pop [data-tid=ruler].on').count()===1&&(await guardadas(p))===undefined,'en el cajón la regla sale como puesta, y un toque no cambia las favoritas');
+  await p.click('#pop [data-tid=ruler]');ok(await p.locator('.ruler').count()===0,'otro toque la quita');
+  // pulsación larga: pasa a la barra (sin abrirse), se guarda y sigue ahí al recargar
+  await larga(p,'ruler');e=await est(p);
+  ok(e.favs.join()===[...DE_SIEMPRE,'ruler'].join()&&await p.locator('.ruler').count()===0&&await p.isVisible('#pop')&&await p.locator('#pop [data-tid=ruler].fav').count()===1,'pulsación larga: la regla pasa a la barra derecha (y no se abre)');
+  ok(/puesta en la barra/.test(await aviso(p))&&(await guardadas(p)).join()===[...DE_SIEMPRE,'ruler'].join(),'se avisa y queda guardado en los ajustes');
+  ok(await p.$$eval('#right > *',es=>es.map(x=>x.className==='sep'?'|':x.dataset.fav||'·').join(''))==='pickergroupsrolesschedasamsematimernoisescore|spotnote|ruler·','en la barra, cada grupo va tras su raya');
+  await p.mouse.click(600,600);await p.click('#right [data-fav=ruler]');
+  ok(await p.locator('.ruler').count()===1&&await p.locator('#right [data-fav=ruler].on').count()===1,'el botón nuevo de la barra pone la regla y queda marcado');
+  await p.click('#right [data-fav=ruler]');
+  await p.reload();await p.waitForTimeout(700);e=await est(p);
+  ok(e.favs.includes('ruler')&&e.favs.length===12&&entero(e),'al recargar, la regla sigue en la barra');
+  await larga(p,'noise');e=await est(p);
+  ok(!e.favs.includes('noise')&&/quitada de la barra/.test(await aviso(p))&&!(await guardadas(p)).includes('noise')&&await p.locator('#pop [data-tid=noise].fav').count()===0,'otra pulsación larga quita una herramienta de la barra');
+  await p.context().close();
+  // con el dedo (pantalla táctil): la pulsación larga marca favorita y el toque corto abre
+  {const ctx=await b.newContext({viewport:{width:1920,height:1080},hasTouch:true});p=await ctx.newPage();p.on('pageerror',x=>errs.push('táctil: '+x.message));
+    await p.goto(url);await p.waitForTimeout(700);
+    const cdp=await ctx.newCDPSession(p),bb=await (async()=>{await p.tap('#btnTools');await p.waitForTimeout(150);return p.locator('#pop [data-tid=geo]').boundingBox()})();
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:bb.x+bb.width/2,y:bb.y+bb.height/2}]});await p.waitForTimeout(900);
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});await p.waitForTimeout(200);
+    ok(await p.locator('#right [data-fav=geo]').count()===1&&await p.locator('.win').count()===0&&await p.isVisible('#pop'),'con el dedo: mantener pulsado pone la herramienta en la barra y no la abre');
+    await p.tap('#pop [data-tid=clock]');await p.waitForTimeout(150);
+    ok(await p.locator('.win').count()===1&&(await guardadas(p)).length===12,'con el dedo: un toque corto la abre y no toca las favoritas');
+    await ctx.close()}
+  // favoritas guardadas con una herramienta que ya no existe: se ignora
+  p=await abrir(1920,1080,{favs:['timer','ya-no-existe','geo']});e=await est(p);
+  ok(e.favs.join()==='timer,geo'&&entero(e),'una favorita guardada que ya no existe se ignora sin romper nada');
+  await p.context().close();
+
+  // 2. Resolución de portátil (1366×768): antes se cortaban grosores, Foco y Nota
+  p=await abrir(1366,768);e=await est(p);
+  ok(/^d[123]$/.test(e.lay)&&entero(e),'1366×768: no se corta nada'+(entero(e)?'':' → '+cortes(e)));
+  ok(e.sz===0&&e.szc===1&&e.rot>0,'1366×768: los grosores van en un solo botón y los rótulos se mantienen');
+  const gros=()=>p.evaluate(()=>document.querySelector('#left .sz.on').dataset.s);
+  const g0=await gros();await p.click('#left .szc');const g1=await gros();await p.click('#left .szc');const g2=await gros();await p.click('#left .szc');
+  ok(g0==='6'&&g1==='12'&&g2==='3'&&await gros()==='6','ese botón recorre fino, medio y grueso');
+  ok(e.favs.length<11&&e.favs.length>=6&&e.favs.join()===DE_SIEMPRE.slice(0,e.favs.length).join(),`en la barra derecha salen las ${e.favs.length} que caben, y el cajón sigue a la vista`);
+  await cajon(p);ok(await dentro(p,'#pop')&&await p.locator('#pop .tile.fav').count()===e.favs.length,'el cajón cabe en la pantalla y solo marca las que se ven en la barra');
+  await p.click('#pop [data-tid=note]');ok(await p.locator('.note').count()===1,'lo que no cabe en la barra (Nota) se abre desde el cajón');
+  // barra llena: no deja añadir hasta quitar una
+  await larga(p,'geo');
+  ok(/No caben más/.test(await aviso(p))&&(await guardadas(p))===undefined&&(await est(p)).favs.join()===e.favs.join(),'con la barra llena, avisa de que no caben más y no cambia nada');
+  await larga(p,e.favs[0]);await larga(p,'geo');const e2=await est(p);
+  ok(e2.favs.join()===[...e.favs.slice(1),'geo'].join()&&(await guardadas(p)).join()===e2.favs.join()&&entero(e2),'al quitar una, ya cabe la nueva; se guarda justo lo que se ve');
+  await p.context().close();
+
+  // 3. 1024×768: antes «Limpiar» salía cortado, también con herramientas en la bandeja
+  p=await abrir(1024,768);e=await est(p);
+  ok(/^d[123]$/.test(e.lay)&&entero(e)&&await dentro(p,'#dock .danger'),'1024×768: no se corta nada y «Limpiar» se ve entero'+(entero(e)?'':' → '+cortes(e)));
+  for(const id of ['b10','clock','eur','frac']){await cajon(p);await p.click(`#pop [data-tid=${id}]`)}
+  await p.waitForTimeout(150);e=await est(p);
+  ok(await p.locator('#tray button').count()===4&&entero(e)&&await dentro(p,'#dock .danger'),'con cuatro herramientas en la bandeja, la barra de abajo se aprieta y «Limpiar» sigue entero'+(entero(e)?'':' → '+cortes(e)));
+  await cajon(p);await p.click('#pop >> text=Reiniciar herramientas');await p.waitForTimeout(150);
+  ok(await p.locator('.win').count()===0&&await p.isHidden('#tray')&&await p.isVisible('#dock .d-reset .lbl-t'),'«Reiniciar herramientas» del cajón lo quita todo, y la barra de abajo recupera sus textos');
+  await p.context().close();
+  p=await abrir(1280,720);e=await est(p);
+  ok(/^d[123]$/.test(e.lay)&&entero(e),'1280×720: no se corta nada'+(entero(e)?'':' → '+cortes(e)));
+  await p.context().close();
+
+  // 4. Tableta en vertical (768×1024): barra compacta
+  p=await abrir(768,1024);e=await est(p);
+  ok(e.lay==='c'&&e.der===null&&entero(e)&&e.w>=700,`768×1024: barra compacta, sin barra derecha; la pizarra mide ${e.w} px de ancho (antes 576)`+(entero(e)?'':' → '+cortes(e)));
+  ok(await p.isVisible('#dock .d-tools')&&await p.isHidden('#dock .d-tools .lbl-t')&&e.rot===0,'el cajón pasa a la barra de abajo, que va solo con iconos');
+  await cajon(p);
+  ok(await dentro(p,'#pop')&&await p.locator('#pop .tile').count()===23&&await p.locator('#pop .tile.fav').count()===0&&await p.locator('#pop .pophint').count()===0,'el cajón cabe y, como no hay barra derecha, no ofrece favoritas');
+  await larga(p,'geo');ok((await guardadas(p))===undefined,'sin barra derecha, la pulsación larga no cambia las favoritas');
+  await p.mouse.up();await p.mouse.click(400,300);
+  await p.context().close();
+
+  // 5. Móvil en vertical (390×844): la pizarra ocupa todo el ancho (antes 198 px) y las herramientas van abajo
+  p=await abrir(390,844);e=await est(p);
+  ok(e.lay==='p'&&e.w===390&&e.leftTop>=e.stage[3]&&entero(e),`móvil vertical: la pizarra mide ${e.w}×${e.h} y las herramientas de dibujo van debajo`+(entero(e)?'':' → '+cortes(e)));
+  ok(await p.evaluate(()=>{const d=document.querySelector('#dock');return d.scrollWidth<=d.clientWidth+1})&&await dentro(p,'#dock .danger')&&await p.isHidden('#dock .d-reset'),'la barra de abajo cabe sin deslizar («Reiniciar» está en el cajón)');
+  await p.mouse.move(80,200);await p.mouse.down();await p.mouse.move(300,400,{steps:6});await p.mouse.up();
+  ok(await p.evaluate(()=>__fori.pages[0].strokes.length)===1,'se puede dibujar');
+  await p.click('#left [data-tool=eraser]');ok(await p.locator('#left [data-tool=eraser].on').count()===1,'se puede cambiar de herramienta');
+  await p.click('#btnUndo');ok(await p.evaluate(()=>__fori.pages[0].strokes.length)===0,'y deshacer');
+  // los menús de la barra de dibujo se abren hacia arriba y caben
+  await p.click('#left [data-pop=shape]');const mf=await dentro(p,'#pop');await p.mouse.click(195,100);
+  await p.click('#left [data-pop=color]');await p.waitForTimeout(100);const mc=await dentro(p,'#pop');await p.mouse.click(195,100);
+  ok(mf&&mc&&await p.isHidden('#pop')&&await p.evaluate(()=>__fori.pages[0].strokes.length)===0,'los menús de formas y de colores caben en el móvil');
+  await cajon(p);ok(await dentro(p,'#pop')&&await p.locator('#pop .tile').count()===23,'el cajón cabe en el móvil');
+  await p.click('#pop [data-tid=picker]');await p.waitForTimeout(100);
+  ok(await dentro(p,'.win'),'una ventana (Alumno al azar) nace dentro de la pantalla');
+  await cajon(p);await p.click('#pop >> text=Reiniciar herramientas');
+  ok(await p.locator('.win').count()===0,'«Reiniciar» funciona desde el cajón');
+  await p.click('#pageLbl');await p.click('#pop >> text=Página nueva');
+  ok((await p.textContent('#pageLbl')).includes('2/2')&&await p.isHidden('#pageLbl .lbl-t'),'el menú de página funciona y la etiqueta se queda en «2/2»');
+  await p.context().close();
+  for(const [w,h] of [[360,740],[320,640]]){
+    p=await abrir(w,h);e=await est(p);
+    ok(e.lay==='p'&&e.w===w&&entero(e),`móvil ${w}×${h}: no se corta nada`+(entero(e)?'':' → '+cortes(e)));
+    await cajon(p);ok(await dentro(p,'#pop'),`móvil ${w}×${h}: el cajón cabe`);
+    await p.context().close();
+  }
+  // móvil apaisado: la barra izquierda se reparte en columnas
+  p=await abrir(844,390);e=await est(p);
+  ok(e.lay==='c'&&entero(e)&&e.w>=700,`móvil apaisado: no se corta nada y la pizarra mide ${e.w}×${e.h} (antes 652×258)`+(entero(e)?'':' → '+cortes(e)));
+  await p.context().close();
+
+  // 6. Con «Tamaño de botones» Muy grande cabe menos: se adapta igual
+  for(const [w,h] of [[1920,1080],[1366,768],[390,844]]){
+    p=await abrir(w,h,{ui:1.3});e=await est(p);
+    ok(entero(e),`${w}×${h} con botones muy grandes (${e.lay}): no se corta nada`+(entero(e)?'':' → '+cortes(e)));
+    await p.context().close();
+  }
+
+  // 7. Cambiar de tamaño con algo dibujado: la interfaz se recoloca y el dibujo no se mueve de su sitio en la página
+  p=await abrir(1920,1080);
+  await p.mouse.move(500,400);await p.mouse.down();await p.mouse.move(900,600,{steps:6});await p.mouse.up();
+  const pag=()=>p.evaluate(()=>{const g=__fori.pages[0],s=g.strokes[0],a=s.pts[0],z=s.pts[s.pts.length-1],L=q=>[(q.x-g.v.ox)/g.v.k,(q.y-g.v.oy)/g.v.k];return {size:g.size,a:L(a),z:L(z),px:[a.x,a.y,z.x,z.y]}});
+  const cerca=(a,b,t=.05)=>a.every((v,i)=>Math.abs(v-b[i])<=t);
+  const d0=await pag();
+  await p.setViewportSize({width:390,height:844});await p.waitForTimeout(300);
+  let d1=await pag();e=await est(p);
+  ok(e.lay==='p'&&entero(e)&&d1.size.w===d0.size.w&&d1.size.h===d0.size.h&&cerca(d1.a,d0.a)&&cerca(d1.z,d0.z),'al pasar a tamaño de móvil, la página y el trazo siguen en su sitio');
+  await p.setViewportSize({width:1024,height:768});await p.waitForTimeout(300);e=await est(p);
+  ok(/^d[123]$/.test(e.lay)&&entero(e)&&e.favs.length>0,'al agrandar a 1024×768 vuelve la barra derecha');
+  await p.setViewportSize({width:1920,height:1080});await p.waitForTimeout(300);
+  d1=await pag();e=await est(p);
+  ok(e.lay==='d0'&&e.favs.length===11&&cerca(d1.px,d0.px,.1),'y al volver al tamaño de la PDI todo queda exactamente como estaba');
+  // modos de pantalla: en Mínima no hay barras; al volver a Completa se recolocan
+  await p.click('#btnView');await p.click('#pop >> text=Mínima');await p.waitForTimeout(200);
+  const enMini=await p.evaluate(()=>[document.body.dataset.lay===undefined,document.querySelector('#stage').clientWidth===innerWidth]);
+  await p.click('#mini [data-pop=view]');await p.click('#pop >> text=Completa');await p.waitForTimeout(200);e=await est(p);
+  ok(enMini.every(Boolean)&&e.lay==='d0'&&entero(e)&&cerca((await pag()).px,d0.px,.1),'el modo Mínima sigue a pantalla entera, y al volver a Completa todo está en su sitio');
+  await p.context().close();
+  ok(errs.length===0,'sin errores en ningún tamaño'+(errs.length?': '+errs.join(' | '):''));
+}
 server.listen(0,async()=>{
   const url=`http://localhost:${server.address().port}/`;
   // FORI_CHROME=1 usa el Chrome instalado en el equipo en vez del navegador de Playwright
@@ -359,8 +526,8 @@ server.listen(0,async()=>{
       await p.click(`#right [data-win="${id}"]`);
     }
     // herramientas de matemáticas
-    await p.click('[data-pop=math]');const labels=await p.$$eval('#pop button',bs=>bs.map(b=>b.textContent.trim()));await p.mouse.click(1000,600);
-    for(const l of labels){await p.click('[data-pop=math]');await p.locator('#pop button',{hasText:l}).first().click();await p.waitForTimeout(80);ok(true,`abre «${l}»`)}
+    for(const id of await p.evaluate(()=>__fori.REG.tools.filter(t=>t.group==='mates'&&!t.hidden).map(t=>t.id))){
+      await p.click('#btnTools');await p.click(`#pop [data-tid="${id}"]`);await p.waitForTimeout(80);ok(await p.isHidden('#pop'),`abre «${id}» desde el cajón`)}
     await p.click('#dock >> text=Reiniciar');
     // páginas
     await p.click('#pageLbl');await p.click('#pop >> text=Página nueva');
@@ -374,6 +541,7 @@ server.listen(0,async()=>{
       ok(await p.evaluate(()=>window.__foriOK===true)&&!e2.length,'arranca con '+JSON.stringify(extra)+(e2.length?': '+e2.join(' | '):''));
     }
     await registro(b,url);
+    await pantallas(b,url);
     await pizarra(b,url);
     await guardado(b,url);
   }catch(e){fails.push(String(e));console.log(e)}

@@ -81,6 +81,8 @@ const ICONS={
   power:'<path d="M12 3.500v8"/><path d="M7 6.500a7.500 7.500 0 1 0 10 0"/>',
   pair:'<circle cx="8.500" cy="8" r="3"/><circle cx="15.500" cy="8" r="3"/><path d="M3 19.500a5.500 5.500 0 0 1 11 0"/><path d="M10.500 14.600A5.500 5.500 0 0 1 21 19.500"/>',
   share:'<circle cx="6" cy="12" r="2.6"/><circle cx="17.5" cy="5.5" r="2.6"/><circle cx="17.5" cy="18.5" r="2.6"/><path d="M8.3 10.7l7-3.9"/><path d="M8.3 13.3l7 3.9"/>',
+  apps:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/>',
+  star:'<path fill="currentColor" d="M12 3.6l2.5 5.3 5.8.8-4.2 4 1 5.8-5.1-2.8-5.1 2.800 1-5.800-4.200-4 5.800-.800z"/>',
   lock:'<rect x="5" y="10.5" width="14" height="10" rx="2.500"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.500"/><path d="M12 14.500v2.500"/>',
   backspace:'<path d="M9 5.500h10a1.500 1.500 0 0 1 1.500 1.500v10a1.500 1.500 0 0 1-1.500 1.500H9L3 12z"/><path d="M12.500 9.500l5 5M17.500 9.500l-5 5"/>',
 };
