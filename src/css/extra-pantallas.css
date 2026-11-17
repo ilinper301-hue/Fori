@@ -62,3 +62,7 @@ body[data-lay=p] #dock .d-reset,body[data-lay=p] #dock .dsep{display:none} /* «
 body[data-lay=p] #top .mini{width:32px;height:40px}
 body[data-lay=p] #top .appbtn{width:28px;height:28px}
 body[data-lay=p] #top .chip{padding:0 8px}
+/* en el móvil vertical la asignatura de «Ahora: …» no cabe junto a los cuatro accesos: se oculta (con clase en curso empujaba los botones fuera de la pantalla) */
+body[data-lay=p] #top #subject{display:none!important}
+body[data-lay=p] #top #clock,body[data-lay=p] #top .mini,body[data-lay=p] #top .appbtn{flex:none}
+body[data-lay=p] #top .sp{flex:1 1 0;min-width:0}
