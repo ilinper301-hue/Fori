@@ -53,12 +53,12 @@ body[data-lay=c] #dock .dbtn,body[data-lay=p] #dock .dbtn{min-height:46px}
 body[data-lay=p] #dock{gap:4px;justify-content:space-between}
 body[data-lay=p] #dock .dbtn{flex:1 1 34px;min-width:34px;max-width:54px;padding:0 4px;justify-content:center}
 body[data-lay=p] #dock .sp{display:none}
-body[data-lay=p] #top{gap:6px;padding-left:6px;padding-right:6px}
+body[data-lay=p] #top{gap:4px;padding-left:6px;padding-right:6px}
 @media (max-width:420px){body[data-lay=p] .brand,body[data-lay=p] .brand-sep{display:none}}
 body[data-lay=p] #dock .d-reset,body[data-lay=p] #dock .dsep{display:none} /* «Reiniciar» está dentro del cajón */
 /* menús en pantallas estrechas: el selector de color se pone en vertical */
 @media (max-width:560px){#pop .cp{flex-direction:column;gap:14px;align-items:center}}
-/* barra superior del móvil: botones algo más pequeños para que quepan los tres accesos a las otras apps */
-body[data-lay=p] #top .mini{width:36px;height:40px}
-body[data-lay=p] #top .appbtn{width:32px;height:32px}
-body[data-lay=p] #top .chip{padding:0 10px}
+/* barra superior del móvil: botones algo más pequeños para que quepan los cuatro accesos a las otras apps */
+body[data-lay=p] #top .mini{width:32px;height:40px}
+body[data-lay=p] #top .appbtn{width:28px;height:28px}
+body[data-lay=p] #top .chip{padding:0 8px}
