@@ -51,21 +51,21 @@ function fit(){
 // Pinta la pauta en el rectángulo (x0,y0)-(x1,y1). Las líneas salen siempre de múltiplos del periodo,
 // así que la pauta queda anclada al origen de la página y no al borde de la pantalla.
 function paintBg(ctx,x0,y0,x1,y1,type,dark){
-  const k=S.pautaSize||1;
+  const k=S.pautaSize||1,lw=k>=1.8?1.7:1; // en «Extra grande» las líneas también son más gruesas, para verlas desde el fondo
   const soft=dark?'rgba(255,255,255,.22)':'rgba(30,80,160,.28)';
   const strong=dark?'rgba(255,255,255,.5)':'rgba(30,80,160,.6)';
   const red=dark?'rgba(255,120,120,.6)':'rgba(214,40,40,.55)';
   const from=(a,per,off=0)=>Math.floor((a-off)/per)*per+off;
-  const line=(y,c,wd,dash)=>{ctx.beginPath();ctx.setLineDash(dash||[]);ctx.lineDashOffset=dash?x0:0;ctx.strokeStyle=c;ctx.lineWidth=wd||1.5;ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke()};
+  const line=(y,c,wd,dash)=>{ctx.beginPath();ctx.setLineDash(dash||[]);ctx.lineDashOffset=dash?x0:0;ctx.strokeStyle=c;ctx.lineWidth=(wd||1.5)*lw;ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke()};
   const vline=x=>{ctx.beginPath();ctx.moveTo(x,y0);ctx.lineTo(x,y1);ctx.stroke()};
-  ctx.save();ctx.lineWidth=1.5;ctx.strokeStyle=soft;ctx.fillStyle=soft;
+  ctx.save();ctx.lineWidth=1.5*lw;ctx.strokeStyle=soft;ctx.fillStyle=soft;
   if(type==='grid'){
     const c=40*k;
     for(let x=from(x0,c);x<x1;x+=c)vline(x);
     for(let y=from(y0,c);y<y1;y+=c)line(y,soft);
   }else if(type==='dots'){
     const c=40*k;
-    for(let x=from(x0,c,c/2);x<x1;x+=c)for(let y=from(y0,c,c/2);y<y1;y+=c){ctx.beginPath();ctx.arc(x,y,2.4,0,7);ctx.fill()}
+    for(let x=from(x0,c,c/2);x<x1;x+=c)for(let y=from(y0,c,c/2);y<y1;y+=c){ctx.beginPath();ctx.arc(x,y,2.4*lw,0,7);ctx.fill()}
   }else if(type==='lines'){ // pauta de doble línea con línea intermedia discontinua
     for(let y=from(y0,130*k);y<y1;y+=130*k){line(y+18*k,soft);line(y+38*k,strong);line(y+63*k,soft,1.5,[8,8]);line(y+88*k,strong);line(y+108*k,soft)}
   }else if(type==='montessori'){ // 4 líneas: ascendentes · cuerpo (sombreado) · descendentes

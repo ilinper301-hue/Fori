@@ -351,7 +351,7 @@ async function pantallas(b,url){
     if(ini)await p.addInitScript(x=>{if(!sessionStorage.getItem('ini')){sessionStorage.setItem('ini','1');localStorage.setItem('fori-v1',JSON.stringify(x))}},ini);
     await p.goto(url);await p.waitForTimeout(700);return p};
   // cómo ha quedado colocada la interfaz: qué botones se salen de su barra o de la pantalla, favoritas a la vista, tamaño de la pizarra
-  const est=p=>p.evaluate(()=>{const q=s=>document.querySelector(s),R=e=>e.getBoundingClientRect(),st=R(q('#stage'));
+  const est=p=>p.evaluate(()=>{const q=s=>document.querySelector(s),R=e=>e.getBoundingClientRect(),st=R(q('#stage'));const sj=q('#subject');sj.style.display='inline-block';sj.textContent='Ahora: Conocimiento del Medio'; /* peor caso: con clase en curso la barra de arriba lleva también la asignatura */
     const cut=sel=>{const c=q(sel);if(getComputedStyle(c).display==='none')return null;const cr=R(c);
       return [...c.querySelectorAll('button,.sw')].filter(e=>{const r=R(e);return r.width&&r.height&&(r.right>Math.min(innerWidth,cr.right)+1||r.bottom>Math.min(innerHeight,cr.bottom)+1||r.left<cr.left-1||r.top<cr.top-1)}).map(e=>e.textContent.trim()||e.getAttribute('aria-label')||e.title||e.className)};
     const vis=s=>[...document.querySelectorAll(s)].filter(e=>e.getBoundingClientRect().width>0);
@@ -538,12 +538,13 @@ server.listen(0,async()=>{
     ok((await p.textContent('#pageLbl')).includes('2/2'),'crea una página nueva');
     ok(errs.length===0,'sin errores en la consola'+(errs.length?': '+errs.join(' | '):''));
     // arrancar con ajustes guardados poco habituales (zonas, modo mínimo, ruleta, tema oscuro…)
-    for(const extra of [{zoneN:4},{zoneN:2,view:'mini'},{view:'clean',theme:'dark',pickerMode:'wheel'},{ui:1.3,pautaSize:1.35}]){
+    for(const extra of [{zoneN:4},{zoneN:2,view:'mini'},{view:'clean',theme:'dark',pickerMode:'wheel'},{ui:1.3,pautaSize:1.35},{pautaSize:1.8}]){
       await p.evaluate(x=>{const k='fori-v1',s=JSON.parse(localStorage.getItem(k)||'{}');localStorage.setItem(k,JSON.stringify({...s,...x}))},extra);
       const e2=[];const h=e=>e2.push(e.message);p.on('pageerror',h);
       await p.reload();await p.waitForTimeout(700);p.off('pageerror',h);
       ok(await p.evaluate(()=>window.__foriOK===true)&&!e2.length,'arranca con '+JSON.stringify(extra)+(e2.length?': '+e2.join(' | '):''));
     }
+    ok(await p.evaluate(()=>[...document.querySelectorAll('#sPauta option')].map(o=>o.value+':'+o.textContent).join()==='0.75:Pequeña,1:Mediana,1.35:Grande,1.8:Extra grande'),'el tamaño de pauta tiene la opción «Extra grande»');
     await registro(b,url);
     await pantallas(b,url);
     await pizarra(b,url);
