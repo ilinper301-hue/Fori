@@ -597,6 +597,9 @@ dialog.tabdlg.small{width:min(420px,92vw)}
 #pop .tile.bgt .bgth{display:block;border-radius:6px;background:var(--board);border:1px solid var(--line)}
 #pop .tile.bgt small{font-size:12px;min-height:2.3em;display:flex;align-items:center}
 #pop .tile.bgt.on{outline:2px solid var(--accent);outline-offset:-2px}
+/* Menú de formas: iconos dibujados a partir de la propia forma (ver formaIcon en 05i-formas.js) */
+#pop button[data-shape]{display:flex;align-items:center;justify-content:center;padding:0}
+#pop button[data-shape] .fi{display:block;width:38px;height:38px}
 /* Lecciones */
 .les-bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
 .les-list{display:flex;flex-direction:column;gap:10px;max-height:min(60vh,520px);overflow:auto}
@@ -876,7 +879,8 @@ function h(tag,props={},...kids){
 // pageUI: funciones que se llaman cada vez que cambia lo que se ve de la página (etiquetas, barras).
 // tools: las herramientas, apuntadas con tool().
 // fondos: los fondos de página (pautas y plantillas), apuntados con fondo().
-const REG={pageMenu:[],pageUI:[],tools:[],fondos:[]};
+// formas: las formas geométricas de la herramienta Formas, apuntadas con forma() (en 05i-formas.js).
+const REG={pageMenu:[],pageUI:[],tools:[],fondos:[],formas:[]};
 /* Registro de herramientas. Cada módulo apunta la suya al final de su archivo con tool({...}):
      id            el de su botón y su ventana
      group         'aula' y 'apoyo' (barra derecha) o 'mates' (menú Matemáticas); decide también el color de la ventana
@@ -891,6 +895,19 @@ const REG={pageMenu:[],pageUI:[],tools:[],fondos:[]};
 function tool(t){const o=toolById(t.id);if(o)Object.assign(o,t);else REG.tools.push(t)}
 const toolById=id=>REG.tools.find(t=>t.id===id);
 const toolsOf=g=>REG.tools.filter(t=>t.group===g&&!t.hidden).sort((a,b)=>a.order-b.order);
+
+/* Registro de formas. Cada forma se apunta con forma({...}) en 05i-formas.js:
+     id       el que se guarda en la página ({type:'shape',shape:id,…}); no se cambia nunca
+     group    'linea', 'plana' o 'cuerpo' (apartados del menú)
+     order    posición dentro del grupo
+     label    nombre (título del botón)
+     keep     true si se mantiene proporcionada (cuadrado, círculo, polígonos regulares, cubo…)
+     polys(a,b,box,s)  lo que se dibuja, como lista de piezas: {pts,closed} o {ell:{cx,cy,rx,ry},closed:true}; opcionales:
+                       fill (se rellena si la forma lleva relleno), dash (discontinua), nostroke (solo relleno), solid (relleno macizo)
+   El dibujo (drawShape), el borrador (shapeLines), la selección y los iconos del menú usan esta misma lista. */
+function forma(f){const o=formaById(f.id);if(o)Object.assign(o,f);else REG.formas.push(f)}
+const formaById=id=>REG.formas.find(f=>f.id===id);
+const formasOf=g=>REG.formas.filter(f=>f.group===g).sort((a,b)=>a.order-b.order);
 
 /* Registro de fondos. Cada fondo se apunta con fondo({...}) (los de siempre, en 05-pizarra.js):
      id            el texto que guarda cada página en p.bg
@@ -1186,31 +1203,33 @@ function seg(ctx,s,p0,p1){
   else{ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke()}
   ctx.restore();
 }
-function polygon(ctx,n,cx,cy,rx,ry){
-  ctx.beginPath();
-  for(let i=0;i<n;i++){const a=-Math.PI/2+i*2*Math.PI/n;const x=cx+rx*Math.cos(a),y=cy+ry*Math.sin(a);i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
-  ctx.closePath();
-}
-function shapeEnd(s){ // cuadrado, círculo y polígonos regulares se mantienen proporcionados
-  const a=s.a,b=s.b;
-  if(!['square','circle','pentagon','hexagon'].includes(s.shape))return b;
+function shapeEnd(s){ // las formas con keep (cuadrado, círculo, polígonos regulares, cubo…) se mantienen proporcionadas
+  const a=s.a,b=s.b,f=formaById(s.shape);
+  if(!f||!f.keep)return b;
   const dx=b.x-a.x,dy=b.y-a.y,m=Math.max(Math.abs(dx),Math.abs(dy));
   return{x:a.x+(dx<0?-m:m),y:a.y+(dy<0?-m:m)};
 }
+// Piezas de una forma ({pts,closed} o {ell}) entre a y b; s aporta el grosor (puntas de flecha, puntos)
+function shapeParts(f,a,b,s){
+  const x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(b.x-a.x),hh=Math.abs(b.y-a.y);
+  return f.polys(a,b,{x,y,w,h:hh,cx:x+w/2,cy:y+hh/2},s);
+}
+const shapePolys=s=>{const f=formaById(s.shape);return f?shapeParts(f,s.a,shapeEnd(s),s):[]}; // forma desconocida: no se dibuja
+function partPath(ctx,it){
+  if(it.ell){const e=it.ell;ctx.ellipse(e.cx,e.cy,e.rx,e.ry,0,0,7)}
+  else{it.pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));if(it.closed)ctx.closePath()}
+}
 function drawShape(ctx,s){
-  const a=s.a,b=shapeEnd(s);
-  const x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(b.x-a.x),hh=Math.abs(b.y-a.y),cx=x+w/2,cy=y+hh/2;
-  ctx.save();setStyle(ctx,s);ctx.beginPath();
-  switch(s.shape){
-    case 'line':ctx.moveTo(a.x,a.y);ctx.lineTo(s.b.x,s.b.y);break;
-    case 'rect':case 'square':ctx.rect(x,y,w,hh);break;
-    case 'circle':case 'ellipse':ctx.ellipse(cx,cy,w/2,hh/2,0,0,7);break;
-    case 'triangle':ctx.moveTo(cx,y);ctx.lineTo(x+w,y+hh);ctx.lineTo(x,y+hh);ctx.closePath();break;
-    case 'pentagon':polygon(ctx,5,cx,cy,w/2,hh/2);break;
-    case 'hexagon':polygon(ctx,6,cx,cy,w/2,hh/2);break;
+  const L=shapePolys(s);if(!L.length)return;
+  ctx.save();setStyle(ctx,s);
+  for(const it of L){
+    ctx.beginPath();partPath(ctx,it);
+    if(it.solid){ctx.save();ctx.globalAlpha=1;ctx.fill();ctx.restore()}
+    else if(s.fill&&it.fill){ctx.save();ctx.globalAlpha=.3;ctx.fill();ctx.restore()}
+    if(it.nostroke)continue;
+    ctx.save();if(it.dash)ctx.setLineDash([s.size*1.6,s.size*1.6]);ctx.stroke();ctx.restore();
   }
-  if(s.fill&&s.shape!=='line'){ctx.save();ctx.globalAlpha=.3;ctx.fill();ctx.restore()}
-  ctx.stroke();ctx.restore();
+  ctx.restore();
 }
 function drawText(ctx,s){
   ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
@@ -1243,7 +1262,8 @@ function bbox(s){
     const w=Math.max(20,...s.text.split('\n').map(l=>cl.measureText(l).width));cl.restore();
     return{x:s.x,y:s.y,w,h:s.text.split('\n').length*s.fs*1.2};
   }
-  const ps=s.type==='shape'?[s.a,shapeEnd(s)]:s.pts,m=s.size/2;
+  let ps=s.type==='shape'?[s.a,shapeEnd(s)]:s.pts;const m=s.size/2;
+  if(s.type==='shape'&&(formaById(s.shape)||{}).group==='linea')ps=ps.concat(...shapeLines(s).map(l=>l.pts)); // las puntas de flecha se salen de a-b
   const xs=ps.map(p=>p.x),ys=ps.map(p=>p.y),x=Math.min(...xs)-m,y=Math.min(...ys)-m;
   return{x,y,w:Math.max(...xs)+m-x,h:Math.max(...ys)+m-y};
 }
@@ -1255,7 +1275,7 @@ function hitTest(p){
     const b=bbox(s),pad=14;
     if(p.x<b.x-pad||p.x>b.x+b.w+pad||p.y<b.y-pad||p.y>b.y+b.h+pad)continue;
     if(s.type==='free'){const tol=s.size/2+pad;if(s.pts.length===1?Math.hypot(p.x-s.pts[0].x,p.y-s.pts[0].y)<tol:s.pts.some((q,j)=>j&&distSeg(p,s.pts[j-1],q)<tol))return s;continue}
-    if(s.type==='shape'&&s.shape==='line'){if(distSeg(p,s.a,s.b)<s.size/2+pad)return s;continue}
+    if(s.type==='shape'&&(formaById(s.shape)||{}).group==='linea'){if(shapeLines(s).some(l=>l.pts.some((q,j)=>j&&distSeg(p,l.pts[j-1],q)<s.size/2+pad)))return s;continue}
     return s;
   }
   return null;
@@ -2328,22 +2348,17 @@ function chEntrada(){
 // Así la página no engorda al borrar y lo borrado no «se queda atrás» al mover un dibujo.
 // Las páginas antiguas pueden traer trazos 'eraser' del sistema anterior: se siguen pintando como antes.
 
-// Contorno de una forma como línea poligonal
-function shapePoly(s){
-  const a=s.a,b=shapeEnd(s);
-  if(s.shape==='line')return{pts:[{x:a.x,y:a.y},{x:s.b.x,y:s.b.y}],closed:false};
-  const x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(b.x-a.x),hh=Math.abs(b.y-a.y),cx=x+w/2,cy=y+hh/2;
-  const ring=n=>Array.from({length:n},(_,i)=>{const t=-Math.PI/2+i*2*Math.PI/n;return{x:cx+w/2*Math.cos(t),y:cy+hh/2*Math.sin(t)}});
-  let pts;
-  switch(s.shape){
-    case 'rect':case 'square':pts=[{x,y},{x:x+w,y},{x:x+w,y:y+hh},{x,y:y+hh}];break;
-    case 'triangle':pts=[{x:cx,y},{x:x+w,y:y+hh},{x,y:y+hh}];break;
-    case 'pentagon':pts=ring(5);break;
-    case 'hexagon':pts=ring(6);break;
-    default:pts=ring(clamp(Math.ceil((w+hh)/5),24,160)); // círculo y elipse
-  }
-  pts.push({x:pts[0].x,y:pts[0].y});
-  return{pts,closed:true};
+// Contorno de una forma como líneas poligonales: una por pieza ({pts,closed,fill,dash,solid,nostroke}); los círculos se aproximan con segmentos
+function shapeLines(s){
+  return shapePolys(s).map(it=>{
+    let pts=it.pts;
+    if(it.ell){
+      const e=it.ell,n=clamp(Math.ceil((e.rx+e.ry)*2/5),24,160);
+      pts=Array.from({length:n},(_,i)=>{const t=-Math.PI/2+i*2*Math.PI/n;return{x:e.cx+e.rx*Math.cos(t),y:e.cy+e.ry*Math.sin(t)}});
+    }else pts=pts.map(q=>({x:q.x,y:q.y}));
+    if(it.closed)pts.push({x:pts[0].x,y:pts[0].y});
+    return{pts,closed:!!it.closed,fill:!!it.fill,dash:!!it.dash,solid:!!it.solid,nostroke:!!it.nostroke};
+  }).filter(l=>l.pts.length);
 }
 // Recorre la línea pts y devuelve los tramos que quedan fuera del borrador (a más de R de su recorrido).
 // Devuelve null si el borrador no la toca. minLen: los restos más cortos se descartan (no dejan motas).
@@ -2397,9 +2412,19 @@ function eraseApply(er){
       if(!near.length)continue;
       const minLen=Math.max(1.5,(s.size||0)*.35);
       if(s.type==='shape'){
-        const poly=shapePoly(s);
-        if(s.fill&&s.shape!=='line'){if(eraseRuns(poly.pts,true,R,near,0)||ep.some(q=>inPoly(q,poly.pts)))pieces=[]}
-        else{const runs=eraseRuns(poly.pts,poly.closed,R,near,minLen);if(runs)pieces=runs.map(pts=>({type:'free',tool:'pen',color:s.color,size:s.size,pts}))}
+        const lines=shapeLines(s);if(!lines.length)continue; // forma desconocida: no se toca
+        if(s.fill&&lines.some(l=>l.fill)){
+          if(lines.filter(l=>l.fill).some(l=>eraseRuns(l.pts,true,R,near,0)||ep.some(q=>inPoly(q,l.pts))))pieces=[];
+        }else{
+          // se corta cada pieza por donde pasa el borrador; las que no toca se conservan como trazo (las discontinuas quedan continuas)
+          let hit=false;const out=[];
+          for(const l of lines){
+            if(l.nostroke)continue; // la silueta solo sirve para el relleno
+            const runs=eraseRuns(l.pts,l.closed,R,near,minLen);
+            if(runs){hit=true;out.push(...runs)}else out.push(l.pts);
+          }
+          if(hit)pieces=out.map(pts=>({type:'free',tool:'pen',color:s.color,size:s.size,pts}));
+        }
       }else{
         const runs=eraseRuns(s.pts,false,R,near,minLen);
         if(runs)pieces=runs.map(pts=>({...s,pts}));
@@ -2625,6 +2650,125 @@ fondo({id:'mapa',group:'plantilla',order:13,label:'Mapa de ideas',paint:g=>{
   nodos.forEach(([x,y],i)=>plEl(c,x,y,nrx,nry,b.tint(['blue','red','green','orange','blue','red'][i],.12)));
   plEl(c,cx,cy,crx,cry,b.tint('orange',.2));
 }});
+/* ============ Formas geométricas (registro forma() de 00-base.js) ============ */
+// Cada forma dice cómo se dibuja con una lista de piezas; drawShape, el borrador, la selección y los iconos del menú la comparten.
+// Los ids de las ocho de siempre no cambian (están en pizarras, lecciones y archivos .fori ya guardados).
+const FM={
+  pt:(x,y)=>({x,y}),
+  ring(n,b,off=0){return Array.from({length:n},(_,i)=>{const t=-Math.PI/2+off+i*2*Math.PI/n;return{x:b.cx+b.w/2*Math.cos(t),y:b.cy+b.h/2*Math.sin(t)}})},
+  // arco de elipse (centro, radios, ángulos en radianes) como puntos
+  arc(cx,cy,rx,ry,a0,a1,n){return Array.from({length:n+1},(_,i)=>{const t=a0+(a1-a0)*i/n;return{x:cx+rx*Math.cos(t),y:cy+ry*Math.sin(t)}})},
+  n:(w,h)=>clamp(Math.ceil((w+h)/10),12,80),
+  // punta de flecha en q (en forma de V abierta), viniendo desde p
+  head(p,q,s){
+    const dx=q.x-p.x,dy=q.y-p.y,l=Math.hypot(dx,dy)||1,ux=dx/l,uy=dy/l,hl=Math.min(l*.4,Math.max(14,s.size*3+8)),c=Math.cos(.45),sn=Math.sin(.45);
+    return[{x:q.x-hl*(ux*c-uy*sn),y:q.y-hl*(uy*c+ux*sn)},{x:q.x,y:q.y},{x:q.x-hl*(ux*c+uy*sn),y:q.y-hl*(uy*c-ux*sn)}];
+  },
+  line:(a,b)=>({pts:[{x:a.x,y:a.y},{x:b.x,y:b.y}],closed:false})
+};
+const FMp=FM.pt;
+
+/* --- Líneas --- */
+forma({id:'line',group:'linea',order:1,label:'Línea',polys:(a,b)=>[FM.line(a,b)]});
+forma({id:'arrow',group:'linea',order:2,label:'Flecha',polys:(a,b,box,s)=>[FM.line(a,b),{pts:FM.head(a,b,s),closed:false}]});
+forma({id:'darrow',group:'linea',order:3,label:'Flecha doble',polys:(a,b,box,s)=>[FM.line(a,b),{pts:FM.head(a,b,s),closed:false},{pts:FM.head(b,a,s),closed:false}]});
+forma({id:'seg',group:'linea',order:4,label:'Segmento',polys:(a,b,box,s)=>{
+  const r=s.size*1.2+2;
+  return[FM.line(a,b),{ell:{cx:a.x,cy:a.y,rx:r,ry:r},closed:true,solid:true},{ell:{cx:b.x,cy:b.y,rx:r,ry:r},closed:true,solid:true}];
+}});
+
+/* --- Planas --- */
+forma({id:'rect',group:'plana',order:1,label:'Rectángulo',polys:(a,b,{x,y,w,h})=>[{pts:[FMp(x,y),FMp(x+w,y),FMp(x+w,y+h),FMp(x,y+h)],closed:true,fill:true}]});
+forma({id:'square',group:'plana',order:2,label:'Cuadrado',keep:true,polys:(a,b,{x,y,w,h})=>[{pts:[FMp(x,y),FMp(x+w,y),FMp(x+w,y+h),FMp(x,y+h)],closed:true,fill:true}]});
+forma({id:'circle',group:'plana',order:3,label:'Círculo',keep:true,polys:(a,b,{cx,cy,w,h})=>[{ell:{cx,cy,rx:w/2,ry:h/2},closed:true,fill:true}]});
+forma({id:'ellipse',group:'plana',order:4,label:'Elipse',polys:(a,b,{cx,cy,w,h})=>[{ell:{cx,cy,rx:w/2,ry:h/2},closed:true,fill:true}]});
+forma({id:'triangle',group:'plana',order:5,label:'Triángulo',polys:(a,b,{x,y,w,h,cx})=>[{pts:[FMp(cx,y),FMp(x+w,y+h),FMp(x,y+h)],closed:true,fill:true}]});
+forma({id:'trirect',group:'plana',order:6,label:'Triángulo rectángulo',polys:(a,b,{x,y,w,h})=>{
+  const izq=a.x<=b.x,m=Math.min(w,h)*.18; // el ángulo recto queda del lado de donde se empieza a arrastrar, con su marca
+  const px=izq?x:x+w,sx=izq?1:-1;
+  return[{pts:[FMp(px,y),FMp(px,y+h),FMp(izq?x+w:x,y+h)],closed:true,fill:true},{pts:[FMp(px,y+h-m),FMp(px+sx*m,y+h-m),FMp(px+sx*m,y+h)],closed:false}];
+}});
+forma({id:'rombo',group:'plana',order:7,label:'Rombo',polys:(a,b,{x,y,w,h,cx,cy})=>[{pts:[FMp(cx,y),FMp(x+w,cy),FMp(cx,y+h),FMp(x,cy)],closed:true,fill:true}]});
+forma({id:'romboide',group:'plana',order:8,label:'Romboide',polys:(a,b,{x,y,w,h})=>{const k=w*.25;return[{pts:[FMp(x+k,y),FMp(x+w,y),FMp(x+w-k,y+h),FMp(x,y+h)],closed:true,fill:true}]}});
+forma({id:'trapecio',group:'plana',order:9,label:'Trapecio',polys:(a,b,{x,y,w,h})=>{const k=w*.2;return[{pts:[FMp(x+k,y),FMp(x+w-k,y),FMp(x+w,y+h),FMp(x,y+h)],closed:true,fill:true}]}});
+forma({id:'pentagon',group:'plana',order:10,label:'Pentágono',keep:true,polys:(a,b,box)=>[{pts:FM.ring(5,box),closed:true,fill:true}]});
+forma({id:'hexagon',group:'plana',order:11,label:'Hexágono',keep:true,polys:(a,b,box)=>[{pts:FM.ring(6,box),closed:true,fill:true}]});
+forma({id:'octogono',group:'plana',order:12,label:'Octógono',keep:true,polys:(a,b,{x,y,w,h})=>{
+  const c=Math.min(w,h)*.2929,x1=x+w,y1=y+h;
+  return[{pts:[FMp(x+c,y),FMp(x1-c,y),FMp(x1,y+c),FMp(x1,y1-c),FMp(x1-c,y1),FMp(x+c,y1),FMp(x,y1-c),FMp(x,y+c)],closed:true,fill:true}];
+}});
+forma({id:'estrella',group:'plana',order:13,label:'Estrella',keep:true,polys:(a,b,{cx,cy,w,h})=>{
+  // estrella de cinco puntas regular, ajustada a la caja
+  const R=Math.min(w/1.902,h/1.809),pts=[];
+  for(let i=0;i<10;i++){const t=-Math.PI/2+i*Math.PI/5,r=i%2?.382:1;pts.push({x:cx+R*r*Math.cos(t),y:cy+R*(r*Math.sin(t)+.0955)})}
+  return[{pts,closed:true,fill:true}];
+}});
+forma({id:'semicirculo',group:'plana',order:14,label:'Semicírculo',polys:(a,b,{y,w,h,cx})=>{
+  const r=Math.min(w/2,h); // siempre medio círculo, apoyado en la base de la caja
+  return[{pts:FM.arc(cx,y+h,r,r,Math.PI,2*Math.PI,FM.n(r*2,r)),closed:true,fill:true}];
+}});
+
+/* --- Cuerpos (las aristas ocultas, discontinuas) --- */
+const prisma=(f)=>(a,b,{x,y,w,h})=>{
+  const o=Math.min(w,h)*f,x1=x+w,y1=y+h;
+  const F0=FMp(x,y+o),F1=FMp(x1-o,y+o),F2=FMp(x1-o,y1),F3=FMp(x,y1),B0=FMp(x+o,y),B1=FMp(x1,y),B2=FMp(x1,y1-o),B3=FMp(x+o,y1-o);
+  return[
+    {pts:[F0,B0,B1,B2,F2,F3],closed:true,fill:true,nostroke:true},
+    {pts:[F0,F1,F2,F3],closed:true},
+    {pts:[F0,B0,B1,B2,F2],closed:false},{pts:[B1,F1],closed:false},
+    {pts:[F3,B3,B0],closed:false,dash:true},{pts:[B3,B2],closed:false,dash:true}
+  ];
+};
+forma({id:'cubo',group:'cuerpo',order:1,label:'Cubo',keep:true,polys:prisma(.3)});
+forma({id:'ortoedro',group:'cuerpo',order:2,label:'Ortoedro',polys:prisma(.25)});
+forma({id:'cilindro',group:'cuerpo',order:3,label:'Cilindro',polys:(a,b,{x,y,w,h,cx})=>{
+  const rx=w/2,ry=Math.min(w*.2,h*.25),n=FM.n(w,ry*2),ty=y+ry,by=y+h-ry,P=Math.PI;
+  const sil=FM.arc(cx,ty,rx,ry,P,2*P,n).concat(FM.arc(cx,by,rx,ry,0,P,n)); // arco de atrás de la tapa y arco de delante de la base (de derecha a izquierda)
+  return[
+    {pts:sil,closed:true,fill:true,nostroke:true},
+    {ell:{cx,cy:ty,rx,ry},closed:true},
+    {pts:[FMp(x,ty),FMp(x,by)],closed:false},{pts:[FMp(x+w,ty),FMp(x+w,by)],closed:false},
+    {pts:FM.arc(cx,by,rx,ry,0,P,n),closed:false},
+    {pts:FM.arc(cx,by,rx,ry,P,2*P,n),closed:false,dash:true}
+  ];
+}});
+forma({id:'cono',group:'cuerpo',order:4,label:'Cono',polys:(a,b,{x,y,w,h,cx})=>{
+  const rx=w/2,ry=Math.min(w*.2,h*.25),n=FM.n(w,ry*2),by=y+h-ry,P=Math.PI,V=FMp(cx,y);
+  return[
+    {pts:[V,FMp(x+w,by)].concat(FM.arc(cx,by,rx,ry,0,P,n),[FMp(x,by)]),closed:true,fill:true,nostroke:true},
+    {pts:[FMp(x,by),V,FMp(x+w,by)],closed:false},
+    {pts:FM.arc(cx,by,rx,ry,0,P,n),closed:false},
+    {pts:FM.arc(cx,by,rx,ry,P,2*P,n),closed:false,dash:true}
+  ];
+}});
+forma({id:'piramide',group:'cuerpo',order:5,label:'Pirámide',polys:(a,b,{x,y,w,h})=>{
+  const o=Math.min(w,h)*.25,x1=x+w,y1=y+h,A=FMp(x,y1),B=FMp(x1-o,y1),C=FMp(x1,y1-o),D=FMp(x+o,y1-o),V=FMp(x+w/2,y);
+  return[
+    {pts:[V,A,B,C],closed:true,fill:true,nostroke:true},
+    {pts:[A,B,C],closed:false},{pts:[A,V,B],closed:false},{pts:[V,C],closed:false},
+    {pts:[A,D,C],closed:false,dash:true},{pts:[V,D],closed:false,dash:true}
+  ];
+}});
+forma({id:'esfera',group:'cuerpo',order:6,label:'Esfera',keep:true,polys:(a,b,{cx,cy,w,h})=>{
+  const rx=w/2,ry=h/2,e=ry*.3,n=FM.n(w,e*2),P=Math.PI;
+  return[
+    {ell:{cx,cy,rx,ry},closed:true,fill:true},
+    {pts:FM.arc(cx,cy,rx,e,0,P,n),closed:false},
+    {pts:FM.arc(cx,cy,rx,e,P,2*P,n),closed:false,dash:true}
+  ];
+}});
+
+/* --- Iconos del menú: la propia forma dibujada pequeña (SVG de 28×28) --- */
+function formaIcon(f){
+  const lin=f.group==='linea',a={x:lin?4:3,y:lin?23:3},b0={x:lin?24:25,y:lin?5:23};
+  const b=f.keep?shapeEnd({a,b:b0,shape:f.id}):b0;
+  const f2=n=>Math.round(n*100)/100;
+  const d=shapeParts(f,a,b,{size:1.5}).filter(it=>!it.nostroke).map(it=>{
+    if(it.ell){const e=it.ell,at=`cx="${f2(e.cx)}" cy="${f2(e.cy)}" rx="${f2(e.rx)}" ry="${f2(e.ry)}"`;return it.solid?`<ellipse ${at} fill="currentColor"/>`:`<ellipse ${at}/>`}
+    return`<${it.closed?'polygon':'polyline'} points="${it.pts.map(q=>f2(q.x)+','+f2(q.y)).join(' ')}"${it.dash?' stroke-dasharray="2.2 2.2"':''}/>`;
+  }).join('');
+  return`<svg class="fi" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+}
 /* ============ Ventanas flotantes ============ */
 const floaters=$('#floaters'),wins=new Map();let zTop=10;
 function makeDrag(handle,el){
@@ -4109,7 +4253,6 @@ spot.addEventListener('pointerup',()=>spDrag=false);
 spot.addEventListener('pointercancel',()=>spDrag=false);
 tool({id:'spot',group:'apoyo',order:10,icon:'spot',label:'Foco',run:()=>toggleSpot(),on:()=>sp.on,clear:()=>{if(sp.on)toggleSpot(false)}});
 /* ============ Construcción de la interfaz ============ */
-const SHAPES=[['line','╱','Línea'],['rect','▭','Rectángulo'],['square','□','Cuadrado'],['circle','◯','Círculo'],['ellipse','⬭','Elipse'],['triangle','△','Triángulo'],['pentagon','⬠','Pentágono'],['hexagon','⬡','Hexágono']];
 const PALETTE=['ink','#000000','#ffffff','#868e96','#8d5524','#f783ac',
   '#c92a2a','#e03131','#ff6b6b','#e8590c','#f08c00','#fcc419',
   '#2b8a3e','#2f9e44','#69db7c','#0ca678','#15aabf','#74c0fc',
@@ -4159,15 +4302,18 @@ function refreshTools(){
 function setSize(s){T.size=s;refreshTools();if(editor){editor.fs=FS[s];editor.ta.style.fontSize=FS[s]+'px';sizeEditor()}}
 const fillLabel=()=>T.fill?'◼ Con relleno':'◻ Sin relleno';
 const shapeNodes=()=>[
-  ...SHAPES.map(([id,ic,nm])=>h('button',{title:nm,'aria-label':nm,class:id===T.shape?'on':'',onclick:()=>{T.shape=id;T.tool='shape';refreshTools();closePop()}},ic)),
+  ...[['linea','Líneas'],['plana','Planas'],['cuerpo','Cuerpos']].flatMap(([g,name])=>[
+    h('div',{class:'popsep grp'},name),
+    ...formasOf(g).map(f=>h('button',{title:f.label,'aria-label':f.label,'data-shape':f.id,class:f.id===T.shape?'on':'',onclick:()=>{T.shape=f.id;T.tool='shape';refreshTools();closePop()}},h('span',{html:formaIcon(f)})))]),
   h('button',{class:'wide'+(T.fill?' on':''),onclick:e=>{T.fill=!T.fill;e.currentTarget.classList.toggle('on',T.fill);e.currentTarget.textContent=fillLabel()}},fillLabel())
 ];
+const shapeCols=()=>innerHeight/(S.ui||1)<640?6:4; // en pantallas bajas, más columnas para que quepan sin deslizar tanto
 const colorNodes=()=>[colorPicker()]; // ruleta de color (ver 33b-selector-color.js)
 function toolBtn(tool,icon,label){
   const extra=tool==='shape'?{'data-pop':'shape'}:{};
   return h('button',{class:'tool','data-tool':tool,...extra,onclick:e=>{
     commitEditor();T.tool=tool;refreshTools();
-    if(tool==='shape')openPop('shape',e.currentTarget,4,shapeNodes());else closePop();
+    if(tool==='shape')openPop('shape',e.currentTarget,shapeCols(),shapeNodes());else closePop();
   }},ico(icon,'ic'),h('small',{},label));
 }
 function buildLeft(){

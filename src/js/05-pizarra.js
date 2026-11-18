@@ -127,31 +127,33 @@ function seg(ctx,s,p0,p1){
   else{ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke()}
   ctx.restore();
 }
-function polygon(ctx,n,cx,cy,rx,ry){
-  ctx.beginPath();
-  for(let i=0;i<n;i++){const a=-Math.PI/2+i*2*Math.PI/n;const x=cx+rx*Math.cos(a),y=cy+ry*Math.sin(a);i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
-  ctx.closePath();
-}
-function shapeEnd(s){ // cuadrado, círculo y polígonos regulares se mantienen proporcionados
-  const a=s.a,b=s.b;
-  if(!['square','circle','pentagon','hexagon'].includes(s.shape))return b;
+function shapeEnd(s){ // las formas con keep (cuadrado, círculo, polígonos regulares, cubo…) se mantienen proporcionadas
+  const a=s.a,b=s.b,f=formaById(s.shape);
+  if(!f||!f.keep)return b;
   const dx=b.x-a.x,dy=b.y-a.y,m=Math.max(Math.abs(dx),Math.abs(dy));
   return{x:a.x+(dx<0?-m:m),y:a.y+(dy<0?-m:m)};
 }
+// Piezas de una forma ({pts,closed} o {ell}) entre a y b; s aporta el grosor (puntas de flecha, puntos)
+function shapeParts(f,a,b,s){
+  const x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(b.x-a.x),hh=Math.abs(b.y-a.y);
+  return f.polys(a,b,{x,y,w,h:hh,cx:x+w/2,cy:y+hh/2},s);
+}
+const shapePolys=s=>{const f=formaById(s.shape);return f?shapeParts(f,s.a,shapeEnd(s),s):[]}; // forma desconocida: no se dibuja
+function partPath(ctx,it){
+  if(it.ell){const e=it.ell;ctx.ellipse(e.cx,e.cy,e.rx,e.ry,0,0,7)}
+  else{it.pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));if(it.closed)ctx.closePath()}
+}
 function drawShape(ctx,s){
-  const a=s.a,b=shapeEnd(s);
-  const x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(b.x-a.x),hh=Math.abs(b.y-a.y),cx=x+w/2,cy=y+hh/2;
-  ctx.save();setStyle(ctx,s);ctx.beginPath();
-  switch(s.shape){
-    case 'line':ctx.moveTo(a.x,a.y);ctx.lineTo(s.b.x,s.b.y);break;
-    case 'rect':case 'square':ctx.rect(x,y,w,hh);break;
-    case 'circle':case 'ellipse':ctx.ellipse(cx,cy,w/2,hh/2,0,0,7);break;
-    case 'triangle':ctx.moveTo(cx,y);ctx.lineTo(x+w,y+hh);ctx.lineTo(x,y+hh);ctx.closePath();break;
-    case 'pentagon':polygon(ctx,5,cx,cy,w/2,hh/2);break;
-    case 'hexagon':polygon(ctx,6,cx,cy,w/2,hh/2);break;
+  const L=shapePolys(s);if(!L.length)return;
+  ctx.save();setStyle(ctx,s);
+  for(const it of L){
+    ctx.beginPath();partPath(ctx,it);
+    if(it.solid){ctx.save();ctx.globalAlpha=1;ctx.fill();ctx.restore()}
+    else if(s.fill&&it.fill){ctx.save();ctx.globalAlpha=.3;ctx.fill();ctx.restore()}
+    if(it.nostroke)continue;
+    ctx.save();if(it.dash)ctx.setLineDash([s.size*1.6,s.size*1.6]);ctx.stroke();ctx.restore();
   }
-  if(s.fill&&s.shape!=='line'){ctx.save();ctx.globalAlpha=.3;ctx.fill();ctx.restore()}
-  ctx.stroke();ctx.restore();
+  ctx.restore();
 }
 function drawText(ctx,s){
   ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
@@ -184,7 +186,8 @@ function bbox(s){
     const w=Math.max(20,...s.text.split('\n').map(l=>cl.measureText(l).width));cl.restore();
     return{x:s.x,y:s.y,w,h:s.text.split('\n').length*s.fs*1.2};
   }
-  const ps=s.type==='shape'?[s.a,shapeEnd(s)]:s.pts,m=s.size/2;
+  let ps=s.type==='shape'?[s.a,shapeEnd(s)]:s.pts;const m=s.size/2;
+  if(s.type==='shape'&&(formaById(s.shape)||{}).group==='linea')ps=ps.concat(...shapeLines(s).map(l=>l.pts)); // las puntas de flecha se salen de a-b
   const xs=ps.map(p=>p.x),ys=ps.map(p=>p.y),x=Math.min(...xs)-m,y=Math.min(...ys)-m;
   return{x,y,w:Math.max(...xs)+m-x,h:Math.max(...ys)+m-y};
 }
@@ -196,7 +199,7 @@ function hitTest(p){
     const b=bbox(s),pad=14;
     if(p.x<b.x-pad||p.x>b.x+b.w+pad||p.y<b.y-pad||p.y>b.y+b.h+pad)continue;
     if(s.type==='free'){const tol=s.size/2+pad;if(s.pts.length===1?Math.hypot(p.x-s.pts[0].x,p.y-s.pts[0].y)<tol:s.pts.some((q,j)=>j&&distSeg(p,s.pts[j-1],q)<tol))return s;continue}
-    if(s.type==='shape'&&s.shape==='line'){if(distSeg(p,s.a,s.b)<s.size/2+pad)return s;continue}
+    if(s.type==='shape'&&(formaById(s.shape)||{}).group==='linea'){if(shapeLines(s).some(l=>l.pts.some((q,j)=>j&&distSeg(p,l.pts[j-1],q)<s.size/2+pad)))return s;continue}
     return s;
   }
   return null;

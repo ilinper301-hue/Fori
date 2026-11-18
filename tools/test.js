@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* Prueba rápida de Fori: arranca la app, dibuja, abre todas las herramientas y comprueba que no hay errores.
-   Uso: node tools/test.js (FORI_SOLO=fondos para correr solo las pruebas de fondos)   (necesita Playwright; primero genera index.html con python3 tools/build.py) */
+   Uso: node tools/test.js (FORI_SOLO=fondos o FORI_SOLO=formas para correr solo esas pruebas)   (necesita Playwright; primero genera index.html con python3 tools/build.py) */
 const http=require('http'),fs=require('fs'),path=require('path');
 const {chromium}=require('playwright');
 const ROOT=path.resolve(__dirname,'..');
@@ -770,12 +770,137 @@ async function plantillas(b,url){
   await ctx.close();
   ok(errs.length===0,'sin errores en las pruebas de plantillas'+(errs.length?': '+errs.join(' | '):''));
 }
+/* Formas: registro, menú con iconos, dibujo, borrador, mover, guardar y lecciones */
+async function formas(b,url){
+  console.log('\nFormas matemáticas');
+  const ctx=await b.newContext({viewport:{width:1280,height:720},acceptDownloads:true});
+  const p=await ctx.newPage();
+  const errs=[];p.on('pageerror',e=>errs.push(e.message));
+  p.on('dialog',d=>d.accept());
+  await p.goto(url);await p.waitForTimeout(800);
+  const drag=async(x0,y0,x1,y1,steps=8)=>{await p.mouse.move(x0,y0);await p.mouse.down();await p.mouse.move(x1,y1,{steps});await p.mouse.up();await p.waitForTimeout(40)};
+  const sts=()=>p.evaluate(()=>__fori.pages[__fori.cur].strokes.map(s=>({...s})));
+  const inkN=()=>p.evaluate(()=>{const c=document.querySelector('#draw'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=4)if(d[i])n++;return n});
+  const dentro=sel=>p.evaluate(s=>{const r=document.querySelector(s).getBoundingClientRect();return r.left>=0&&r.top>=0&&r.right<=innerWidth+.5&&r.bottom<=innerHeight+.5},sel);
+  const limpia=()=>p.evaluate(()=>{__fori.pages[__fori.cur].strokes.length=0});
+  const tool=t=>p.click(`#left [data-tool=${t}]`);
+  const elige=async id=>{await tool('shape');await p.click(`#pop [data-shape=${id}]`)};
+  const relleno=async v=>{await tool('shape');const l=await p.textContent('#pop .wide');if(/Con relleno/.test(l)!==v)await p.click('#pop .wide');await p.keyboard.press('Escape')};
+  const kv=k=>p.evaluate(k=>new Promise(r=>{const q=indexedDB.open('fori',1);q.onsuccess=()=>{const g=q.result.transaction('kv').objectStore('kv').get(k);g.onsuccess=()=>r(g.result)}}),k);
+
+  // 1. Registro: las ocho de siempre con sus ids y las nuevas, por grupos
+  const reg=await p.evaluate(()=>__fori.REG.formas.map(f=>[f.id,f.group,!!f.keep]));
+  const ids=reg.map(f=>f[0]),viejas=['line','rect','square','circle','ellipse','triangle','pentagon','hexagon'];
+  ok(viejas.every(i=>ids.includes(i)),'las ocho formas de siempre conservan su id');
+  ok(reg.filter(f=>f[1]==='linea').length===4&&reg.filter(f=>f[1]==='plana').length===14&&reg.filter(f=>f[1]==='cuerpo').length===6,'hay 4 líneas, 14 planas y 6 cuerpos');
+  ok(same(reg.filter(f=>f[2]).map(f=>f[0]).sort(),['circle','cubo','esfera','estrella','hexagon','octogono','pentagon','square']),'se mantienen proporcionadas: cuadrado, círculo, polígonos regulares, estrella, cubo y esfera');
+
+  // 2. Menú: tres apartados, un icono dibujado por forma y el botón de relleno al final
+  await tool('shape');
+  const seps=await p.locator('#pop .popsep.grp').allTextContents();
+  ok(same(seps.map(s=>s.toLowerCase()),['líneas','planas','cuerpos']),'el menú tiene los apartados Líneas, Planas y Cuerpos');
+  ok(await p.locator('#pop button[data-shape]').count()===24&&await p.locator('#pop button[data-shape] svg.fi polygon,#pop button[data-shape] svg.fi polyline,#pop button[data-shape] svg.fi ellipse').count()>=24,'24 botones, cada uno con su icono dibujado');
+  ok(await p.evaluate(()=>[...document.querySelectorAll('#pop button[data-shape]')].every(b=>b.getAttribute('aria-label')&&b.title)),'todos los botones tienen nombre');
+  ok(await p.evaluate(()=>document.querySelector('#pop').lastElementChild.classList.contains('wide')),'el botón de relleno queda al final');
+  ok(await dentro('#pop'),'el menú cabe en 1280×720');
+  await p.keyboard.press('Escape');
+
+  // 3. Cada forma se dibuja (sin y con relleno) y se guarda con su id
+  for(const fill of [false,true]){
+    await relleno(fill);
+    for(const id of ids){
+      await limpia();await elige(id);await drag(300,200,560,420);
+      const s=await sts();
+      ok(s.length===1&&s[0].type==='shape'&&s[0].shape===id&&s[0].fill===fill&&await inkN()>50,`${id}${fill?' (con relleno)':''} se dibuja y se guarda como forma`);
+    }
+  }
+  await relleno(false);
+
+  // 4. Proporción fija: un cubo arrastrado en horizontal queda cúbico (caja cuadrada)
+  await limpia();await elige('cubo');await drag(300,200,600,300);
+  const lado=await p.evaluate(()=>{const s=__fori.pages[__fori.cur].strokes[0];return[Math.abs(s.b.x-s.a.x),Math.abs(s.b.y-s.a.y)]});
+  ok(lado[0]>250&&await inkN()>50,'el cubo se dibuja arrastrando en horizontal (su caja se fuerza cuadrada al pintar)');
+
+  // 5. Borrador: corta una forma sin relleno por donde pasa y borra entera la que tiene relleno
+  await limpia();await elige('cubo');await drag(300,200,500,400);
+  await tool('eraser');await drag(250,330,350,330,6);
+  let s=await sts();
+  ok(s.length>1&&s.every(q=>q.type==='free'),'el borrador corta un cubo sin relleno en trozos de trazo libre');
+  await p.click('#btnUndo');s=await sts();
+  ok(s.length===1&&s[0].shape==='cubo','deshacer recupera el cubo entero');
+  await limpia();await relleno(true);await elige('cubo');await drag(300,200,500,400);
+  await tool('eraser');await drag(250,330,350,330,6);
+  s=await sts();ok(s.length===0,'el borrador borra entero un cubo con relleno');
+  await p.click('#btnUndo');s=await sts();ok(s.length===1&&s[0].shape==='cubo'&&s[0].fill,'y deshacer lo devuelve con su relleno');
+  await limpia();await relleno(false);
+  await elige('arrow');await drag(300,300,700,300);
+  await tool('eraser');await drag(500,250,500,350,6);
+  s=await sts();ok(s.length>=2&&s.every(q=>q.type==='free'),'el borrador corta una flecha');
+  await limpia();
+
+  // 6. Mover: una forma nueva y una línea nueva se mueven enteras
+  await elige('piramide');await drag(300,200,520,400);
+  await tool('select');
+  const a0=(await sts())[0].a;await drag(410,330,470,360,6);
+  const a1=(await sts())[0].a;
+  ok(Math.abs(a1.x-a0.x-60)<1&&Math.abs(a1.y-a0.y-30)<1,'la pirámide se mueve entera al arrastrarla');
+  await limpia();await elige('darrow');await drag(300,300,700,360);
+  await tool('select');const b0=(await sts())[0];await drag(500,330,500,450,6);
+  const b1=(await sts())[0];
+  ok(Math.abs(b1.a.y-b0.a.y-120)<1&&Math.abs(b1.b.y-b0.b.y-120)<1,'la flecha doble se coge por la línea y se mueve');
+  await limpia();
+
+  // 7. Guardar, recargar y guardar como lección conservan los ids
+  const dib=[['cono',200,150,380,350],['arrow',500,150,800,200],['esfera',500,300,700,500],['semicirculo',850,200,1050,320]];
+  for(const [id,...c] of dib){await elige(id);await drag(...c)}
+  const antes=(await sts()).map(q=>q.shape);
+  await p.waitForTimeout(1200);await p.reload();await p.waitForTimeout(900);
+  s=await sts();
+  ok(same(s.map(q=>q.shape),antes)&&antes.length===4,'al recargar, las formas siguen con su id: '+antes.join(', '));
+  ok(await inkN()>200,'y se vuelven a dibujar');
+  const menu=async t=>{await p.click('#pageLbl');await p.click(`#pop >> text=${t}`);await p.waitForTimeout(150)};
+  await menu('Guardar como lección');await p.waitForTimeout(600);
+  const les=await kv('lessons'),lp=await kv('lesson:'+les[0].id);
+  ok(same(lp[0].strokes.map(q=>q.shape),antes),'la lección guardada lleva los ids de las formas');
+  await menu('Mis lecciones');
+  const [dl]=await Promise.all([p.waitForEvent('download'),p.click('.les-item [aria-label=Exportar]')]);
+  const txt=require('fs').readFileSync(await dl.path(),'utf8'),d=JSON.parse(txt);
+  ok(same(d.pages[0].strokes.map(q=>q.shape),antes),'el archivo .fori exportado lleva los ids de las formas');
+
+  // 8. Un id que esta versión no conoce no rompe nada: no se dibuja, ni se corta, y el dato se conserva
+  await p.click('#pop,body',{position:{x:5,y:5},force:true}).catch(()=>{});
+  d.pages[0].strokes.push({type:'shape',shape:'zzz',fill:true,color:'ink',size:6,a:{x:700,y:400},b:{x:900,y:560}});d.name='futura';
+  const imp=async t=>{const [fc]=await Promise.all([p.waitForEvent('filechooser'),p.click('text=Importar lección')]);await fc.setFiles({name:'a.fori',mimeType:'application/json',buffer:Buffer.from(t)});await p.waitForTimeout(900)};
+  await imp(JSON.stringify(d));
+  s=await sts();
+  ok(s.length===5&&s[4].shape==='zzz','una lección con una forma desconocida se abre y la conserva');
+  await tool('eraser');await drag(650,480,950,480,8);
+  await tool('select');await drag(800,480,850,500,4);
+  s=await sts();
+  ok(s.some(q=>q.shape==='zzz')&&errs.length===0,'el borrador y Mover pasan por encima de una forma desconocida sin errores'+(errs.length?': '+errs.join(' | '):''));
+
+  // 9. El menú cabe en móvil (vertical y horizontal) y se llega al botón de relleno
+  for(const [w,h2] of [[390,844],[844,390]]){
+    await p.setViewportSize({width:w,height:h2});await p.waitForTimeout(400);
+    await p.evaluate(()=>{document.querySelectorAll('.win').forEach(x=>x.remove())});
+    await tool('shape');
+    const dentroPop=await dentro('#pop');
+    await p.evaluate(()=>{const q=document.querySelector('#pop');q.scrollTop=q.scrollHeight});
+    const fin=await dentro('#pop');
+    const rb=await p.evaluate(()=>{const r=document.querySelector('#pop .wide').getBoundingClientRect(),q=document.querySelector('#pop').getBoundingClientRect();return r.bottom<=q.bottom+1&&r.top>=q.top-1&&r.bottom<=innerHeight+.5});
+    await p.keyboard.press('Escape');
+    ok(dentroPop&&fin&&rb,`a ${w}×${h2} el menú de formas cabe y se llega al botón de relleno`);
+  }
+  await ctx.close();
+  ok(errs.length===0,'sin errores en las pruebas de formas'+(errs.length?': '+errs.join(' | '):''));
+}
 server.listen(0,async()=>{
   const url=`http://localhost:${server.address().port}/`;
   // FORI_CHROME=1 usa el Chrome instalado en el equipo en vez del navegador de Playwright
   const b=await chromium.launch(process.env.FORI_CHROME?{channel:'chrome',args:['--no-sandbox']}:{});
   try{
     if(process.env.FORI_SOLO==='fondos'){await fondos(b,url);await plantillas(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
+    if(process.env.FORI_SOLO==='formas'){await formas(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     const p=await b.newPage({viewport:{width:1920,height:1080}});
     const errs=[];p.on('pageerror',e=>errs.push(e.message));
     p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource|ERR_/.test(m.text()))errs.push(m.text())});
@@ -811,6 +936,7 @@ server.listen(0,async()=>{
     await guardado(b,url);
     await fondos(b,url);
     await plantillas(b,url);
+    await formas(b,url);
   }catch(e){fails.push(String(e));console.log(e)}
   await b.close();server.close();
   console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0);
