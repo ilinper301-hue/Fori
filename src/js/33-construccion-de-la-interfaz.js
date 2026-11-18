@@ -87,14 +87,21 @@ let bgHeldAt=0; // para que soltar el dedo tras la pulsación larga no pulse sin
 function bgSet(f,opt,remember){
   const p=P();p.bg=f.id;
   if(opt===undefined)delete p.bgo;else p.bgo=opt;
+  // una plantilla se encaja en la página: en una vacía, su tamaño queda fijo desde ahora (no se mueve al girar la pantalla)
+  if(f.group==='plantilla'&&!p.strokes.length){p.size={w:stage.clientWidth,h:stage.clientHeight};p.v=viewId()}
+  fitPage(p);
   if(remember&&opt!==undefined){(S.bgLast=S.bgLast||{})[f.id]=opt;save()}
   drawBg();persist();refreshBgBtn();closePop();
 }
 function bgThumb(f,w,hh){
   const c=h('canvas',{class:'bgth','aria-hidden':'true'}),dpr=devicePixelRatio||1,z=.4; // se pinta con el mismo paint, a menor escala
   c.width=Math.round(w*dpr);c.height=Math.round(hh*dpr);c.style.width=w+'px';c.style.height=hh+'px';
-  const x=c.getContext('2d');x.scale(dpr,dpr);x.scale(z,z);
-  paintBg(x,0,0,w/z,hh/z,f.id,document.documentElement.dataset.theme==='dark',bgTapOpt(f));
+  const x=c.getContext('2d'),dark=document.documentElement.dataset.theme==='dark';x.scale(dpr,dpr);
+  if(f.group==='plantilla'){ // una página entera (con la forma de la pizarra) reducida y centrada en la tesela
+    const W=stage.clientWidth||1,H=stage.clientHeight||1,L={w:240,h:Math.max(60,Math.min(480,240*H/W))},k=Math.min(w/L.w,hh/L.h);
+    x.translate((w-L.w*k)/2,(hh-L.h*k)/2);x.scale(k,k);
+    paintBg(x,0,0,L.w,L.h,f.id,dark,bgTapOpt(f),L);
+  }else{x.scale(z,z);paintBg(x,0,0,w/z,hh/z,f.id,dark,bgTapOpt(f))}
   return c;
 }
 function bgTile(f,tw,anchor){
