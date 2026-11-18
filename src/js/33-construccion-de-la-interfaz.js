@@ -76,24 +76,73 @@ function buildLeft(){
     h('button',{class:'tool szc','aria-label':'Grosor',title:'Grosor',onclick:()=>setSize(T.size===3?6:T.size===6?12:3)},h('i')));
   renderRecent();refreshTools();updatePageUI();
 }
-const BGS=[['plain','Liso'],['grid','Cuadrícula'],['dots','Puntos'],['lines','Pauta doble línea'],['montessori','Pauta Montessori'],['cuadrovia','Cuadrovía']];
+/* --- Menú de fondo ---
+   Teselas con vista previa, por apartados (Pautas, Plantillas). Toque corto: pone ese fondo con el último tamaño usado
+   para él (S.bgLast[id]) o, si no hay, el de Ajustes. Pulsación larga (600 ms): el mismo menú cambia a las opciones
+   del fondo (en las pautas, el tamaño); elegir una pone fondo y opción en esta página y cierra. */
+const bgLabel=()=>`${fondoOf(P().bg).label}${P().img?' + imagen':''} ▾`;
+const refreshBgBtn=()=>{const b=$('#bgBtn');if(b)b.replaceChildren(...ib('layers',bgLabel()))};
+const bgTapOpt=f=>{const o=S.bgLast&&S.bgLast[f.id];return bgoOk(o)?o:undefined}; // la opción de un toque corto (undefined = la por defecto)
+let bgHeldAt=0; // para que soltar el dedo tras la pulsación larga no pulse sin querer una opción del menú nuevo
+function bgSet(f,opt,remember){
+  const p=P();p.bg=f.id;
+  if(opt===undefined)delete p.bgo;else p.bgo=opt;
+  if(remember&&opt!==undefined){(S.bgLast=S.bgLast||{})[f.id]=opt;save()}
+  drawBg();persist();refreshBgBtn();closePop();
+}
+function bgThumb(f,w,hh){
+  const c=h('canvas',{class:'bgth','aria-hidden':'true'}),dpr=devicePixelRatio||1,z=.4; // se pinta con el mismo paint, a menor escala
+  c.width=Math.round(w*dpr);c.height=Math.round(hh*dpr);c.style.width=w+'px';c.style.height=hh+'px';
+  const x=c.getContext('2d');x.scale(dpr,dpr);x.scale(z,z);
+  paintBg(x,0,0,w/z,hh/z,f.id,document.documentElement.dataset.theme==='dark',bgTapOpt(f));
+  return c;
+}
+function bgTile(f,tw,anchor){
+  const b=h('button',{class:'tile bgt'+(P().bg===f.id?' on':''),title:f.label,'data-bg':f.id,style:`width:${tw}px`},bgThumb(f,tw-12,50),h('small',{},f.label));
+  let timer=null,held=false,x0=0,y0=0;
+  const cancel=()=>{clearTimeout(timer);timer=null;b.classList.remove('holding')};
+  if(f.opts&&f.opts.length){
+    b.addEventListener('pointerdown',e=>{held=false;x0=e.clientX;y0=e.clientY;b.classList.add('holding');timer=setTimeout(()=>{held=true;cancel();bgHeldAt=performance.now();bgOptions(f,anchor,tw)},600)});
+    b.addEventListener('pointermove',e=>{if(timer&&Math.hypot(e.clientX-x0,e.clientY-y0)>12)cancel()}); // si el dedo se mueve, desliza la lista
+    for(const ev of ['pointerup','pointerleave','pointercancel'])b.addEventListener(ev,cancel);
+  }
+  b.addEventListener('click',()=>{
+    if(held){held=false;return}
+    if(P().bg===f.id)closePop();else bgSet(f,bgTapOpt(f));
+  });
+  return b;
+}
+function bgOptions(f,anchor){
+  const p=P(),cur=fondoOpt(f,p.bg===f.id?p.bgo:bgTapOpt(f));
+  closePop();
+  openPop('bg',anchor,1,[
+    h('button',{class:'wide',onclick:()=>{if(performance.now()-bgHeldAt<400)return;closePop();bgMenu(anchor)}},`‹ Volver · ${f.label}`),
+    ...f.opts.map(([v,lb])=>h('button',{class:'wide'+(v===cur?' on':''),onclick:()=>{if(performance.now()-bgHeldAt<400)return;bgSet(f,v,true)}},lb))],'above');
+}
+function bgMenu(anchor){
+  const W=innerWidth/(S.ui||1),tw=Math.min(104,Math.floor((W-34-12)/3)),nodes=[]; // tres columnas que caben a lo ancho en cualquier móvil
+  for(const [g,name] of [['pauta','Pautas'],['plantilla','Plantillas']]){
+    const fs=fondosOf(g);if(fs.length)nodes.push(h('div',{class:'popsep grp'},name),...fs.map(f=>bgTile(f,tw,anchor)));
+  }
+  nodes.push(
+    h('button',{class:'wide',onclick:()=>{
+      closePop();
+      if(P().img){P().img=null;drawBg();persist();refreshBgBtn()}
+      else $('#bgFile').click();
+    }},...ib('image',P().img?'Quitar imagen de fondo':'Poner imagen de fondo')),
+    h('div',{class:'popsep'},'Pizarra dividida'),
+    ...[[1,'Una sola zona'],[2,'Dividir en 2 zonas'],[3,'Dividir en 3 zonas'],[4,'Dividir en 4 zonas']].map(([n,lb])=>h('button',{class:'wide'+(ZN.n===n?' on':''),onclick:()=>{closePop();setZones(n)}},...ib('zones'+n,lb))),
+    h('p',{class:'pophint',style:`max-width:${3*tw+12}px`},'Mantén pulsado un fondo para cambiar su tamaño.'));
+  openPop('bg',anchor,3,nodes,'above');
+}
 function resetTools(){
   commitEditor();closeAllWins();REG.tools.forEach(t=>t.clear&&t.clear());
   closePop();setSel(null);refreshRail();toast('Herramientas reiniciadas');
 }
 function buildDock(){
   const dock=$('#dock');
-  const bgLabel=()=>`${BGS.find(b=>b[0]===P().bg)[1]}${P().img?' + imagen':''} ▾`;
-  const setBg=()=>bgBtn.replaceChildren(...ib('layers',bgLabel()));
-  const bgBtn=h('button',{class:'dbtn','data-pop':'bg',id:'bgBtn',title:'Fondo',onclick:e=>openPop('bg',e.currentTarget,1,[
-    ...BGS.map(([id,lb])=>h('button',{class:'wide'+(P().bg===id?' on':''),onclick:()=>{P().bg=id;drawBg();persist();setBg();closePop()}},lb)),
-    h('button',{class:'wide',onclick:()=>{
-      closePop();
-      if(P().img){P().img=null;drawBg();persist();setBg()}
-      else $('#bgFile').click();
-    }},...ib('image',P().img?'Quitar imagen de fondo':'Poner imagen de fondo')),
-    h('div',{class:'popsep'},'Pizarra dividida'),
-    ...[[1,'Una sola zona'],[2,'Dividir en 2 zonas'],[3,'Dividir en 3 zonas'],[4,'Dividir en 4 zonas']].map(([n,lb])=>h('button',{class:'wide'+(ZN.n===n?' on':''),onclick:()=>{closePop();setZones(n)}},...ib('zones'+n,lb)))],'above')});
+  const setBg=refreshBgBtn;
+  const bgBtn=h('button',{class:'dbtn','data-pop':'bg',id:'bgBtn',title:'Fondo',onclick:e=>bgMenu(e.currentTarget)});
   $('#bgFile').addEventListener('change',async e=>{
     const f=e.target.files[0];if(!f)return;e.target.value='';
     await setBgImage(f);setBg();

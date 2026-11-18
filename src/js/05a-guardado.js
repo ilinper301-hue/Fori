@@ -69,7 +69,7 @@ function bdRef(u,st,full,refs){
 // Escribe el registro de una página
 function bdPage(p,st,full){
   const refs=new Set(),r=u=>bdRef(u,st,full,refs);
-  const rec={strokes:p.strokes.map(s=>s&&s.type==='img'?{...s,src:r(s.src)}:s),bg:p.bg,
+  const rec={strokes:p.strokes.map(s=>s&&s.type==='img'?{...s,src:r(s.src)}:s),bg:p.bg,...bgoF(p.bgo),
     img:p.ch&&p.img&&p.img===chImg(p.ch)?'ch:':r(p.img||null),size:p.size||null,v:p.v||null,ch:p.ch||null};
   st.put(rec,'page:'+p.id);BD.refs.set(p.id,refs);
 }
@@ -160,7 +160,7 @@ async function loadBoard(){
       };
       const ch=chClean(r.ch);
       const strokes=r.strokes.map(s=>s&&s.type==='img'?{...s,src:u(s.src)}:s).filter(s=>s&&(s.type!=='img'||typeof s.src==='string'));
-      ps.push({id,strokes,bg:r.bg,img:r.img==='ch:'?(ch?chImg(ch):null):u(r.img),size:r.size,v:r.v,ch});
+      ps.push({id,strokes,bg:r.bg,...bgoF(r.bgo),img:r.img==='ch:'?(ch?chImg(ch):null):u(r.img),size:r.size,v:r.v,ch});
       BD.pg.add(id);BD.refs.set(id,refs);
     });
     BD.seen=bdStamp(o.idx);
@@ -176,7 +176,7 @@ async function loadBoard(){
   }
   if(d){
     // v: vista con la que se guardaron los trazos (las copias antiguas no la traen: sus trazos valen para p.size tal cual)
-    pages=d.pages.map(p=>({...(p.id?{id:p.id}:{}),strokes:p.strokes||[],bg:p.bg||'plain',img:p.img||null,size:p.size||null,v:viewOk(p.v)?{k:p.v.k,ox:p.v.ox,oy:p.v.oy}:null,ch:chClean(p.ch),undo:[],redo:[]}));
+    pages=d.pages.map(p=>({...(p.id?{id:p.id}:{}),strokes:p.strokes||[],bg:p.bg||'plain',...bgoF(p.bgo),img:p.img||null,size:p.size||null,v:viewOk(p.v)?{k:p.v.k,ox:p.v.ox,oy:p.v.oy}:null,ch:chClean(p.ch),undo:[],redo:[]}));
     cur=clamp(d.cur|0,0,pages.length-1);
   }
   BD.dirty.clear();BD.ready=true;

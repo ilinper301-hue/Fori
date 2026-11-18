@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* Prueba rápida de Fori: arranca la app, dibuja, abre todas las herramientas y comprueba que no hay errores.
-   Uso: node tools/test.js   (necesita Playwright; primero genera index.html con python3 tools/build.py) */
+   Uso: node tools/test.js (FORI_SOLO=fondos para correr solo las pruebas de fondos)   (necesita Playwright; primero genera index.html con python3 tools/build.py) */
 const http=require('http'),fs=require('fs'),path=require('path');
 const {chromium}=require('playwright');
 const ROOT=path.resolve(__dirname,'..');
@@ -15,6 +15,7 @@ const readBoard=p=>p.evaluate(()=>new Promise(r=>{const q=indexedDB.open('fori',
   const st=q.result.transaction('kv').objectStore('kv'),g=st.get('board2');
   g.onsuccess=()=>{const d=g.result;if(!d||!d.ids.length)return r(null);const out={cur:d.cur,ids:d.ids,old:d.old,w:d.w,n:d.n,pages:[]};let n=d.ids.length;
     d.ids.forEach((id,i)=>{const pg=st.get('page:'+id);pg.onsuccess=()=>{out.pages[i]=pg.result||null;if(!--n)r(out)}})}}}));
+const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 const fails=[];const ok=(c,m)=>{if(!c)fails.push(m);console.log((c?'  ✓ ':'  ✗ ')+m)};
 /* Pruebas de la pizarra: lienzo lógico (nada se encoge ni se mueve al cambiar de tamaño) y borrado real */
 async function pizarra(b,url){
@@ -511,11 +512,123 @@ async function pantallas(b,url){
   await p.context().close();
   ok(errs.length===0,'sin errores en ningún tamaño'+(errs.length?': '+errs.join(' | '):''));
 }
+/* Pruebas de los fondos: registro, tamaño por página (p.bgo), menú con vistas previas y pulsación larga */
+async function fondos(b,url){
+  console.log('\nFondos y tamaño por página');
+  const ctx=await b.newContext({viewport:{width:1920,height:1080},acceptDownloads:true});
+  const p=await ctx.newPage();
+  const errs=[];p.on('pageerror',e=>errs.push(e.message));
+  p.on('dialog',d=>d.accept());
+  await p.goto(url);await p.waitForTimeout(800);
+  const pg=()=>p.evaluate(()=>__fori.pages.map(q=>[q.bg,q.bgo]));
+  const abre=async()=>{await p.click('#dock [data-pop=bg]');await p.waitForTimeout(100)};
+  const corto=async id=>{await abre();await p.click(`#pop [data-bg=${id}]`);await p.waitForTimeout(100)};
+  const sostener=async id=>{await abre();await p.hover(`#pop [data-bg=${id}]`);await p.mouse.down();await p.waitForTimeout(800);await p.mouse.up();await p.waitForTimeout(500)};
+  const larga=async(id,op)=>{await sostener(id);await p.click(`#pop >> text=${op}`);await p.waitForTimeout(100)};
+  const hash=()=>p.evaluate(()=>{const c=document.querySelector('#bg'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let h=0,n=0;for(let i=0;i<d.length;i+=4){n+=d[i+3];h=(h*31+d[i+3]+d[i]*7+d[i+1]*13)|0}return [h,n]});
+  const dentro=sel=>p.evaluate(s=>{const r=document.querySelector(s).getBoundingClientRect();return r.left>=0&&r.top>=0&&r.right<=innerWidth+.5&&r.bottom<=innerHeight+.5},sel);
+  const ajustes=async x=>{await p.evaluate(x=>{const k='fori-v1',s=JSON.parse(localStorage.getItem(k)||'{}');for(const n in x)x[n]===null?delete s[n]:s[n]=x[n];localStorage.setItem(k,JSON.stringify(s))},x)};
+  const recarga=async()=>{await p.waitForTimeout(1000);await p.reload();await p.waitForTimeout(800)};
+  const idb=f=>p.evaluate(f=>new Promise(r=>{const q=indexedDB.open('fori',1);q.onsuccess=async()=>{const st=q.result.transaction('kv','readwrite').objectStore('kv');const g=k=>new Promise(o=>{const x=st.get(k);x.onsuccess=()=>o(x.result)});const ids=(await g('board2')).ids;const rec=await g('page:'+ids[0]);(new Function('rec',f))(rec);st.put(rec,'page:'+ids[0]).onsuccess=()=>r(true)}}),f);
+
+  // 1. El menú enseña los seis fondos con vista previa, en un solo apartado
+  await abre();
+  const tiles=await p.locator('#pop .tile.bgt').count(),seps=await p.locator('#pop .popsep.grp').allTextContents();
+  const pintada=id=>p.evaluate(id=>{const c=document.querySelector(`#pop [data-bg=${id}] canvas`),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=4)n+=d[i];return n},id);
+  ok(tiles===6&&seps.length===1&&/Pautas/i.test(seps[0]),'el menú enseña los seis fondos en «Pautas» y no hay apartado «Plantillas» vacío');
+  ok(await pintada('grid')>0&&await pintada('montessori')>0&&await pintada('plain')===0,'cada tesela lleva su vista previa pintada (Liso, vacía)');
+  ok(/Mantén pulsado un fondo/.test(await p.textContent('#pop')),'el menú avisa de la pulsación larga');
+  ok(await dentro('#pop'),'el menú cabe en 1920×1080');
+  await p.keyboard.press('Escape');
+
+  // 2. Toque corto, pulsación larga y tamaño solo en esa página
+  await corto('grid');
+  ok(same(await pg(),[['grid',undefined]])&&/Cuadrícula/.test(await p.textContent('#bgBtn')),'toque corto: cambia el fondo y la página sigue el tamaño de Ajustes');
+  await sostener('grid');
+  const vista=await p.locator('#pop .wide').allTextContents();
+  ok(/Volver · Cuadrícula/.test(vista[0])&&vista.slice(1,5).map(t=>t.trim()).join()==='Pequeña,Mediana,Grande,Extra grande'&&(await p.textContent('#pop .wide.on')).trim()==='Mediana','pulsación larga: «‹ Volver · Cuadrícula» y los cuatro tamaños, con el actual marcado');
+  ok(await dentro('#pop'),'la vista de opciones cabe');
+  await p.click('#pop >> text=Extra grande');await p.waitForTimeout(100);
+  ok(same(await pg(),[['grid',1.8]])&&await p.isHidden('#pop'),'elegir «Extra grande» deja bg y bgo=1.8 en la página y cierra el menú');
+  await sostener('grid');await p.click('#pop >> text=Volver');await p.waitForTimeout(100);
+  ok(await p.locator('#pop .tile.bgt').count()===6,'«Volver» regresa al menú de fondos');
+  await p.keyboard.press('Escape');
+
+  // 3. Página nueva y duplicada heredan fondo y tamaño; otras páginas no cambian
+  const menu=async t=>{await p.click('#pageLbl');await p.click(`#pop >> text=${t}`);await p.waitForTimeout(150)};
+  await menu('Página nueva');
+  ok(same(await pg(),[['grid',1.8],['grid',1.8]]),'una página nueva hereda fondo y tamaño');
+  await larga('dots','Pequeña');
+  ok(same(await pg(),[['grid',1.8],['dots',.75]]),'pulsación larga + «Pequeña» solo afecta a esa página');
+  await menu('Duplicar esta página');
+  ok(same(await pg(),[['grid',1.8],['dots',.75],['dots',.75]]),'duplicar hereda fondo y tamaño');
+  ok((await p.evaluate(()=>JSON.parse(localStorage.getItem('fori-v1')).bgLast)).grid===1.8,'el último tamaño usado por fondo queda en los ajustes (bgLast)');
+  await corto('grid');
+  ok(same((await pg())[2],['grid',1.8]),'toque corto: pone el fondo con el último tamaño usado para él');
+  await corto('plain');
+  ok(same((await pg())[2],['plain',undefined]),'Liso no lleva tamaño');
+
+  // 4. Recargar conserva bgo
+  const antes=await pg();await recarga();
+  ok(same(await pg(),antes)&&same(antes.map(x=>x[1]),[1.8,.75,undefined]),'al recargar, cada página conserva su fondo y su tamaño');
+
+  // 5. Una página sin bgo usa el tamaño de Ajustes (se ve igual que con ese bgo)
+  await ajustes({pautaSize:1.8,bgLast:null});await recarga();
+  await corto('plain');await corto('grid');
+  const hA=await hash(),sinA=(await pg())[(await p.evaluate(()=>__fori.cur))];
+  await ajustes({pautaSize:1,bgLast:null});await recarga();
+  const hC=await hash();
+  await larga('grid','Extra grande');const hB=await hash();
+  ok(sinA[1]===undefined&&hA[1]>0&&same(hA,hB),'una página sin bgo usa el tamaño de Ajustes: se pinta igual que con bgo=1.8');
+  ok(!same(hA,hC),'y con otro tamaño de Ajustes se pinta distinto');
+
+  // 6. Un fondo desconocido no rompe nada, se ve y se rotula como Liso y el dato no se toca
+  await idb("rec.bg='xyz';rec.bgo=99");await recarga();
+  for(let i=0;i<2;i++){await p.click('#dock [aria-label="Página anterior"]');await p.waitForTimeout(100)} // la página 1 es la del fondo desconocido
+  ok((await p.textContent('#bgBtn')).includes('Liso')&&(await hash())[1]===0,'bg desconocido: se rotula y se pinta como Liso');
+  ok((await p.evaluate(()=>__fori.pages[0].bg))==='xyz'&&(await p.evaluate(()=>__fori.pages[0].bgo))===undefined,'el dato se conserva y un bgo fuera de rango se descarta');
+  await abre();ok(await p.locator('#pop .tile.bgt').count()===6,'el menú abre con un fondo desconocido');await p.keyboard.press('Escape');
+  await corto('dots');
+
+  // 7. Lecciones: guardar, exportar e importar conservan bgo; un bgo no válido se descarta
+  await larga('dots','Grande');
+  const kv=k=>p.evaluate(k=>new Promise(r=>{const q=indexedDB.open('fori',1);q.onsuccess=()=>{const g=q.result.transaction('kv').objectStore('kv').get(k);g.onsuccess=()=>r(g.result)}}),k);
+  await menu('Guardar como lección');await p.waitForTimeout(600);
+  const les=await kv('lessons'),lp=await kv('lesson:'+les[0].id);
+  ok(lp[0].bg==='dots'&&lp[0].bgo===1.35,'la lección guardada lleva bgo');
+  await menu('Mis lecciones');
+  const [dl]=await Promise.all([p.waitForEvent('download'),p.click('.les-item [aria-label=Exportar]')]);
+  const txt=require('fs').readFileSync(await dl.path(),'utf8'),d=JSON.parse(txt);
+  ok(d.pages[0].bgo===1.35,'el archivo .fori exportado lleva bgo');
+  await p.click('#pop,body',{position:{x:5,y:5},force:true}).catch(()=>{});
+  await corto('plain');
+  const imp=async t=>{const [fc]=await Promise.all([p.waitForEvent('filechooser'),p.click('text=Importar lección')]);await fc.setFiles({name:'a.fori',mimeType:'application/json',buffer:Buffer.from(t)});await p.waitForTimeout(900)};
+  await imp(txt);
+  ok(same((await pg())[0],['dots',1.35]),'importar la lección conserva el fondo y el tamaño');
+  d.pages[0].bgo='x'.repeat(30);d.name='mala';await imp(JSON.stringify(d));
+  ok((await pg())[0][1]===undefined,'al importar, un bgo de texto demasiado largo se descarta');
+  d.pages[0].bgo=99;d.name='mala2';await imp(JSON.stringify(d));
+  ok((await pg())[0][1]===undefined,'al importar, un bgo numérico fuera de rango se descarta');
+
+  // 8. El menú cabe en móvil (vertical y horizontal)
+  for(const [w,h2] of [[390,844],[844,390]]){
+    await p.setViewportSize({width:w,height:h2});await p.waitForTimeout(400);
+    await p.evaluate(()=>{document.querySelectorAll('.win').forEach(x=>x.remove())});
+    await abre();
+    const ok1=await dentro('#pop'),cols=await p.locator('#pop .tile.bgt').count();
+    await p.keyboard.press('Escape');
+    await sostener('grid');const ok2=await dentro('#pop');await p.keyboard.press('Escape');
+    ok(ok1&&ok2&&cols===6,`a ${w}×${h2} el menú de fondos y sus opciones caben`);
+  }
+  await ctx.close();
+  ok(errs.length===0,'sin errores en las pruebas de fondos'+(errs.length?': '+errs.join(' | '):''));
+}
 server.listen(0,async()=>{
   const url=`http://localhost:${server.address().port}/`;
   // FORI_CHROME=1 usa el Chrome instalado en el equipo en vez del navegador de Playwright
   const b=await chromium.launch(process.env.FORI_CHROME?{channel:'chrome',args:['--no-sandbox']}:{});
   try{
+    if(process.env.FORI_SOLO==='fondos'){await fondos(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     const p=await b.newPage({viewport:{width:1920,height:1080}});
     const errs=[];p.on('pageerror',e=>errs.push(e.message));
     p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource|ERR_/.test(m.text()))errs.push(m.text())});
@@ -549,6 +662,7 @@ server.listen(0,async()=>{
     await pantallas(b,url);
     await pizarra(b,url);
     await guardado(b,url);
+    await fondos(b,url);
   }catch(e){fails.push(String(e));console.log(e)}
   await b.close();server.close();
   console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0);

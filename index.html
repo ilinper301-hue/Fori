@@ -592,6 +592,11 @@ dialog.tabdlg.small{width:min(420px,92vw)}
 .zonebar .zsw.on{box-shadow:0 0 0 2px var(--frame),0 0 0 4px var(--teal)}
 /* botón «Colores»: anillo de tonos fino alrededor del color actual */
 .curc{width:32px;height:32px;border-width:3px;box-shadow:0 0 0 2px var(--frame) inset}
+/* Menú de fondo: teselas con vista previa (ver bgMenu en 33-construccion-de-la-interfaz.js) */
+#pop .tile.bgt{justify-self:center;height:auto;gap:4px;padding:6px 5px 5px;font-size:inherit}
+#pop .tile.bgt .bgth{display:block;border-radius:6px;background:var(--board);border:1px solid var(--line)}
+#pop .tile.bgt small{font-size:12px;min-height:2.3em;display:flex;align-items:center}
+#pop .tile.bgt.on{outline:2px solid var(--accent);outline-offset:-2px}
 /* Lecciones */
 .les-bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
 .les-list{display:flex;flex-direction:column;gap:10px;max-height:min(60vh,520px);overflow:auto}
@@ -801,7 +806,7 @@ body[data-lay=p] #top .sp{flex:1 1 0;min-width:0}
   <div class="row">
     <label class="inl">Tema <select id="sTheme"><option value="light">Claro</option><option value="dark">Pizarra oscura</option></select></label>
     <label class="inl">Tamaño de botones <select id="sUi"><option value="0.85">Pequeño</option><option value="1">Normal</option><option value="1.15">Grande</option><option value="1.3">Muy grande</option></select></label>
-    <label class="inl">Tamaño de pauta y cuadrícula <select id="sPauta"><option value="0.75">Pequeña</option><option value="1">Mediana</option><option value="1.35">Grande</option><option value="1.8">Extra grande</option></select></label>
+    <label class="inl">Tamaño de pauta para páginas nuevas <select id="sPauta"><option value="0.75">Pequeña</option><option value="1">Mediana</option><option value="1.35">Grande</option><option value="1.8">Extra grande</option></select></label>
   </div>
   <label class="inl" style="margin-top:12px"><input type="checkbox" id="sPictos" style="width:24px;height:24px"> Mostrar pictogramas de ARASAAC en horario y encargados (necesita internet la primera vez)</label>
   <h3>Seguridad</h3>
@@ -870,7 +875,8 @@ function h(tag,props={},...kids){
 // pageMenu: funciones que devuelven botones para el menú de «Página».
 // pageUI: funciones que se llaman cada vez que cambia lo que se ve de la página (etiquetas, barras).
 // tools: las herramientas, apuntadas con tool().
-const REG={pageMenu:[],pageUI:[],tools:[]};
+// fondos: los fondos de página (pautas y plantillas), apuntados con fondo().
+const REG={pageMenu:[],pageUI:[],tools:[],fondos:[]};
 /* Registro de herramientas. Cada módulo apunta la suya al final de su archivo con tool({...}):
      id            el de su botón y su ventana
      group         'aula' y 'apoyo' (barra derecha) o 'mates' (menú Matemáticas); decide también el color de la ventana
@@ -885,6 +891,25 @@ const REG={pageMenu:[],pageUI:[],tools:[]};
 function tool(t){const o=toolById(t.id);if(o)Object.assign(o,t);else REG.tools.push(t)}
 const toolById=id=>REG.tools.find(t=>t.id===id);
 const toolsOf=g=>REG.tools.filter(t=>t.group===g&&!t.hidden).sort((a,b)=>a.order-b.order);
+
+/* Registro de fondos. Cada fondo se apunta con fondo({...}) (los de siempre, en 05-pizarra.js):
+     id            el texto que guarda cada página en p.bg
+     group         'pauta' (se repite por toda la página) o 'plantilla' (se dibuja una vez, encajada en la página)
+     order         posición dentro del grupo
+     label         nombre en el menú
+     opts          opciones de pulsación larga: lista de [valor, rótulo] (en las pautas, los cuatro tamaños); sin opts no hay pulsación larga
+     def           opción por defecto (valor o función que la da); si la página no lleva p.bgo se usa esta
+     paint(g)      dibuja; g = {ctx,x0,y0,x1,y1,dark,opt,k,lw,soft,strong,red,from,line,vline}
+   Una página guarda p.bg (id) y, si se eligió, p.bgo (la opción: número entre 0,5 y 3 o texto corto). */
+function fondo(f){const o=fondoById(f.id);if(o)Object.assign(o,f);else REG.fondos.push(f)}
+const fondoById=id=>REG.fondos.find(f=>f.id===id);
+const fondosOf=g=>REG.fondos.filter(f=>f.group===g).sort((a,b)=>a.order-b.order);
+// Un id desconocido (p. ej. de un .fori hecho con una versión más nueva) se pinta y se rotula como «Liso»; el dato no se toca
+const fondoOf=id=>fondoById(id)||fondoById('plain');
+// La opción de un fondo: la de la página si es válida y, si no, la por defecto
+const bgoOk=o=>(typeof o==='number'&&isFinite(o)&&o>=.5&&o<=3)||(typeof o==='string'&&o.length>0&&o.length<20);
+const bgoF=o=>bgoOk(o)?{bgo:o}:{}; // para copiar bgo campo a campo solo si existe y vale
+const fondoOpt=(f,o)=>bgoOk(o)?o:(typeof f.def==='function'?f.def():f.def);
 /* ============ Iconos de línea (propios, 24×24, trazo redondeado) ============ */
 const ICONS={
   camera:'<path d="M4 8h3l1.5-2.5h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
@@ -1043,7 +1068,7 @@ let fistNow=null; // gesto de borrar con el puño en curso (05e-borrar-puno.js):
 const inkColor=()=>document.documentElement.dataset.theme==='dark'?'#ffffff':'#111111';
 
 /* --- Páginas y guardado automático (IndexedDB) --- */
-const newPage=bgType=>({strokes:[],bg:bgType||'plain',img:null,undo:[],redo:[]});
+const newPage=(bgType,bgo)=>({strokes:[],bg:bgType||'plain',...bgoF(bgo),img:null,undo:[],redo:[]});
 let pages=[newPage()],cur=0,sel=null;
 const P=()=>pages[cur];
 /* --- Lienzo lógico de cada página ---
@@ -1067,7 +1092,7 @@ function strokeOut(s,v){
   else{o.size=r2(s.size*k);if(s.type==='shape'){o.a=f(s.a);o.b=f(s.b)}else o.pts=s.pts.map(f)}
   return o;
 }
-const pagePlain=p=>({strokes:p.strokes.map(s=>strokeOut(s,p.v||viewId())),bg:p.bg,img:p.img||null,size:p.size||null,ch:p.ch||null});
+const pagePlain=p=>({strokes:p.strokes.map(s=>strokeOut(s,p.v||viewId())),bg:p.bg,...bgoF(p.bgo),img:p.img||null,size:p.size||null,ch:p.ch||null});
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('fori',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch{r()}})},
   get(k){return new Promise(r=>{if(!this.db)return r(null);try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result===undefined?null:q.result);q.onerror=()=>r(null)}catch{r(null)}})},
@@ -1082,10 +1107,10 @@ function fit(){
   for(const [c,x] of [[bg,cb],[dr,cd],[lv,cl]]){c.width=Math.round(w*dpr);c.height=Math.round(hh*dpr);x.setTransform(dpr,0,0,dpr,0,0)}
   drawBg();redraw();
 }
-// Pinta la pauta en el rectángulo (x0,y0)-(x1,y1). Las líneas salen siempre de múltiplos del periodo,
-// así que la pauta queda anclada al origen de la página y no al borde de la pantalla.
-function paintBg(ctx,x0,y0,x1,y1,type,dark){
-  const k=S.pautaSize||1,lw=k>=1.8?1.7:1; // en «Extra grande» las líneas también son más gruesas, para verlas desde el fondo
+// Pinta el fondo `type` en el rectángulo (x0,y0)-(x1,y1) con su opción `bgo` (la de la página; si falta, la por defecto).
+// Las pautas salen siempre de múltiplos del periodo, así que quedan ancladas al origen de la página y no al borde de la pantalla.
+function paintBg(ctx,x0,y0,x1,y1,type,dark,bgo){
+  const f=fondoOf(type),opt=fondoOpt(f,bgo),k=typeof opt==='number'?opt:1,lw=k>=1.8?1.7:1; // en «Extra grande» las líneas también son más gruesas, para verlas desde el fondo
   const soft=dark?'rgba(255,255,255,.22)':'rgba(30,80,160,.28)';
   const strong=dark?'rgba(255,255,255,.5)':'rgba(30,80,160,.6)';
   const red=dark?'rgba(255,120,120,.6)':'rgba(214,40,40,.55)';
@@ -1093,42 +1118,51 @@ function paintBg(ctx,x0,y0,x1,y1,type,dark){
   const line=(y,c,wd,dash)=>{ctx.beginPath();ctx.setLineDash(dash||[]);ctx.lineDashOffset=dash?x0:0;ctx.strokeStyle=c;ctx.lineWidth=(wd||1.5)*lw;ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke()};
   const vline=x=>{ctx.beginPath();ctx.moveTo(x,y0);ctx.lineTo(x,y1);ctx.stroke()};
   ctx.save();ctx.lineWidth=1.5*lw;ctx.strokeStyle=soft;ctx.fillStyle=soft;
-  if(type==='grid'){
-    const c=40*k;
-    for(let x=from(x0,c);x<x1;x+=c)vline(x);
-    for(let y=from(y0,c);y<y1;y+=c)line(y,soft);
-  }else if(type==='dots'){
-    const c=40*k;
-    for(let x=from(x0,c,c/2);x<x1;x+=c)for(let y=from(y0,c,c/2);y<y1;y+=c){ctx.beginPath();ctx.arc(x,y,2.4*lw,0,7);ctx.fill()}
-  }else if(type==='lines'){ // pauta de doble línea con línea intermedia discontinua
-    for(let y=from(y0,130*k);y<y1;y+=130*k){line(y+18*k,soft);line(y+38*k,strong);line(y+63*k,soft,1.5,[8,8]);line(y+88*k,strong);line(y+108*k,soft)}
-  }else if(type==='montessori'){ // 4 líneas: ascendentes · cuerpo (sombreado) · descendentes
-    const s=32*k;
-    for(let y=from(y0,s*5);y<y1;y+=s*5){
-      ctx.fillStyle=dark?'rgba(255,120,120,.10)':'rgba(214,40,40,.07)';ctx.fillRect(x0,y+s*1.5,x1-x0,s);
-      line(y+s*.5,strong);line(y+s*1.5,red,2);line(y+s*2.5,red,2);line(y+s*3.5,strong);
-    }
-  }else if(type==='cuadrovia'){ // cuadrícula en grupos de 3 filas con la fila central (cuerpo) marcada
-    const c=22*k;
-    for(let x=from(x0,c);x<x1;x+=c)vline(x);
-    for(let y=from(y0,c);y<y1;y+=c)line(y,soft,1);
-    for(let y=from(y0,c*3);y<y1;y+=c*3){
-      ctx.fillStyle=dark?'rgba(120,180,255,.10)':'rgba(30,111,224,.07)';ctx.fillRect(x0,y+c,x1-x0,c);
-      line(y+c,strong,2.2);line(y+2*c,strong,2.2);
-    }
-  }
+  if(f.paint)f.paint({ctx,x0,y0,x1,y1,dark,opt,k,lw,soft,strong,red,from,line,vline});
   ctx.restore();
 }
-// La pauta se pinta con la vista de la página: cubre toda la pizarra y acompaña a lo escrito al cambiar de tamaño
-function paintBgView(ctx,w,hh,v,type,dark){
+// El tamaño de las pautas: el de la página (p.bgo) o, si no lo tiene, el de Ajustes
+const pautaDef=()=>S.pautaSize||1;
+const PAUTA_OPTS=[[0.75,'Pequeña'],[1,'Mediana'],[1.35,'Grande'],[1.8,'Extra grande']];
+fondo({id:'plain',group:'pauta',order:0,label:'Liso',paint:()=>{}});
+fondo({id:'grid',group:'pauta',order:1,label:'Cuadrícula',opts:PAUTA_OPTS,def:pautaDef,paint:({ctx,x0,y0,x1,y1,k,soft,from,line,vline})=>{
+  const c=40*k;
+  for(let x=from(x0,c);x<x1;x+=c)vline(x);
+  for(let y=from(y0,c);y<y1;y+=c)line(y,soft);
+}});
+fondo({id:'dots',group:'pauta',order:2,label:'Puntos',opts:PAUTA_OPTS,def:pautaDef,paint:({ctx,x0,y0,x1,y1,k,lw,from})=>{
+  const c=40*k;
+  for(let x=from(x0,c,c/2);x<x1;x+=c)for(let y=from(y0,c,c/2);y<y1;y+=c){ctx.beginPath();ctx.arc(x,y,2.4*lw,0,7);ctx.fill()}
+}});
+fondo({id:'lines',group:'pauta',order:3,label:'Pauta doble línea',opts:PAUTA_OPTS,def:pautaDef,paint:({y0,y1,k,soft,strong,from,line})=>{ // doble línea con línea intermedia discontinua
+  for(let y=from(y0,130*k);y<y1;y+=130*k){line(y+18*k,soft);line(y+38*k,strong);line(y+63*k,soft,1.5,[8,8]);line(y+88*k,strong);line(y+108*k,soft)}
+}});
+fondo({id:'montessori',group:'pauta',order:4,label:'Pauta Montessori',opts:PAUTA_OPTS,def:pautaDef,paint:({ctx,x0,y0,x1,y1,k,dark,strong,red,from,line})=>{ // 4 líneas: ascendentes · cuerpo (sombreado) · descendentes
+  const s=32*k;
+  for(let y=from(y0,s*5);y<y1;y+=s*5){
+    ctx.fillStyle=dark?'rgba(255,120,120,.10)':'rgba(214,40,40,.07)';ctx.fillRect(x0,y+s*1.5,x1-x0,s);
+    line(y+s*.5,strong);line(y+s*1.5,red,2);line(y+s*2.5,red,2);line(y+s*3.5,strong);
+  }
+}});
+fondo({id:'cuadrovia',group:'pauta',order:5,label:'Cuadrovía',opts:PAUTA_OPTS,def:pautaDef,paint:({ctx,x0,y0,x1,y1,k,dark,soft,strong,from,line,vline})=>{ // cuadrícula en grupos de 3 filas con la fila central (cuerpo) marcada
+  const c=22*k;
+  for(let x=from(x0,c);x<x1;x+=c)vline(x);
+  for(let y=from(y0,c);y<y1;y+=c)line(y,soft,1);
+  for(let y=from(y0,c*3);y<y1;y+=c*3){
+    ctx.fillStyle=dark?'rgba(120,180,255,.10)':'rgba(30,111,224,.07)';ctx.fillRect(x0,y+c,x1-x0,c);
+    line(y+c,strong,2.2);line(y+2*c,strong,2.2);
+  }
+}});
+// El fondo se pinta con la vista de la página: cubre toda la pizarra y acompaña a lo escrito al cambiar de tamaño
+function paintBgView(ctx,w,hh,v,type,dark,bgo){
   ctx.save();ctx.translate(v.ox,v.oy);ctx.scale(v.k,v.k);
-  paintBg(ctx,-v.ox/v.k,-v.oy/v.k,(w-v.ox)/v.k,(hh-v.oy)/v.k,type,dark);
+  paintBg(ctx,-v.ox/v.k,-v.oy/v.k,(w-v.ox)/v.k,(hh-v.oy)/v.k,type,dark,bgo);
   ctx.restore();
 }
 function drawBg(){
   const w=stage.clientWidth,hh=stage.clientHeight,p=P(),v=p.v||viewId();
   cb.clearRect(0,0,w,hh);
-  paintBgView(cb,w,hh,v,p.bg,document.documentElement.dataset.theme==='dark');
+  paintBgView(cb,w,hh,v,p.bg,document.documentElement.dataset.theme==='dark',p.bgo);
   p.strokes.forEach(s=>{if(s.type==='img')drawImgObj(cb,s)}); // imágenes insertadas: debajo de la tinta
   drawZoneLines(cb,w,hh);
   // la imagen de fondo (ficha, PDF) ocupa el rectángulo de la página, igual que la tinta que lleva encima
@@ -1519,13 +1553,13 @@ function showPage(){fitPage(P());setSel(null);active.clear();drawBg();redraw();d
 function gotoPage(i){commitEditor();cur=clamp(i,0,pages.length-1);showPage();persist(null)}
 function addPage(copy){
   commitEditor();
-  const p=copy?{...newPage(P().bg),strokes:structuredClone(P().strokes),img:P().img,size:P().size?{...P().size}:null,v:P().v?{...P().v}:null,ch:P().ch?{...P().ch}:null}:newPage(P().bg);
+  const p=copy?{...newPage(P().bg,P().bgo),strokes:structuredClone(P().strokes),img:P().img,size:P().size?{...P().size}:null,v:P().v?{...P().v}:null,ch:P().ch?{...P().ch}:null}:newPage(P().bg,P().bgo);
   pages.splice(cur+1,0,p);gotoPage(cur+1);
 }
 function deletePage(){
   commitEditor();
   const removed=pages[cur],at=cur;
-  if(pages.length===1)pages=[newPage(removed.bg)];else pages.splice(cur,1);
+  if(pages.length===1)pages=[newPage(removed.bg,removed.bgo)];else pages.splice(cur,1);
   gotoPage(Math.min(at,pages.length-1));
   toast('Página borrada',{label:ib('undo','Deshacer'),fn:()=>{if(pages.length===1&&!pages[0].strokes.length&&pages[0]!==removed)pages=[removed];else pages.splice(at,0,removed);gotoPage(at)}});
 }
@@ -1547,7 +1581,7 @@ async function renderPage(p,scale=2){
   const x=c.getContext('2d');x.scale(scale,scale);
   x.fillStyle=getComputedStyle(stage).backgroundColor;x.fillRect(0,0,w,hh);
   if(p.img){const im=await loadImg(p.img);if(im){const pw=L.w*tv.k,ph=L.h*tv.k,k=Math.min(pw/im.width,ph/im.height);x.drawImage(im,tv.ox+(pw-im.width*k)/2,tv.oy+(ph-im.height*k)/2,im.width*k,im.height*k)}}
-  paintBgView(x,w,hh,tv,p.bg,dark);
+  paintBgView(x,w,hh,tv,p.bg,dark,p.bgo);
   x.save();x.translate(dx,dy);x.scale(r,r);
   for(const s of p.strokes)if(s.type==='img'){const im=await loadImg(s.src);if(im)x.drawImage(im,s.x,s.y,s.w,s.h)}
   x.restore();
@@ -1646,7 +1680,7 @@ function bdRef(u,st,full,refs){
 // Escribe el registro de una página
 function bdPage(p,st,full){
   const refs=new Set(),r=u=>bdRef(u,st,full,refs);
-  const rec={strokes:p.strokes.map(s=>s&&s.type==='img'?{...s,src:r(s.src)}:s),bg:p.bg,
+  const rec={strokes:p.strokes.map(s=>s&&s.type==='img'?{...s,src:r(s.src)}:s),bg:p.bg,...bgoF(p.bgo),
     img:p.ch&&p.img&&p.img===chImg(p.ch)?'ch:':r(p.img||null),size:p.size||null,v:p.v||null,ch:p.ch||null};
   st.put(rec,'page:'+p.id);BD.refs.set(p.id,refs);
 }
@@ -1737,7 +1771,7 @@ async function loadBoard(){
       };
       const ch=chClean(r.ch);
       const strokes=r.strokes.map(s=>s&&s.type==='img'?{...s,src:u(s.src)}:s).filter(s=>s&&(s.type!=='img'||typeof s.src==='string'));
-      ps.push({id,strokes,bg:r.bg,img:r.img==='ch:'?(ch?chImg(ch):null):u(r.img),size:r.size,v:r.v,ch});
+      ps.push({id,strokes,bg:r.bg,...bgoF(r.bgo),img:r.img==='ch:'?(ch?chImg(ch):null):u(r.img),size:r.size,v:r.v,ch});
       BD.pg.add(id);BD.refs.set(id,refs);
     });
     BD.seen=bdStamp(o.idx);
@@ -1753,7 +1787,7 @@ async function loadBoard(){
   }
   if(d){
     // v: vista con la que se guardaron los trazos (las copias antiguas no la traen: sus trazos valen para p.size tal cual)
-    pages=d.pages.map(p=>({...(p.id?{id:p.id}:{}),strokes:p.strokes||[],bg:p.bg||'plain',img:p.img||null,size:p.size||null,v:viewOk(p.v)?{k:p.v.k,ox:p.v.ox,oy:p.v.oy}:null,ch:chClean(p.ch),undo:[],redo:[]}));
+    pages=d.pages.map(p=>({...(p.id?{id:p.id}:{}),strokes:p.strokes||[],bg:p.bg||'plain',...bgoF(p.bgo),img:p.img||null,size:p.size||null,v:viewOk(p.v)?{k:p.v.k,ox:p.v.ox,oy:p.v.oy}:null,ch:chClean(p.ch),undo:[],redo:[]}));
     cur=clamp(d.cur|0,0,pages.length-1);
   }
   BD.dirty.clear();BD.ready=true;
@@ -1824,7 +1858,7 @@ const lesPages=async id=>{const d=await DB.get('lesson:'+id);return Array.isArra
 
 async function lesThumb(p){
   try{
-    const c=await renderPage({strokes:p.strokes,bg:p.bg,img:p.img,size:p.size||null,v:p.v||null},Math.min(1,220/Math.max(1,stage.clientWidth)));
+    const c=await renderPage({strokes:p.strokes,bg:p.bg,bgo:p.bgo,img:p.img,size:p.size||null,v:p.v||null},Math.min(1,220/Math.max(1,stage.clientWidth)));
     return c.toDataURL('image/jpeg',.6);
   }catch{return null}
 }
@@ -1859,7 +1893,7 @@ async function lesOpen(l,add){
   commitEditor();
   const ps=await lesPages(l.id);
   if(!ps||!ps.length){toast('No se ha podido leer la lección');return}
-  const fresh=ps.map(p=>({strokes:structuredClone(p.strokes||[]),bg:p.bg||'plain',img:p.img||null,size:p.size||null,ch:chClean(p.ch),undo:[],redo:[]}));
+  const fresh=ps.map(p=>({strokes:structuredClone(p.strokes||[]),bg:p.bg||'plain',...bgoF(p.bgo),img:p.img||null,size:p.size||null,ch:chClean(p.ch),undo:[],redo:[]}));
   if(add){
     const at=pages.length;pages.push(...fresh);cur=at;
     showPage();persist();toast(`Añadidas ${lesN(fresh.length)} al final`);
@@ -1933,7 +1967,7 @@ function lesParse(text){
     if(!p||!Array.isArray(p.strokes)||!p.strokes.every(lesCheckStroke))throw new Error(`La página ${i+1} está dañada.`);
     const img=p.img==null?null:p.img;
     if(img!==null&&!(typeof img==='string'&&/^data:image\//.test(img)))throw new Error(`La imagen de fondo de la página ${i+1} no es válida.`);
-    return{strokes:p.strokes,bg:typeof p.bg==='string'?p.bg:'plain',img,size:(p.size&&lesNum(p.size.w)&&lesNum(p.size.h)?{w:p.size.w,h:p.size.h}:null),ch:chClean(p.ch)};
+    return{strokes:p.strokes,bg:typeof p.bg==='string'?p.bg:'plain',...bgoF(p.bgo),img,size:(p.size&&lesNum(p.size.w)&&lesNum(p.size.h)?{w:p.size.w,h:p.size.h}:null),ch:chClean(p.ch)};
   });
   const date=typeof d.date==='string'&&!isNaN(Date.parse(d.date))?d.date:new Date().toISOString();
   return{name:(typeof d.name==='string'&&d.name.trim()?d.name.trim():'Lección importada').slice(0,80),date,pages:pagesOk};
@@ -3929,24 +3963,73 @@ function buildLeft(){
     h('button',{class:'tool szc','aria-label':'Grosor',title:'Grosor',onclick:()=>setSize(T.size===3?6:T.size===6?12:3)},h('i')));
   renderRecent();refreshTools();updatePageUI();
 }
-const BGS=[['plain','Liso'],['grid','Cuadrícula'],['dots','Puntos'],['lines','Pauta doble línea'],['montessori','Pauta Montessori'],['cuadrovia','Cuadrovía']];
+/* --- Menú de fondo ---
+   Teselas con vista previa, por apartados (Pautas, Plantillas). Toque corto: pone ese fondo con el último tamaño usado
+   para él (S.bgLast[id]) o, si no hay, el de Ajustes. Pulsación larga (600 ms): el mismo menú cambia a las opciones
+   del fondo (en las pautas, el tamaño); elegir una pone fondo y opción en esta página y cierra. */
+const bgLabel=()=>`${fondoOf(P().bg).label}${P().img?' + imagen':''} ▾`;
+const refreshBgBtn=()=>{const b=$('#bgBtn');if(b)b.replaceChildren(...ib('layers',bgLabel()))};
+const bgTapOpt=f=>{const o=S.bgLast&&S.bgLast[f.id];return bgoOk(o)?o:undefined}; // la opción de un toque corto (undefined = la por defecto)
+let bgHeldAt=0; // para que soltar el dedo tras la pulsación larga no pulse sin querer una opción del menú nuevo
+function bgSet(f,opt,remember){
+  const p=P();p.bg=f.id;
+  if(opt===undefined)delete p.bgo;else p.bgo=opt;
+  if(remember&&opt!==undefined){(S.bgLast=S.bgLast||{})[f.id]=opt;save()}
+  drawBg();persist();refreshBgBtn();closePop();
+}
+function bgThumb(f,w,hh){
+  const c=h('canvas',{class:'bgth','aria-hidden':'true'}),dpr=devicePixelRatio||1,z=.4; // se pinta con el mismo paint, a menor escala
+  c.width=Math.round(w*dpr);c.height=Math.round(hh*dpr);c.style.width=w+'px';c.style.height=hh+'px';
+  const x=c.getContext('2d');x.scale(dpr,dpr);x.scale(z,z);
+  paintBg(x,0,0,w/z,hh/z,f.id,document.documentElement.dataset.theme==='dark',bgTapOpt(f));
+  return c;
+}
+function bgTile(f,tw,anchor){
+  const b=h('button',{class:'tile bgt'+(P().bg===f.id?' on':''),title:f.label,'data-bg':f.id,style:`width:${tw}px`},bgThumb(f,tw-12,50),h('small',{},f.label));
+  let timer=null,held=false,x0=0,y0=0;
+  const cancel=()=>{clearTimeout(timer);timer=null;b.classList.remove('holding')};
+  if(f.opts&&f.opts.length){
+    b.addEventListener('pointerdown',e=>{held=false;x0=e.clientX;y0=e.clientY;b.classList.add('holding');timer=setTimeout(()=>{held=true;cancel();bgHeldAt=performance.now();bgOptions(f,anchor,tw)},600)});
+    b.addEventListener('pointermove',e=>{if(timer&&Math.hypot(e.clientX-x0,e.clientY-y0)>12)cancel()}); // si el dedo se mueve, desliza la lista
+    for(const ev of ['pointerup','pointerleave','pointercancel'])b.addEventListener(ev,cancel);
+  }
+  b.addEventListener('click',()=>{
+    if(held){held=false;return}
+    if(P().bg===f.id)closePop();else bgSet(f,bgTapOpt(f));
+  });
+  return b;
+}
+function bgOptions(f,anchor){
+  const p=P(),cur=fondoOpt(f,p.bg===f.id?p.bgo:bgTapOpt(f));
+  closePop();
+  openPop('bg',anchor,1,[
+    h('button',{class:'wide',onclick:()=>{if(performance.now()-bgHeldAt<400)return;closePop();bgMenu(anchor)}},`‹ Volver · ${f.label}`),
+    ...f.opts.map(([v,lb])=>h('button',{class:'wide'+(v===cur?' on':''),onclick:()=>{if(performance.now()-bgHeldAt<400)return;bgSet(f,v,true)}},lb))],'above');
+}
+function bgMenu(anchor){
+  const W=innerWidth/(S.ui||1),tw=Math.min(104,Math.floor((W-34-12)/3)),nodes=[]; // tres columnas que caben a lo ancho en cualquier móvil
+  for(const [g,name] of [['pauta','Pautas'],['plantilla','Plantillas']]){
+    const fs=fondosOf(g);if(fs.length)nodes.push(h('div',{class:'popsep grp'},name),...fs.map(f=>bgTile(f,tw,anchor)));
+  }
+  nodes.push(
+    h('button',{class:'wide',onclick:()=>{
+      closePop();
+      if(P().img){P().img=null;drawBg();persist();refreshBgBtn()}
+      else $('#bgFile').click();
+    }},...ib('image',P().img?'Quitar imagen de fondo':'Poner imagen de fondo')),
+    h('div',{class:'popsep'},'Pizarra dividida'),
+    ...[[1,'Una sola zona'],[2,'Dividir en 2 zonas'],[3,'Dividir en 3 zonas'],[4,'Dividir en 4 zonas']].map(([n,lb])=>h('button',{class:'wide'+(ZN.n===n?' on':''),onclick:()=>{closePop();setZones(n)}},...ib('zones'+n,lb))),
+    h('p',{class:'pophint',style:`max-width:${3*tw+12}px`},'Mantén pulsado un fondo para cambiar su tamaño.'));
+  openPop('bg',anchor,3,nodes,'above');
+}
 function resetTools(){
   commitEditor();closeAllWins();REG.tools.forEach(t=>t.clear&&t.clear());
   closePop();setSel(null);refreshRail();toast('Herramientas reiniciadas');
 }
 function buildDock(){
   const dock=$('#dock');
-  const bgLabel=()=>`${BGS.find(b=>b[0]===P().bg)[1]}${P().img?' + imagen':''} ▾`;
-  const setBg=()=>bgBtn.replaceChildren(...ib('layers',bgLabel()));
-  const bgBtn=h('button',{class:'dbtn','data-pop':'bg',id:'bgBtn',title:'Fondo',onclick:e=>openPop('bg',e.currentTarget,1,[
-    ...BGS.map(([id,lb])=>h('button',{class:'wide'+(P().bg===id?' on':''),onclick:()=>{P().bg=id;drawBg();persist();setBg();closePop()}},lb)),
-    h('button',{class:'wide',onclick:()=>{
-      closePop();
-      if(P().img){P().img=null;drawBg();persist();setBg()}
-      else $('#bgFile').click();
-    }},...ib('image',P().img?'Quitar imagen de fondo':'Poner imagen de fondo')),
-    h('div',{class:'popsep'},'Pizarra dividida'),
-    ...[[1,'Una sola zona'],[2,'Dividir en 2 zonas'],[3,'Dividir en 3 zonas'],[4,'Dividir en 4 zonas']].map(([n,lb])=>h('button',{class:'wide'+(ZN.n===n?' on':''),onclick:()=>{closePop();setZones(n)}},...ib('zones'+n,lb)))],'above')});
+  const setBg=refreshBgBtn;
+  const bgBtn=h('button',{class:'dbtn','data-pop':'bg',id:'bgBtn',title:'Fondo',onclick:e=>bgMenu(e.currentTarget)});
   $('#bgFile').addEventListener('change',async e=>{
     const f=e.target.files[0];if(!f)return;e.target.value='';
     await setBgImage(f);setBg();
