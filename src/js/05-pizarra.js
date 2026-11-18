@@ -9,7 +9,7 @@ let fistNow=null; // gesto de borrar con el puño en curso (05e-borrar-puno.js):
 const inkColor=()=>document.documentElement.dataset.theme==='dark'?'#ffffff':'#111111';
 
 /* --- Páginas y guardado automático (IndexedDB) --- */
-const newPage=bgType=>({strokes:[],bg:bgType||'plain',img:null,undo:[],redo:[]});
+const newPage=(bgType,bgo)=>({strokes:[],bg:bgType||'plain',...bgoF(bgo),img:null,undo:[],redo:[]});
 let pages=[newPage()],cur=0,sel=null;
 const P=()=>pages[cur];
 /* --- Lienzo lógico de cada página ---
@@ -33,7 +33,7 @@ function strokeOut(s,v){
   else{o.size=r2(s.size*k);if(s.type==='shape'){o.a=f(s.a);o.b=f(s.b)}else o.pts=s.pts.map(f)}
   return o;
 }
-const pagePlain=p=>({strokes:p.strokes.map(s=>strokeOut(s,p.v||viewId())),bg:p.bg,img:p.img||null,size:p.size||null,ch:p.ch||null});
+const pagePlain=p=>({strokes:p.strokes.map(s=>strokeOut(s,p.v||viewId())),bg:p.bg,...bgoF(p.bgo),img:p.img||null,size:p.size||null,ch:p.ch||null});
 const DB={db:null,
   open(){return new Promise(r=>{try{const q=indexedDB.open('fori',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>{this.db=q.result;r()};q.onerror=()=>r()}catch{r()}})},
   get(k){return new Promise(r=>{if(!this.db)return r(null);try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>r(q.result===undefined?null:q.result);q.onerror=()=>r(null)}catch{r(null)}})},
@@ -48,10 +48,10 @@ function fit(){
   for(const [c,x] of [[bg,cb],[dr,cd],[lv,cl]]){c.width=Math.round(w*dpr);c.height=Math.round(hh*dpr);x.setTransform(dpr,0,0,dpr,0,0)}
   drawBg();redraw();
 }
-// Pinta la pauta en el rectángulo (x0,y0)-(x1,y1). Las líneas salen siempre de múltiplos del periodo,
-// así que la pauta queda anclada al origen de la página y no al borde de la pantalla.
-function paintBg(ctx,x0,y0,x1,y1,type,dark){
-  const k=S.pautaSize||1,lw=k>=1.8?1.7:1; // en «Extra grande» las líneas también son más gruesas, para verlas desde el fondo
+// Pinta el fondo `type` en el rectángulo (x0,y0)-(x1,y1) con su opción `bgo` (la de la página; si falta, la por defecto).
+// Las pautas salen siempre de múltiplos del periodo, así que quedan ancladas al origen de la página y no al borde de la pantalla.
+function paintBg(ctx,x0,y0,x1,y1,type,dark,bgo){
+  const f=fondoOf(type),opt=fondoOpt(f,bgo),k=typeof opt==='number'?opt:1,lw=k>=1.8?1.7:1; // en «Extra grande» las líneas también son más gruesas, para verlas desde el fondo
   const soft=dark?'rgba(255,255,255,.22)':'rgba(30,80,160,.28)';
   const strong=dark?'rgba(255,255,255,.5)':'rgba(30,80,160,.6)';
   const red=dark?'rgba(255,120,120,.6)':'rgba(214,40,40,.55)';
@@ -59,42 +59,51 @@ function paintBg(ctx,x0,y0,x1,y1,type,dark){
   const line=(y,c,wd,dash)=>{ctx.beginPath();ctx.setLineDash(dash||[]);ctx.lineDashOffset=dash?x0:0;ctx.strokeStyle=c;ctx.lineWidth=(wd||1.5)*lw;ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke()};
   const vline=x=>{ctx.beginPath();ctx.moveTo(x,y0);ctx.lineTo(x,y1);ctx.stroke()};
   ctx.save();ctx.lineWidth=1.5*lw;ctx.strokeStyle=soft;ctx.fillStyle=soft;
-  if(type==='grid'){
-    const c=40*k;
-    for(let x=from(x0,c);x<x1;x+=c)vline(x);
-    for(let y=from(y0,c);y<y1;y+=c)line(y,soft);
-  }else if(type==='dots'){
-    const c=40*k;
-    for(let x=from(x0,c,c/2);x<x1;x+=c)for(let y=from(y0,c,c/2);y<y1;y+=c){ctx.beginPath();ctx.arc(x,y,2.4*lw,0,7);ctx.fill()}
-  }else if(type==='lines'){ // pauta de doble línea con línea intermedia discontinua
-    for(let y=from(y0,130*k);y<y1;y+=130*k){line(y+18*k,soft);line(y+38*k,strong);line(y+63*k,soft,1.5,[8,8]);line(y+88*k,strong);line(y+108*k,soft)}
-  }else if(type==='montessori'){ // 4 líneas: ascendentes · cuerpo (sombreado) · descendentes
-    const s=32*k;
-    for(let y=from(y0,s*5);y<y1;y+=s*5){
-      ctx.fillStyle=dark?'rgba(255,120,120,.10)':'rgba(214,40,40,.07)';ctx.fillRect(x0,y+s*1.5,x1-x0,s);
-      line(y+s*.5,strong);line(y+s*1.5,red,2);line(y+s*2.5,red,2);line(y+s*3.5,strong);
-    }
-  }else if(type==='cuadrovia'){ // cuadrícula en grupos de 3 filas con la fila central (cuerpo) marcada
-    const c=22*k;
-    for(let x=from(x0,c);x<x1;x+=c)vline(x);
-    for(let y=from(y0,c);y<y1;y+=c)line(y,soft,1);
-    for(let y=from(y0,c*3);y<y1;y+=c*3){
-      ctx.fillStyle=dark?'rgba(120,180,255,.10)':'rgba(30,111,224,.07)';ctx.fillRect(x0,y+c,x1-x0,c);
-      line(y+c,strong,2.2);line(y+2*c,strong,2.2);
-    }
-  }
+  if(f.paint)f.paint({ctx,x0,y0,x1,y1,dark,opt,k,lw,soft,strong,red,from,line,vline});
   ctx.restore();
 }
-// La pauta se pinta con la vista de la página: cubre toda la pizarra y acompaña a lo escrito al cambiar de tamaño
-function paintBgView(ctx,w,hh,v,type,dark){
+// El tamaño de las pautas: el de la página (p.bgo) o, si no lo tiene, el de Ajustes
+const pautaDef=()=>S.pautaSize||1;
+const PAUTA_OPTS=[[0.75,'Pequeña'],[1,'Mediana'],[1.35,'Grande'],[1.8,'Extra grande']];
+fondo({id:'plain',group:'pauta',order:0,label:'Liso',paint:()=>{}});
+fondo({id:'grid',group:'pauta',order:1,label:'Cuadrícula',opts:PAUTA_OPTS,def:pautaDef,paint:({ctx,x0,y0,x1,y1,k,soft,from,line,vline})=>{
+  const c=40*k;
+  for(let x=from(x0,c);x<x1;x+=c)vline(x);
+  for(let y=from(y0,c);y<y1;y+=c)line(y,soft);
+}});
+fondo({id:'dots',group:'pauta',order:2,label:'Puntos',opts:PAUTA_OPTS,def:pautaDef,paint:({ctx,x0,y0,x1,y1,k,lw,from})=>{
+  const c=40*k;
+  for(let x=from(x0,c,c/2);x<x1;x+=c)for(let y=from(y0,c,c/2);y<y1;y+=c){ctx.beginPath();ctx.arc(x,y,2.4*lw,0,7);ctx.fill()}
+}});
+fondo({id:'lines',group:'pauta',order:3,label:'Pauta doble línea',opts:PAUTA_OPTS,def:pautaDef,paint:({y0,y1,k,soft,strong,from,line})=>{ // doble línea con línea intermedia discontinua
+  for(let y=from(y0,130*k);y<y1;y+=130*k){line(y+18*k,soft);line(y+38*k,strong);line(y+63*k,soft,1.5,[8,8]);line(y+88*k,strong);line(y+108*k,soft)}
+}});
+fondo({id:'montessori',group:'pauta',order:4,label:'Pauta Montessori',opts:PAUTA_OPTS,def:pautaDef,paint:({ctx,x0,y0,x1,y1,k,dark,strong,red,from,line})=>{ // 4 líneas: ascendentes · cuerpo (sombreado) · descendentes
+  const s=32*k;
+  for(let y=from(y0,s*5);y<y1;y+=s*5){
+    ctx.fillStyle=dark?'rgba(255,120,120,.10)':'rgba(214,40,40,.07)';ctx.fillRect(x0,y+s*1.5,x1-x0,s);
+    line(y+s*.5,strong);line(y+s*1.5,red,2);line(y+s*2.5,red,2);line(y+s*3.5,strong);
+  }
+}});
+fondo({id:'cuadrovia',group:'pauta',order:5,label:'Cuadrovía',opts:PAUTA_OPTS,def:pautaDef,paint:({ctx,x0,y0,x1,y1,k,dark,soft,strong,from,line,vline})=>{ // cuadrícula en grupos de 3 filas con la fila central (cuerpo) marcada
+  const c=22*k;
+  for(let x=from(x0,c);x<x1;x+=c)vline(x);
+  for(let y=from(y0,c);y<y1;y+=c)line(y,soft,1);
+  for(let y=from(y0,c*3);y<y1;y+=c*3){
+    ctx.fillStyle=dark?'rgba(120,180,255,.10)':'rgba(30,111,224,.07)';ctx.fillRect(x0,y+c,x1-x0,c);
+    line(y+c,strong,2.2);line(y+2*c,strong,2.2);
+  }
+}});
+// El fondo se pinta con la vista de la página: cubre toda la pizarra y acompaña a lo escrito al cambiar de tamaño
+function paintBgView(ctx,w,hh,v,type,dark,bgo){
   ctx.save();ctx.translate(v.ox,v.oy);ctx.scale(v.k,v.k);
-  paintBg(ctx,-v.ox/v.k,-v.oy/v.k,(w-v.ox)/v.k,(hh-v.oy)/v.k,type,dark);
+  paintBg(ctx,-v.ox/v.k,-v.oy/v.k,(w-v.ox)/v.k,(hh-v.oy)/v.k,type,dark,bgo);
   ctx.restore();
 }
 function drawBg(){
   const w=stage.clientWidth,hh=stage.clientHeight,p=P(),v=p.v||viewId();
   cb.clearRect(0,0,w,hh);
-  paintBgView(cb,w,hh,v,p.bg,document.documentElement.dataset.theme==='dark');
+  paintBgView(cb,w,hh,v,p.bg,document.documentElement.dataset.theme==='dark',p.bgo);
   p.strokes.forEach(s=>{if(s.type==='img')drawImgObj(cb,s)}); // imágenes insertadas: debajo de la tinta
   drawZoneLines(cb,w,hh);
   // la imagen de fondo (ficha, PDF) ocupa el rectángulo de la página, igual que la tinta que lleva encima
@@ -485,13 +494,13 @@ function showPage(){fitPage(P());setSel(null);active.clear();drawBg();redraw();d
 function gotoPage(i){commitEditor();cur=clamp(i,0,pages.length-1);showPage();persist(null)}
 function addPage(copy){
   commitEditor();
-  const p=copy?{...newPage(P().bg),strokes:structuredClone(P().strokes),img:P().img,size:P().size?{...P().size}:null,v:P().v?{...P().v}:null,ch:P().ch?{...P().ch}:null}:newPage(P().bg);
+  const p=copy?{...newPage(P().bg,P().bgo),strokes:structuredClone(P().strokes),img:P().img,size:P().size?{...P().size}:null,v:P().v?{...P().v}:null,ch:P().ch?{...P().ch}:null}:newPage(P().bg,P().bgo);
   pages.splice(cur+1,0,p);gotoPage(cur+1);
 }
 function deletePage(){
   commitEditor();
   const removed=pages[cur],at=cur;
-  if(pages.length===1)pages=[newPage(removed.bg)];else pages.splice(cur,1);
+  if(pages.length===1)pages=[newPage(removed.bg,removed.bgo)];else pages.splice(cur,1);
   gotoPage(Math.min(at,pages.length-1));
   toast('Página borrada',{label:ib('undo','Deshacer'),fn:()=>{if(pages.length===1&&!pages[0].strokes.length&&pages[0]!==removed)pages=[removed];else pages.splice(at,0,removed);gotoPage(at)}});
 }
@@ -513,7 +522,7 @@ async function renderPage(p,scale=2){
   const x=c.getContext('2d');x.scale(scale,scale);
   x.fillStyle=getComputedStyle(stage).backgroundColor;x.fillRect(0,0,w,hh);
   if(p.img){const im=await loadImg(p.img);if(im){const pw=L.w*tv.k,ph=L.h*tv.k,k=Math.min(pw/im.width,ph/im.height);x.drawImage(im,tv.ox+(pw-im.width*k)/2,tv.oy+(ph-im.height*k)/2,im.width*k,im.height*k)}}
-  paintBgView(x,w,hh,tv,p.bg,dark);
+  paintBgView(x,w,hh,tv,p.bg,dark,p.bgo);
   x.save();x.translate(dx,dy);x.scale(r,r);
   for(const s of p.strokes)if(s.type==='img'){const im=await loadImg(s.src);if(im)x.drawImage(im,s.x,s.y,s.w,s.h)}
   x.restore();

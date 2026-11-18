@@ -35,7 +35,7 @@ const lesPages=async id=>{const d=await DB.get('lesson:'+id);return Array.isArra
 
 async function lesThumb(p){
   try{
-    const c=await renderPage({strokes:p.strokes,bg:p.bg,img:p.img,size:p.size||null,v:p.v||null},Math.min(1,220/Math.max(1,stage.clientWidth)));
+    const c=await renderPage({strokes:p.strokes,bg:p.bg,bgo:p.bgo,img:p.img,size:p.size||null,v:p.v||null},Math.min(1,220/Math.max(1,stage.clientWidth)));
     return c.toDataURL('image/jpeg',.6);
   }catch{return null}
 }
@@ -70,7 +70,7 @@ async function lesOpen(l,add){
   commitEditor();
   const ps=await lesPages(l.id);
   if(!ps||!ps.length){toast('No se ha podido leer la lección');return}
-  const fresh=ps.map(p=>({strokes:structuredClone(p.strokes||[]),bg:p.bg||'plain',img:p.img||null,size:p.size||null,ch:chClean(p.ch),undo:[],redo:[]}));
+  const fresh=ps.map(p=>({strokes:structuredClone(p.strokes||[]),bg:p.bg||'plain',...bgoF(p.bgo),img:p.img||null,size:p.size||null,ch:chClean(p.ch),undo:[],redo:[]}));
   if(add){
     const at=pages.length;pages.push(...fresh);cur=at;
     showPage();persist();toast(`Añadidas ${lesN(fresh.length)} al final`);
@@ -144,7 +144,7 @@ function lesParse(text){
     if(!p||!Array.isArray(p.strokes)||!p.strokes.every(lesCheckStroke))throw new Error(`La página ${i+1} está dañada.`);
     const img=p.img==null?null:p.img;
     if(img!==null&&!(typeof img==='string'&&/^data:image\//.test(img)))throw new Error(`La imagen de fondo de la página ${i+1} no es válida.`);
-    return{strokes:p.strokes,bg:typeof p.bg==='string'?p.bg:'plain',img,size:(p.size&&lesNum(p.size.w)&&lesNum(p.size.h)?{w:p.size.w,h:p.size.h}:null),ch:chClean(p.ch)};
+    return{strokes:p.strokes,bg:typeof p.bg==='string'?p.bg:'plain',...bgoF(p.bgo),img,size:(p.size&&lesNum(p.size.w)&&lesNum(p.size.h)?{w:p.size.w,h:p.size.h}:null),ch:chClean(p.ch)};
   });
   const date=typeof d.date==='string'&&!isNaN(Date.parse(d.date))?d.date:new Date().toISOString();
   return{name:(typeof d.name==='string'&&d.name.trim()?d.name.trim():'Lección importada').slice(0,80),date,pages:pagesOk};
