@@ -21,7 +21,8 @@ function h(tag,props={},...kids){
 // pageUI: funciones que se llaman cada vez que cambia lo que se ve de la página (etiquetas, barras).
 // tools: las herramientas, apuntadas con tool().
 // fondos: los fondos de página (pautas y plantillas), apuntados con fondo().
-const REG={pageMenu:[],pageUI:[],tools:[],fondos:[]};
+// formas: las formas geométricas de la herramienta Formas, apuntadas con forma() (en 05i-formas.js).
+const REG={pageMenu:[],pageUI:[],tools:[],fondos:[],formas:[]};
 /* Registro de herramientas. Cada módulo apunta la suya al final de su archivo con tool({...}):
      id            el de su botón y su ventana
      group         'aula' y 'apoyo' (barra derecha) o 'mates' (menú Matemáticas); decide también el color de la ventana
@@ -36,6 +37,19 @@ const REG={pageMenu:[],pageUI:[],tools:[],fondos:[]};
 function tool(t){const o=toolById(t.id);if(o)Object.assign(o,t);else REG.tools.push(t)}
 const toolById=id=>REG.tools.find(t=>t.id===id);
 const toolsOf=g=>REG.tools.filter(t=>t.group===g&&!t.hidden).sort((a,b)=>a.order-b.order);
+
+/* Registro de formas. Cada forma se apunta con forma({...}) en 05i-formas.js:
+     id       el que se guarda en la página ({type:'shape',shape:id,…}); no se cambia nunca
+     group    'linea', 'plana' o 'cuerpo' (apartados del menú)
+     order    posición dentro del grupo
+     label    nombre (título del botón)
+     keep     true si se mantiene proporcionada (cuadrado, círculo, polígonos regulares, cubo…)
+     polys(a,b,box,s)  lo que se dibuja, como lista de piezas: {pts,closed} o {ell:{cx,cy,rx,ry},closed:true}; opcionales:
+                       fill (se rellena si la forma lleva relleno), dash (discontinua), nostroke (solo relleno), solid (relleno macizo)
+   El dibujo (drawShape), el borrador (shapeLines), la selección y los iconos del menú usan esta misma lista. */
+function forma(f){const o=formaById(f.id);if(o)Object.assign(o,f);else REG.formas.push(f)}
+const formaById=id=>REG.formas.find(f=>f.id===id);
+const formasOf=g=>REG.formas.filter(f=>f.group===g).sort((a,b)=>a.order-b.order);
 
 /* Registro de fondos. Cada fondo se apunta con fondo({...}) (los de siempre, en 05-pizarra.js):
      id            el texto que guarda cada página en p.bg

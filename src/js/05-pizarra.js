@@ -50,7 +50,8 @@ function fit(){
 }
 // Pinta el fondo `type` en el rectángulo (x0,y0)-(x1,y1) con su opción `bgo` (la de la página; si falta, la por defecto).
 // Las pautas salen siempre de múltiplos del periodo, así que quedan ancladas al origen de la página y no al borde de la pantalla.
-function paintBg(ctx,x0,y0,x1,y1,type,dark,bgo){
+// L = el tamaño de la página (solo lo usan las plantillas, que se dibujan una vez encajadas en (0,0)-(L.w,L.h)); si falta, el rectángulo pintado.
+function paintBg(ctx,x0,y0,x1,y1,type,dark,bgo,L){
   const f=fondoOf(type),opt=fondoOpt(f,bgo),k=typeof opt==='number'?opt:1,lw=k>=1.8?1.7:1; // en «Extra grande» las líneas también son más gruesas, para verlas desde el fondo
   const soft=dark?'rgba(255,255,255,.22)':'rgba(30,80,160,.28)';
   const strong=dark?'rgba(255,255,255,.5)':'rgba(30,80,160,.6)';
@@ -59,7 +60,7 @@ function paintBg(ctx,x0,y0,x1,y1,type,dark,bgo){
   const line=(y,c,wd,dash)=>{ctx.beginPath();ctx.setLineDash(dash||[]);ctx.lineDashOffset=dash?x0:0;ctx.strokeStyle=c;ctx.lineWidth=(wd||1.5)*lw;ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke()};
   const vline=x=>{ctx.beginPath();ctx.moveTo(x,y0);ctx.lineTo(x,y1);ctx.stroke()};
   ctx.save();ctx.lineWidth=1.5*lw;ctx.strokeStyle=soft;ctx.fillStyle=soft;
-  if(f.paint)f.paint({ctx,x0,y0,x1,y1,dark,opt,k,lw,soft,strong,red,from,line,vline});
+  if(f.paint)f.paint({ctx,x0,y0,x1,y1,dark,opt,k,lw,soft,strong,red,from,line,vline,L:L||{w:x1-x0,h:y1-y0}});
   ctx.restore();
 }
 // El tamaño de las pautas: el de la página (p.bgo) o, si no lo tiene, el de Ajustes
@@ -95,19 +96,20 @@ fondo({id:'cuadrovia',group:'pauta',order:5,label:'Cuadrovía',opts:PAUTA_OPTS,d
   }
 }});
 // El fondo se pinta con la vista de la página: cubre toda la pizarra y acompaña a lo escrito al cambiar de tamaño
-function paintBgView(ctx,w,hh,v,type,dark,bgo){
+function paintBgView(ctx,w,hh,v,type,dark,bgo,L){
   ctx.save();ctx.translate(v.ox,v.oy);ctx.scale(v.k,v.k);
-  paintBg(ctx,-v.ox/v.k,-v.oy/v.k,(w-v.ox)/v.k,(hh-v.oy)/v.k,type,dark,bgo);
+  paintBg(ctx,-v.ox/v.k,-v.oy/v.k,(w-v.ox)/v.k,(hh-v.oy)/v.k,type,dark,bgo,L);
   ctx.restore();
 }
 function drawBg(){
   const w=stage.clientWidth,hh=stage.clientHeight,p=P(),v=p.v||viewId();
   cb.clearRect(0,0,w,hh);
-  paintBgView(cb,w,hh,v,p.bg,document.documentElement.dataset.theme==='dark',p.bgo);
+  const L=p.size||{w,h:hh};
+  paintBgView(cb,w,hh,v,p.bg,document.documentElement.dataset.theme==='dark',p.bgo,L);
   p.strokes.forEach(s=>{if(s.type==='img')drawImgObj(cb,s)}); // imágenes insertadas: debajo de la tinta
   drawZoneLines(cb,w,hh);
   // la imagen de fondo (ficha, PDF) ocupa el rectángulo de la página, igual que la tinta que lleva encima
-  const im=$('#bgimg'),L=p.size||{w,h:hh};
+  const im=$('#bgimg');
   im.style.left=v.ox+'px';im.style.top=v.oy+'px';im.style.width=L.w*v.k+'px';im.style.height=L.h*v.k+'px';
   im.style.backgroundImage=p.img?`url(${p.img})`:'';
 }
@@ -125,31 +127,33 @@ function seg(ctx,s,p0,p1){
   else{ctx.moveTo(p0.x,p0.y);ctx.lineTo(p1.x,p1.y);ctx.stroke()}
   ctx.restore();
 }
-function polygon(ctx,n,cx,cy,rx,ry){
-  ctx.beginPath();
-  for(let i=0;i<n;i++){const a=-Math.PI/2+i*2*Math.PI/n;const x=cx+rx*Math.cos(a),y=cy+ry*Math.sin(a);i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
-  ctx.closePath();
-}
-function shapeEnd(s){ // cuadrado, círculo y polígonos regulares se mantienen proporcionados
-  const a=s.a,b=s.b;
-  if(!['square','circle','pentagon','hexagon'].includes(s.shape))return b;
+function shapeEnd(s){ // las formas con keep (cuadrado, círculo, polígonos regulares, cubo…) se mantienen proporcionadas
+  const a=s.a,b=s.b,f=formaById(s.shape);
+  if(!f||!f.keep)return b;
   const dx=b.x-a.x,dy=b.y-a.y,m=Math.max(Math.abs(dx),Math.abs(dy));
   return{x:a.x+(dx<0?-m:m),y:a.y+(dy<0?-m:m)};
 }
+// Piezas de una forma ({pts,closed} o {ell}) entre a y b; s aporta el grosor (puntas de flecha, puntos)
+function shapeParts(f,a,b,s){
+  const x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(b.x-a.x),hh=Math.abs(b.y-a.y);
+  return f.polys(a,b,{x,y,w,h:hh,cx:x+w/2,cy:y+hh/2},s);
+}
+const shapePolys=s=>{const f=formaById(s.shape);return f?shapeParts(f,s.a,shapeEnd(s),s):[]}; // forma desconocida: no se dibuja
+function partPath(ctx,it){
+  if(it.ell){const e=it.ell;ctx.ellipse(e.cx,e.cy,e.rx,e.ry,0,0,7)}
+  else{it.pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));if(it.closed)ctx.closePath()}
+}
 function drawShape(ctx,s){
-  const a=s.a,b=shapeEnd(s);
-  const x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(b.x-a.x),hh=Math.abs(b.y-a.y),cx=x+w/2,cy=y+hh/2;
-  ctx.save();setStyle(ctx,s);ctx.beginPath();
-  switch(s.shape){
-    case 'line':ctx.moveTo(a.x,a.y);ctx.lineTo(s.b.x,s.b.y);break;
-    case 'rect':case 'square':ctx.rect(x,y,w,hh);break;
-    case 'circle':case 'ellipse':ctx.ellipse(cx,cy,w/2,hh/2,0,0,7);break;
-    case 'triangle':ctx.moveTo(cx,y);ctx.lineTo(x+w,y+hh);ctx.lineTo(x,y+hh);ctx.closePath();break;
-    case 'pentagon':polygon(ctx,5,cx,cy,w/2,hh/2);break;
-    case 'hexagon':polygon(ctx,6,cx,cy,w/2,hh/2);break;
+  const L=shapePolys(s);if(!L.length)return;
+  ctx.save();setStyle(ctx,s);
+  for(const it of L){
+    ctx.beginPath();partPath(ctx,it);
+    if(it.solid){ctx.save();ctx.globalAlpha=1;ctx.fill();ctx.restore()}
+    else if(s.fill&&it.fill){ctx.save();ctx.globalAlpha=.3;ctx.fill();ctx.restore()}
+    if(it.nostroke)continue;
+    ctx.save();if(it.dash)ctx.setLineDash([s.size*1.6,s.size*1.6]);ctx.stroke();ctx.restore();
   }
-  if(s.fill&&s.shape!=='line'){ctx.save();ctx.globalAlpha=.3;ctx.fill();ctx.restore()}
-  ctx.stroke();ctx.restore();
+  ctx.restore();
 }
 function drawText(ctx,s){
   ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';
@@ -182,7 +186,8 @@ function bbox(s){
     const w=Math.max(20,...s.text.split('\n').map(l=>cl.measureText(l).width));cl.restore();
     return{x:s.x,y:s.y,w,h:s.text.split('\n').length*s.fs*1.2};
   }
-  const ps=s.type==='shape'?[s.a,shapeEnd(s)]:s.pts,m=s.size/2;
+  let ps=s.type==='shape'?[s.a,shapeEnd(s)]:s.pts;const m=s.size/2;
+  if(s.type==='shape'&&(formaById(s.shape)||{}).group==='linea')ps=ps.concat(...shapeLines(s).map(l=>l.pts)); // las puntas de flecha se salen de a-b
   const xs=ps.map(p=>p.x),ys=ps.map(p=>p.y),x=Math.min(...xs)-m,y=Math.min(...ys)-m;
   return{x,y,w:Math.max(...xs)+m-x,h:Math.max(...ys)+m-y};
 }
@@ -194,7 +199,7 @@ function hitTest(p){
     const b=bbox(s),pad=14;
     if(p.x<b.x-pad||p.x>b.x+b.w+pad||p.y<b.y-pad||p.y>b.y+b.h+pad)continue;
     if(s.type==='free'){const tol=s.size/2+pad;if(s.pts.length===1?Math.hypot(p.x-s.pts[0].x,p.y-s.pts[0].y)<tol:s.pts.some((q,j)=>j&&distSeg(p,s.pts[j-1],q)<tol))return s;continue}
-    if(s.type==='shape'&&s.shape==='line'){if(distSeg(p,s.a,s.b)<s.size/2+pad)return s;continue}
+    if(s.type==='shape'&&(formaById(s.shape)||{}).group==='linea'){if(shapeLines(s).some(l=>l.pts.some((q,j)=>j&&distSeg(p,l.pts[j-1],q)<s.size/2+pad)))return s;continue}
     return s;
   }
   return null;
@@ -487,8 +492,8 @@ function fitPage(p){
   const ov=viewOk(p.v)?p.v:viewId(),nv=viewFor(p.size);
   if(Math.abs(nv.k-ov.k)>1e-9||Math.abs(nv.ox-ov.ox)>1e-6||Math.abs(nv.oy-ov.oy)>1e-6){remapPage(p,ov,nv);persist(p)}
   p.v=nv;
-  // una página sin nada dibujado toma el tamaño de la pizarra en la que está (no se mueve nada)
-  if(!p.strokes.length&&!(editor&&p===P())){p.size={w:W,h:H};p.v=viewId()}
+  // una página sin nada dibujado toma el tamaño de la pizarra en la que está (no se mueve nada); salvo con una plantilla, que se encaja en el tamaño que tenía al elegirla
+  if(!p.strokes.length&&!(editor&&p===P())&&fondoOf(p.bg).group!=='plantilla'){p.size={w:W,h:H};p.v=viewId()}
 }
 function showPage(){fitPage(P());setSel(null);active.clear();drawBg();redraw();drawLive();updatePageUI()}
 function gotoPage(i){commitEditor();cur=clamp(i,0,pages.length-1);showPage();persist(null)}
@@ -523,13 +528,14 @@ const loadImg=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.onerr
 // Dibuja una página (la actual u otra, o una de una lección) tal como se vería en esta pizarra, sin tocarla
 async function renderPage(p,scale=2){
   const w=stage.clientWidth,hh=stage.clientHeight,dark=document.documentElement.dataset.theme==='dark';
-  const L=p.size&&p.strokes.length?p.size:{w,h:hh},cv=viewOk(p.v)&&p.strokes.length?p.v:viewId(),tv=viewFor(L);
+  const fija=p.strokes.length||fondoOf(p.bg).group==='plantilla'; // con plantilla, la página conserva su tamaño aunque esté vacía
+  const L=p.size&&fija?p.size:{w,h:hh},cv=viewOk(p.v)&&fija?p.v:viewId(),tv=viewFor(L);
   const r=tv.k/cv.k,dx=tv.ox-cv.ox*r,dy=tv.oy-cv.oy*r; // de las coordenadas de la página a las de esta pizarra
   const c=document.createElement('canvas');c.width=w*scale;c.height=hh*scale;
   const x=c.getContext('2d');x.scale(scale,scale);
   x.fillStyle=getComputedStyle(stage).backgroundColor;x.fillRect(0,0,w,hh);
   if(p.img){const im=await loadImg(p.img);if(im){const pw=L.w*tv.k,ph=L.h*tv.k,k=Math.min(pw/im.width,ph/im.height);x.drawImage(im,tv.ox+(pw-im.width*k)/2,tv.oy+(ph-im.height*k)/2,im.width*k,im.height*k)}}
-  paintBgView(x,w,hh,tv,p.bg,dark,p.bgo);
+  paintBgView(x,w,hh,tv,p.bg,dark,p.bgo,L);
   x.save();x.translate(dx,dy);x.scale(r,r);
   for(const s of p.strokes)if(s.type==='img'){const im=await loadImg(s.src);if(im)x.drawImage(im,s.x,s.y,s.w,s.h)}
   x.restore();
