@@ -932,6 +932,11 @@ server.listen(0,async()=>{
     ok(await p.evaluate(()=>[...document.querySelectorAll('#sPauta option')].map(o=>o.value+':'+o.textContent).join()==='0.75:Pequeña,1:Mediana,1.35:Grande,1.8:Extra grande'),'el tamaño de pauta tiene la opción «Extra grande»');
     await registro(b,url);
     await pantallas(b,url);
+    // versión de caché: la genera build.py y coincide con lo publicado; repetir la construcción no la cambia
+    {console.log('\nVersión de caché');const {execSync}=require('child_process'),sw=()=>fs.readFileSync(path.join(ROOT,'sw.js'),'utf8'),ix=()=>fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
+      const s0=sw(),i0=ix();execSync('python3 tools/build.py',{cwd:ROOT});
+      ok(/const CACHE = 'fori-[0-9a-f]{8}';/.test(s0),'sw.js lleva una versión de caché generada');
+      ok(sw()===s0&&ix()===i0,'index.html y sw.js están al día: construir otra vez no cambia nada')}
     await pizarra(b,url);
     await guardado(b,url);
     await fondos(b,url);
