@@ -530,7 +530,7 @@ async function fondos(b,url){
   const abre=async()=>{await p.click('#dock [data-pop=bg]');await p.waitForTimeout(100)};
   const corto=async id=>{await abre();await p.click(`#pop [data-bg=${id}]`);await p.waitForTimeout(100)};
   const sostener=async id=>{await abre();await p.hover(`#pop [data-bg=${id}]`);await p.mouse.down();await p.waitForTimeout(800);await p.mouse.up();await p.waitForTimeout(500)};
-  const larga=async(id,op)=>{await sostener(id);await p.click(`#pop >> text=${op}`);await p.waitForTimeout(100)};
+  const larga=async(id,op)=>{await sostener(id);await p.click(`#pop >> text="${op}"`);await p.waitForTimeout(100)};
   const hash=()=>p.evaluate(()=>{const c=document.querySelector('#bg'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let h=0,n=0;for(let i=0;i<d.length;i+=4){n+=d[i+3];h=(h*31+d[i+3]+d[i]*7+d[i+1]*13)|0}return [h,n]});
   const dentro=sel=>p.evaluate(s=>{const r=document.querySelector(s).getBoundingClientRect();return r.left>=0&&r.top>=0&&r.right<=innerWidth+.5&&r.bottom<=innerHeight+.5},sel);
   const ajustes=async x=>{await p.evaluate(x=>{const k='fori-v1',s=JSON.parse(localStorage.getItem(k)||'{}');for(const n in x)x[n]===null?delete s[n]:s[n]=x[n];localStorage.setItem(k,JSON.stringify(s))},x)};
@@ -552,10 +552,13 @@ async function fondos(b,url){
   ok(same(await pg(),[['grid',undefined]])&&/Cuadrícula/.test(await p.textContent('#bgBtn')),'toque corto: cambia el fondo y la página sigue el tamaño de Ajustes');
   await sostener('grid');
   const vista=await p.locator('#pop .wide').allTextContents();
-  ok(/Volver · Cuadrícula/.test(vista[0])&&vista.slice(1,5).map(t=>t.trim()).join()==='Pequeña,Mediana,Grande,Extra grande'&&(await p.textContent('#pop .wide.on')).trim()==='Mediana','pulsación larga: «‹ Volver · Cuadrícula» y los cuatro tamaños, con el actual marcado');
+  ok(/Volver · Cuadrícula/.test(vista[0])&&vista.slice(1,6).map(t=>t.trim()).join()==='Extra pequeña,Pequeña,Mediana,Grande,Extra grande'&&(await p.textContent('#pop .wide.on')).trim()==='Pequeña','pulsación larga: «‹ Volver · Cuadrícula» y los cinco tamaños, con el actual marcado');
   ok(await dentro('#pop'),'la vista de opciones cabe');
-  await p.click('#pop >> text=Extra grande');await p.waitForTimeout(100);
-  ok(same(await pg(),[['grid',1.8]])&&await p.isHidden('#pop'),'elegir «Extra grande» deja bg y bgo=1.8 en la página y cierra el menú');
+  await p.click('#pop >> text="Grande"');await p.waitForTimeout(100);
+  ok(same(await pg(),[['grid',1.8]])&&await p.isHidden('#pop'),'elegir «Grande» deja bg y bgo=1.8 en la página y cierra el menú');
+  await sostener('grid');await p.click('#pop >> text="Extra grande"');await p.waitForTimeout(100);
+  ok(same(await pg(),[['grid',2.4]]),'«Extra grande» deja bgo=2.4 en la página');
+  await sostener('grid');await p.click('#pop >> text="Grande"');await p.waitForTimeout(100);
   await sostener('grid');await p.click('#pop >> text=Volver');await p.waitForTimeout(100);
   ok(await p.locator('#pop .tile.bgt').count()===22,'«Volver» regresa al menú de fondos');
   await p.keyboard.press('Escape');
@@ -564,8 +567,8 @@ async function fondos(b,url){
   const menu=async t=>{await p.click('#pageLbl');await p.click(`#pop >> text=${t}`);await p.waitForTimeout(150)};
   await menu('Página nueva');
   ok(same(await pg(),[['grid',1.8],['grid',1.8]]),'una página nueva hereda fondo y tamaño');
-  await larga('dots','Pequeña');
-  ok(same(await pg(),[['grid',1.8],['dots',.75]]),'pulsación larga + «Pequeña» solo afecta a esa página');
+  await larga('dots','Extra pequeña');
+  ok(same(await pg(),[['grid',1.8],['dots',.75]]),'pulsación larga + «Extra pequeña» solo afecta a esa página');
   await menu('Duplicar esta página');
   ok(same(await pg(),[['grid',1.8],['dots',.75],['dots',.75]]),'duplicar hereda fondo y tamaño');
   ok((await p.evaluate(()=>JSON.parse(localStorage.getItem('fori-v1')).bgLast)).grid===1.8,'el último tamaño usado por fondo queda en los ajustes (bgLast)');
@@ -584,7 +587,7 @@ async function fondos(b,url){
   const hA=await hash(),sinA=(await pg())[(await p.evaluate(()=>__fori.cur))];
   await ajustes({pautaSize:1,bgLast:null});await recarga();
   const hC=await hash();
-  await larga('grid','Extra grande');const hB=await hash();
+  await larga('grid','Grande');const hB=await hash();
   ok(sinA[1]===undefined&&hA[1]>0&&same(hA,hB),'una página sin bgo usa el tamaño de Ajustes: se pinta igual que con bgo=1.8');
   ok(!same(hA,hC),'y con otro tamaño de Ajustes se pinta distinto');
 
@@ -597,7 +600,7 @@ async function fondos(b,url){
   await corto('dots');
 
   // 7. Lecciones: guardar, exportar e importar conservan bgo; un bgo no válido se descarta
-  await larga('dots','Grande');
+  await larga('dots','Mediana');
   const kv=k=>p.evaluate(k=>new Promise(r=>{const q=indexedDB.open('fori',1);q.onsuccess=()=>{const g=q.result.transaction('kv').objectStore('kv').get(k);g.onsuccess=()=>r(g.result)}}),k);
   await menu('Guardar como lección');await p.waitForTimeout(600);
   const les=await kv('lessons'),lp=await kv('lesson:'+les[0].id);
@@ -923,13 +926,13 @@ server.listen(0,async()=>{
     ok((await p.textContent('#pageLbl')).includes('2/2'),'crea una página nueva');
     ok(errs.length===0,'sin errores en la consola'+(errs.length?': '+errs.join(' | '):''));
     // arrancar con ajustes guardados poco habituales (zonas, modo mínimo, ruleta, tema oscuro…)
-    for(const extra of [{zoneN:4},{zoneN:2,view:'mini'},{view:'clean',theme:'dark',pickerMode:'wheel'},{ui:1.3,pautaSize:1.35},{pautaSize:1.8}]){
+    for(const extra of [{zoneN:4},{zoneN:2,view:'mini'},{view:'clean',theme:'dark',pickerMode:'wheel'},{ui:1.3,pautaSize:1.35},{pautaSize:1.8},{pautaSize:2.4}]){
       await p.evaluate(x=>{const k='fori-v1',s=JSON.parse(localStorage.getItem(k)||'{}');localStorage.setItem(k,JSON.stringify({...s,...x}))},extra);
       const e2=[];const h=e=>e2.push(e.message);p.on('pageerror',h);
       await p.reload();await p.waitForTimeout(700);p.off('pageerror',h);
       ok(await p.evaluate(()=>window.__foriOK===true)&&!e2.length,'arranca con '+JSON.stringify(extra)+(e2.length?': '+e2.join(' | '):''));
     }
-    ok(await p.evaluate(()=>[...document.querySelectorAll('#sPauta option')].map(o=>o.value+':'+o.textContent).join()==='0.75:Pequeña,1:Mediana,1.35:Grande,1.8:Extra grande'),'el tamaño de pauta tiene la opción «Extra grande»');
+    ok(await p.evaluate(()=>[...document.querySelectorAll('#sPauta option')].map(o=>o.value+':'+o.textContent).join()==='0.75:Extra pequeña,1:Pequeña,1.35:Mediana,1.8:Grande,2.4:Extra grande'),'el tamaño de pauta tiene cinco opciones, hasta «Extra grande»');
     await registro(b,url);
     await pantallas(b,url);
     // versión de caché: la genera build.py y coincide con lo publicado; repetir la construcción no la cambia
