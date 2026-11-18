@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Genera index.html juntando las partes de src/ (CSS y JS en orden alfabético).
 Uso: python3 tools/build.py   (desde la carpeta del proyecto)"""
-import glob,os
+import glob,hashlib,os,re
 R=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 def cat(pat):
     out=[]
@@ -15,3 +15,12 @@ html=tpl.replace('<!--CSS-->','\n'.join(open(os.path.join(R,'src','css',n+'.css'
 html=html.replace('<!--JS-->',cat('src/js/*.js'),1)
 open(os.path.join(R,'index.html'),'w',encoding='utf-8').write(html)
 print('index.html generado')
+# Versión de caché del service worker: sale sola del contenido (index.html + sw.js sin esa línea).
+# Si algo cambia, cambia el nombre y los dispositivos descargan lo nuevo; si no cambia nada, queda igual.
+sw=os.path.join(R,'sw.js');t=open(sw,encoding='utf-8').read()
+rx=re.compile(r"^const CACHE = '[^']*';",re.M)
+h=hashlib.sha1()
+h.update(open(os.path.join(R,'index.html'),'rb').read());h.update(rx.sub('',t).encode('utf-8'))
+v='fori-'+h.hexdigest()[:8]
+open(sw,'w',encoding='utf-8').write(rx.sub("const CACHE = '%s';"%v,t,1))
+print('caché',v)
