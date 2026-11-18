@@ -151,6 +151,7 @@ function buildDock(){
     h('button',{class:'wide',onclick:()=>{closePop();addPage(false)}},...ib('plus','Página nueva')),
     h('button',{class:'wide',onclick:()=>{closePop();addPage(true)}},...ib('copy','Duplicar esta página')),
     h('button',{class:'wide',onclick:()=>{closePop();deletePage()}},...ib('trash','Borrar esta página')),
+    h('button',{class:'wide',onclick:()=>{closePop();deleteAllPages()}},...ib('trash','Borrar todas las páginas')),
     h('button',{class:'wide',onclick:()=>{closePop();exportPNG()}},...ib('image','Guardar página como imagen')),
     h('button',{class:'wide',onclick:()=>{closePop();exportPDF()}},...ib('pdf','Guardar todas en PDF')),
     ...REG.pageMenu.map(f=>f())],'above')});
