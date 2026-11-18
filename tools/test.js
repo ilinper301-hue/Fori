@@ -175,6 +175,12 @@ async function guardado(b,url){
   ok(d.ids.length===2&&!('page:'+gone in s),'borrar una página borra su registro');
   await p.click('#toast button');d=await board();s=await store();
   ok(d.ids.length===3&&('page:'+gone in s)&&d.pages[1].strokes.some(q=>q.type==='img'),'deshacer el borrado la vuelve a guardar');
+  // borrar todas las páginas a la vez: queda una vacía con el mismo fondo; deshacer devuelve las tres
+  const antes=d.ids.slice(),cur0=(await mem()).cur;
+  await menu('Borrar todas las páginas');d=await board();s=await store();
+  ok(d.ids.length===1&&d.pages[0].strokes.length===0&&antes.every(i=>!('page:'+i in s)),'borrar todas deja una página vacía y quita los registros de las demás');
+  await p.click('#toast button');d=await board();s=await store();
+  ok(same(d.ids,antes)&&(await mem()).cur===cur0&&antes.every(i=>'page:'+i in s)&&d.pages[1].strokes.some(q=>q.type==='img'),'deshacer devuelve todas las páginas, en su sitio y guardadas');
 
   // 2. Lecciones: mismo formato de siempre (imagen dentro), y al abrirlas la pizarra se guarda bien
   await menu('Guardar como lección');await p.waitForTimeout(600);
