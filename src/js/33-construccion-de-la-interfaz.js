@@ -1,5 +1,4 @@
 /* ============ Construcción de la interfaz ============ */
-const SHAPES=[['line','╱','Línea'],['rect','▭','Rectángulo'],['square','□','Cuadrado'],['circle','◯','Círculo'],['ellipse','⬭','Elipse'],['triangle','△','Triángulo'],['pentagon','⬠','Pentágono'],['hexagon','⬡','Hexágono']];
 const PALETTE=['ink','#000000','#ffffff','#868e96','#8d5524','#f783ac',
   '#c92a2a','#e03131','#ff6b6b','#e8590c','#f08c00','#fcc419',
   '#2b8a3e','#2f9e44','#69db7c','#0ca678','#15aabf','#74c0fc',
@@ -49,15 +48,18 @@ function refreshTools(){
 function setSize(s){T.size=s;refreshTools();if(editor){editor.fs=FS[s];editor.ta.style.fontSize=FS[s]+'px';sizeEditor()}}
 const fillLabel=()=>T.fill?'◼ Con relleno':'◻ Sin relleno';
 const shapeNodes=()=>[
-  ...SHAPES.map(([id,ic,nm])=>h('button',{title:nm,'aria-label':nm,class:id===T.shape?'on':'',onclick:()=>{T.shape=id;T.tool='shape';refreshTools();closePop()}},ic)),
+  ...[['linea','Líneas'],['plana','Planas'],['cuerpo','Cuerpos']].flatMap(([g,name])=>[
+    h('div',{class:'popsep grp'},name),
+    ...formasOf(g).map(f=>h('button',{title:f.label,'aria-label':f.label,'data-shape':f.id,class:f.id===T.shape?'on':'',onclick:()=>{T.shape=f.id;T.tool='shape';refreshTools();closePop()}},h('span',{html:formaIcon(f)})))]),
   h('button',{class:'wide'+(T.fill?' on':''),onclick:e=>{T.fill=!T.fill;e.currentTarget.classList.toggle('on',T.fill);e.currentTarget.textContent=fillLabel()}},fillLabel())
 ];
+const shapeCols=()=>innerHeight/(S.ui||1)<640?6:4; // en pantallas bajas, más columnas para que quepan sin deslizar tanto
 const colorNodes=()=>[colorPicker()]; // ruleta de color (ver 33b-selector-color.js)
 function toolBtn(tool,icon,label){
   const extra=tool==='shape'?{'data-pop':'shape'}:{};
   return h('button',{class:'tool','data-tool':tool,...extra,onclick:e=>{
     commitEditor();T.tool=tool;refreshTools();
-    if(tool==='shape')openPop('shape',e.currentTarget,4,shapeNodes());else closePop();
+    if(tool==='shape')openPop('shape',e.currentTarget,shapeCols(),shapeNodes());else closePop();
   }},ico(icon,'ic'),h('small',{},label));
 }
 function buildLeft(){

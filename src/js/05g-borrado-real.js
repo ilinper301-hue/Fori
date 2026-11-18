@@ -6,22 +6,17 @@
 // Así la página no engorda al borrar y lo borrado no «se queda atrás» al mover un dibujo.
 // Las páginas antiguas pueden traer trazos 'eraser' del sistema anterior: se siguen pintando como antes.
 
-// Contorno de una forma como línea poligonal
-function shapePoly(s){
-  const a=s.a,b=shapeEnd(s);
-  if(s.shape==='line')return{pts:[{x:a.x,y:a.y},{x:s.b.x,y:s.b.y}],closed:false};
-  const x=Math.min(a.x,b.x),y=Math.min(a.y,b.y),w=Math.abs(b.x-a.x),hh=Math.abs(b.y-a.y),cx=x+w/2,cy=y+hh/2;
-  const ring=n=>Array.from({length:n},(_,i)=>{const t=-Math.PI/2+i*2*Math.PI/n;return{x:cx+w/2*Math.cos(t),y:cy+hh/2*Math.sin(t)}});
-  let pts;
-  switch(s.shape){
-    case 'rect':case 'square':pts=[{x,y},{x:x+w,y},{x:x+w,y:y+hh},{x,y:y+hh}];break;
-    case 'triangle':pts=[{x:cx,y},{x:x+w,y:y+hh},{x,y:y+hh}];break;
-    case 'pentagon':pts=ring(5);break;
-    case 'hexagon':pts=ring(6);break;
-    default:pts=ring(clamp(Math.ceil((w+hh)/5),24,160)); // círculo y elipse
-  }
-  pts.push({x:pts[0].x,y:pts[0].y});
-  return{pts,closed:true};
+// Contorno de una forma como líneas poligonales: una por pieza ({pts,closed,fill,dash,solid,nostroke}); los círculos se aproximan con segmentos
+function shapeLines(s){
+  return shapePolys(s).map(it=>{
+    let pts=it.pts;
+    if(it.ell){
+      const e=it.ell,n=clamp(Math.ceil((e.rx+e.ry)*2/5),24,160);
+      pts=Array.from({length:n},(_,i)=>{const t=-Math.PI/2+i*2*Math.PI/n;return{x:e.cx+e.rx*Math.cos(t),y:e.cy+e.ry*Math.sin(t)}});
+    }else pts=pts.map(q=>({x:q.x,y:q.y}));
+    if(it.closed)pts.push({x:pts[0].x,y:pts[0].y});
+    return{pts,closed:!!it.closed,fill:!!it.fill,dash:!!it.dash,solid:!!it.solid,nostroke:!!it.nostroke};
+  }).filter(l=>l.pts.length);
 }
 // Recorre la línea pts y devuelve los tramos que quedan fuera del borrador (a más de R de su recorrido).
 // Devuelve null si el borrador no la toca. minLen: los restos más cortos se descartan (no dejan motas).
@@ -75,9 +70,19 @@ function eraseApply(er){
       if(!near.length)continue;
       const minLen=Math.max(1.5,(s.size||0)*.35);
       if(s.type==='shape'){
-        const poly=shapePoly(s);
-        if(s.fill&&s.shape!=='line'){if(eraseRuns(poly.pts,true,R,near,0)||ep.some(q=>inPoly(q,poly.pts)))pieces=[]}
-        else{const runs=eraseRuns(poly.pts,poly.closed,R,near,minLen);if(runs)pieces=runs.map(pts=>({type:'free',tool:'pen',color:s.color,size:s.size,pts}))}
+        const lines=shapeLines(s);if(!lines.length)continue; // forma desconocida: no se toca
+        if(s.fill&&lines.some(l=>l.fill)){
+          if(lines.filter(l=>l.fill).some(l=>eraseRuns(l.pts,true,R,near,0)||ep.some(q=>inPoly(q,l.pts))))pieces=[];
+        }else{
+          // se corta cada pieza por donde pasa el borrador; las que no toca se conservan como trazo (las discontinuas quedan continuas)
+          let hit=false;const out=[];
+          for(const l of lines){
+            if(l.nostroke)continue; // la silueta solo sirve para el relleno
+            const runs=eraseRuns(l.pts,l.closed,R,near,minLen);
+            if(runs){hit=true;out.push(...runs)}else out.push(l.pts);
+          }
+          if(hit)pieces=out.map(pts=>({type:'free',tool:'pen',color:s.color,size:s.size,pts}));
+        }
       }else{
         const runs=eraseRuns(s.pts,false,R,near,minLen);
         if(runs)pieces=runs.map(pts=>({...s,pts}));
