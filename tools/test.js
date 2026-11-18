@@ -541,7 +541,7 @@ async function fondos(b,url){
   await abre();
   const tiles=await p.locator('#pop .tile.bgt').count(),seps=await p.locator('#pop .popsep.grp').allTextContents();
   const pintada=id=>p.evaluate(id=>{const c=document.querySelector(`#pop [data-bg=${id}] canvas`),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=4)n+=d[i];return n},id);
-  ok(tiles===6&&seps.length===1&&/Pautas/i.test(seps[0]),'el menú enseña los seis fondos en «Pautas» y no hay apartado «Plantillas» vacío');
+  ok(tiles===22&&seps.length===2&&/Pautas/i.test(seps[0])&&/Plantillas/i.test(seps[1]),'el menú enseña los 22 fondos: 9 pautas y 13 plantillas, en dos apartados');
   ok(await pintada('grid')>0&&await pintada('montessori')>0&&await pintada('plain')===0,'cada tesela lleva su vista previa pintada (Liso, vacía)');
   ok(/Mantén pulsado un fondo/.test(await p.textContent('#pop')),'el menú avisa de la pulsación larga');
   ok(await dentro('#pop'),'el menú cabe en 1920×1080');
@@ -557,7 +557,7 @@ async function fondos(b,url){
   await p.click('#pop >> text=Extra grande');await p.waitForTimeout(100);
   ok(same(await pg(),[['grid',1.8]])&&await p.isHidden('#pop'),'elegir «Extra grande» deja bg y bgo=1.8 en la página y cierra el menú');
   await sostener('grid');await p.click('#pop >> text=Volver');await p.waitForTimeout(100);
-  ok(await p.locator('#pop .tile.bgt').count()===6,'«Volver» regresa al menú de fondos');
+  ok(await p.locator('#pop .tile.bgt').count()===22,'«Volver» regresa al menú de fondos');
   await p.keyboard.press('Escape');
 
   // 3. Página nueva y duplicada heredan fondo y tamaño; otras páginas no cambian
@@ -593,7 +593,7 @@ async function fondos(b,url){
   for(let i=0;i<2;i++){await p.click('#dock [aria-label="Página anterior"]');await p.waitForTimeout(100)} // la página 1 es la del fondo desconocido
   ok((await p.textContent('#bgBtn')).includes('Liso')&&(await hash())[1]===0,'bg desconocido: se rotula y se pinta como Liso');
   ok((await p.evaluate(()=>__fori.pages[0].bg))==='xyz'&&(await p.evaluate(()=>__fori.pages[0].bgo))===undefined,'el dato se conserva y un bgo fuera de rango se descarta');
-  await abre();ok(await p.locator('#pop .tile.bgt').count()===6,'el menú abre con un fondo desconocido');await p.keyboard.press('Escape');
+  await abre();ok(await p.locator('#pop .tile.bgt').count()===22,'el menú abre con un fondo desconocido');await p.keyboard.press('Escape');
   await corto('dots');
 
   // 7. Lecciones: guardar, exportar e importar conservan bgo; un bgo no válido se descarta
@@ -624,17 +624,158 @@ async function fondos(b,url){
     const ok1=await dentro('#pop'),cols=await p.locator('#pop .tile.bgt').count();
     await p.keyboard.press('Escape');
     await sostener('grid');const ok2=await dentro('#pop');await p.keyboard.press('Escape');
-    ok(ok1&&ok2&&cols===6,`a ${w}×${h2} el menú de fondos y sus opciones caben`);
+    ok(ok1&&ok2&&cols===22,`a ${w}×${h2} el menú de fondos y sus opciones caben`);
   }
   await ctx.close();
   ok(errs.length===0,'sin errores en las pruebas de fondos'+(errs.length?': '+errs.join(' | '):''));
+}
+/* Pruebas de la fase B: plantillas (se dibujan una vez, encajadas en la página) y pautas nuevas */
+async function plantillas(b,url){
+  console.log('\nPlantillas y pautas nuevas');
+  const ctx=await b.newContext({viewport:{width:1920,height:1080},acceptDownloads:true});
+  const p=await ctx.newPage();
+  const errs=[];p.on('pageerror',e=>errs.push(e.message));
+  p.on('dialog',d=>d.accept());
+  await p.goto(url);await p.waitForTimeout(800);
+  const abre=async()=>{await p.click('#dock [data-pop=bg]');await p.waitForTimeout(100)};
+  const corto=async id=>{await abre();await p.click(`#pop [data-bg=${id}]`);await p.waitForTimeout(150)};
+  const larga=async(id,op)=>{await abre();await p.hover(`#pop [data-bg=${id}]`);await p.mouse.down();await p.waitForTimeout(800);await p.mouse.up();await p.waitForTimeout(500);await p.click(`#pop >> text=${op}`);await p.waitForTimeout(150)};
+  const hash=()=>p.evaluate(()=>{const c=document.querySelector('#bg'),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let h=0,n=0;for(let i=0;i<d.length;i+=4){n+=d[i+3];h=(h*31+d[i+3]+d[i]*7+d[i+1]*13)|0}return [h,n]});
+  const pag=()=>p.evaluate(()=>{const q=__fori.pages[__fori.cur];return{bg:q.bg,bgo:q.bgo,size:q.size,v:q.v}});
+  const nudge=async()=>{const v=p.viewportSize();await p.setViewportSize({width:v.width-1,height:v.height});await p.waitForTimeout(150);await p.setViewportSize(v);await p.waitForTimeout(250)};
+  const recarga=async()=>{await p.waitForTimeout(1000);await p.reload();await p.waitForTimeout(800)};
+  const dentro=sel=>p.evaluate(s=>{const r=document.querySelector(s).getBoundingClientRect();return r.left>=0&&r.top>=0&&r.right<=innerWidth+.5&&r.bottom<=innerHeight+.5},sel);
+
+  // 1. El registro: 9 pautas y 13 plantillas, en el orden previsto
+  const reg=await p.evaluate(()=>__fori.REG.fondos.map(f=>({id:f.id,g:f.group,o:f.order,op:(f.opts||[]).map(x=>x[0])})));
+  const ids=g=>reg.filter(f=>f.g===g).sort((a,c)=>a.o-c.o).map(f=>f.id).join();
+  ok(ids('pauta')==='plain,grid,dots,lines,montessori,cuadrovia,renglones,isometrico,milimetrado','pautas: las seis de siempre y Renglones, Papel isométrico y Milimetrado');
+  ok(ids('plantilla')==='venn,ajedrez,tabla100,marco10,ppt,valorpos,ejes,grafbarras,tablacol,vinetas,dibescr,calendario,mapa','plantillas: las 13, en el orden del plan');
+  ok(same(reg.find(f=>f.id==='ajedrez').op,['coord','8','damas'])&&same(reg.find(f=>f.id==='valorpos').op,['du','cdu','umcdu'])&&same(reg.find(f=>f.id==='vinetas').op,['3','4','6'])&&reg.find(f=>f.id==='calendario').op.length===0,'las variantes son las del plan (y Calendario no tiene)');
+
+  // 2. Cada fondo y cada variante se pinta sin errores en claro y oscuro (las plantillas dejan algo pintado)
+  let vacios=[],n=0;
+  for(const tema of ['light','dark']){
+    await p.evaluate(t=>{document.documentElement.dataset.theme=t},tema);
+    for(const f of reg){
+      for(const op of (f.op.length?f.op:[undefined])){
+        await p.evaluate(([id,o])=>{const q=__fori.pages[__fori.cur];q.bg=id;if(o===undefined)delete q.bgo;else q.bgo=o},[f.id,op]);
+        await nudge();n++;
+        const h=await hash();if(f.id!=='plain'&&!(h[1]>0))vacios.push(tema+':'+f.id+':'+op);
+      }
+    }
+  }
+  await p.evaluate(()=>{document.documentElement.dataset.theme='light'});
+  ok(vacios.length===0&&n>40,`${n} combinaciones (fondo × variante × claro/oscuro) se pintan sin dejar la página vacía`+(vacios.length?': '+vacios.join(' '):''));
+  ok(errs.length===0,'sin errores al pintarlas todas'+(errs.length?': '+errs.join(' | '):''));
+
+  // 3. Distintas variantes se ven distintas
+  const dist=async(id,a,c)=>{await p.evaluate(([id,o])=>{const q=__fori.pages[__fori.cur];q.bg=id;q.bgo=o},[id,a]);await nudge();const h1=await hash();
+    await p.evaluate(([id,o])=>{const q=__fori.pages[__fori.cur];q.bg=id;q.bgo=o},[id,c]);await nudge();const h2=await hash();return !same(h1,h2)};
+  ok(await dist('venn','2','3')&&await dist('ajedrez','coord','8')&&await dist('ajedrez','8','damas')&&await dist('tabla100','vacia','fila')&&await dist('marco10','1','2')&&await dist('ppt','circ','barras')&&await dist('valorpos','du','umcdu')&&await dist('ejes','q1','q4')&&await dist('tablacol','2','3')&&await dist('vinetas','3','6'),'cada variante se pinta distinta de la otra');
+
+  // 4. El menú: tres apartados, vistas previas de las plantillas y todo cabe
+  await p.evaluate(()=>{const q=__fori.pages[__fori.cur];q.bg='plain';delete q.bgo});await nudge();
+  await abre();
+  const seps=await p.locator('#pop .popsep.grp').allTextContents(),tiles=await p.locator('#pop .tile.bgt').count();
+  const pintada=id=>p.evaluate(id=>{const c=document.querySelector(`#pop [data-bg=${id}] canvas`),d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=3;i<d.length;i+=4)n+=d[i];return n},id);
+  const todasPintadas=[];for(const f of reg.filter(f=>f.g==='plantilla'||['renglones','isometrico','milimetrado'].includes(f.id)))if(!(await pintada(f.id)>0))todasPintadas.push(f.id);
+  ok(seps.length===2&&/Pautas/.test(seps[0])&&/Plantillas/.test(seps[1])&&tiles===22,'el menú tiene los apartados «Pautas» y «Plantillas» con 22 teselas');
+  ok(todasPintadas.length===0,'la vista previa de cada plantilla y pauta nueva está pintada'+(todasPintadas.length?': '+todasPintadas.join():''));
+  await p.keyboard.press('Escape');
+
+  // 5. Elegir una plantilla en una página vacía fija su tamaño; al cambiar el tamaño de la ventana no se mueve ni se deforma
+  await corto('plain');
+  await corto('ajedrez');
+  const a0=await pag();
+  ok(a0.bg==='ajedrez'&&a0.bgo===undefined&&a0.size&&a0.size.w>0&&a0.size.h>0&&same(a0.v,{k:1,ox:0,oy:0}),'toque corto en «Tablero de ajedrez»: pone la plantilla con la variante por defecto y fija el tamaño de la página');
+  // el centro de una casilla oscura (b8) tiene tinta y el de una clara (a8), no
+  const casillas=()=>p.evaluate(()=>{
+    const q=__fori.pages[__fori.cur],L=q.size,v=q.v,m=.06*Math.min(L.w,L.h),s=Math.min((L.w-2*m)/9.3,(L.h-2*m)/9.3),x0=(L.w-8*s)/2,y0=(L.h-8*s)/2;
+    const c=document.querySelector('#bg'),dpr=c.width/c.clientWidth,x=c.getContext('2d');
+    const al=(lx,ly)=>x.getImageData(Math.round((v.ox+lx*v.k)*dpr),Math.round((v.oy+ly*v.k)*dpr),1,1).data[3];
+    return [al(x0+1.5*s,y0+.5*s),al(x0+.5*s,y0+.5*s),al(x0+6.5*s,y0+7.5*s),al(x0+7.5*s,y0+7.5*s)];
+  });
+  const c0=await casillas();
+  ok(c0[0]>0&&c0[1]===0&&c0[2]>0&&c0[3]===0,'las casillas oscuras están pintadas y las claras no');
+  await p.setViewportSize({width:1280,height:720});await p.waitForTimeout(400);
+  const a1=await pag(),c1=await casillas();
+  ok(same(a1.size,a0.size)&&a1.v.k<1&&same(c1.map(x=>x>0),c0.map(x=>x>0)),'tras reducir la ventana a 1280×720 la plantilla sigue entera y en su sitio (misma página lógica, vista a escala)');
+  await p.setViewportSize({width:700,height:1000});await p.waitForTimeout(400);
+  const a2=await pag(),c2=await casillas();
+  ok(same(a2.size,a0.size)&&same(c2.map(x=>x>0),c0.map(x=>x>0)),'y al girar la ventana a vertical (700×1000) tampoco se mueve ni se deforma');
+  await p.setViewportSize({width:1920,height:1080});await p.waitForTimeout(400);
+
+  // 6. Escribir encima: el trazo acompaña a la plantilla
+  await p.mouse.move(900,500);await p.mouse.down();await p.mouse.move(1100,560,{steps:6});await p.mouse.up();
+  const t0=await p.evaluate(()=>__fori.pages[__fori.cur].strokes.length);
+  await p.setViewportSize({width:1280,height:720});await p.waitForTimeout(400);
+  const a3=await pag(),c3=await casillas();
+  ok(t0===1&&same(a3.size,a0.size)&&same(c3.map(x=>x>0),c0.map(x=>x>0)),'con un trazo encima, la página conserva su tamaño y la plantilla sigue alineada tras cambiar el tamaño de la ventana');
+  await p.setViewportSize({width:1920,height:1080});await p.waitForTimeout(400);
+
+  // 7. Pulsación larga: variante guardada solo en esa página, y recargar la conserva
+  await p.click('#pageLbl');await p.click('#pop >> text=Página nueva');await p.waitForTimeout(150);
+  await larga('ajedrez','Damas');
+  const a4=await pag();
+  ok(a4.bg==='ajedrez'&&a4.bgo==='damas'&&a4.size&&same(a4.v,{k:1,ox:0,oy:0}),'pulsación larga + «Damas 10×10» deja bgo=damas en esa página');
+  ok(same((await p.evaluate(()=>__fori.pages.map(q=>[q.bg,q.bgo]))),[['ajedrez',undefined],['ajedrez','damas']]),'la otra página no cambia');
+  const hD=await hash();
+  await recarga();
+  ok(same(await p.evaluate(()=>__fori.pages.map(q=>[q.bg,q.bgo])),[['ajedrez',undefined],['ajedrez','damas']])&&same(await hash(),hD),'al recargar se conservan la plantilla y su variante y se ven igual');
+  ok((await p.evaluate(()=>__fori.pages[__fori.cur].size)).w>0,'y la página vacía con plantilla conserva su tamaño');
+
+  // 8. Cambiar de una plantilla a una pauta en una página vacía: vuelve a tomar el tamaño de la pizarra
+  await p.setViewportSize({width:1280,height:720});await p.waitForTimeout(400);
+  await corto('grid');
+  const a5=await pag(),st=await p.evaluate(()=>[document.querySelector('#stage').clientWidth,document.querySelector('#stage').clientHeight]);
+  ok(a5.bg==='grid'&&a5.size.w===st[0]&&a5.size.h===st[1]&&same(a5.v,{k:1,ox:0,oy:0}),'plantilla → pauta en una página vacía: la página vuelve a seguir el tamaño de la pizarra');
+  await p.setViewportSize({width:1920,height:1080});await p.waitForTimeout(400);
+
+  // 9. Exportar: el PNG y la miniatura de la lección llevan la plantilla
+  await corto('plain');await corto('venn');
+  const png=async()=>{const [dl]=await Promise.all([p.waitForEvent('download'),(async()=>{await p.click('#pageLbl');await p.click('#pop >> text=Guardar página como imagen')})()]);
+    const buf=require('fs').readFileSync(await dl.path());
+    return p.evaluate(async b64=>{const im=new Image();await new Promise(r=>{im.onload=r;im.src='data:image/png;base64,'+b64});const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x=c.getContext('2d');x.drawImage(im,0,0);
+      const d=x.getImageData(0,0,c.width,c.height).data,o=new Set();for(let i=0;i<d.length;i+=4*97)o.add(d[i]+','+d[i+1]+','+d[i+2]);return o.size},buf.toString('base64'))};
+  const colVenn=await png();
+  await corto('plain');const colLiso=await png();
+  ok(colVenn>colLiso&&colLiso<=2,'«Guardar página como imagen» incluye la plantilla (el PNG de una página lisa tiene un solo color; el del Venn, varios)');
+  await corto('venn');
+  await p.click('#pageLbl');await p.click('#pop >> text=Guardar como lección');await p.waitForTimeout(700);
+  const kv=k=>p.evaluate(k=>new Promise(r=>{const q=indexedDB.open('fori',1);q.onsuccess=()=>{const g=q.result.transaction('kv').objectStore('kv').get(k);g.onsuccess=()=>r(g.result)}}),k);
+  const les=await kv('lessons'),lp=await kv('lesson:'+les[0].id);
+  ok(lp[1].bg==='venn'&&lp[1].size&&lp[1].size.w>0,'la lección guardada lleva la plantilla y el tamaño de la página');
+  const thumbVenn=les[0].thumb;
+  ok(typeof thumbVenn==='string'&&thumbVenn.length>1500,'la miniatura de la lección existe y no está vacía');
+
+  // 10. Una lección con una plantilla desconocida o con una variante no válida se abre sin romper nada
+  await p.evaluate(()=>{const q=__fori.pages[__fori.cur];q.bg='plantilla-futura';q.bgo='x'.repeat(30)});await nudge();await p.click('#dock [aria-label="Página anterior"]');await p.click('#dock [aria-label="Página siguiente"]');await p.waitForTimeout(150);
+  ok((await p.textContent('#bgBtn')).includes('Liso')&&errs.length===0,'una plantilla desconocida se rotula y se pinta como Liso y no da errores');
+
+  // 11. El menú largo cabe y se puede recorrer hasta el final en móvil
+  for(const [w,h2] of [[390,844],[844,390]]){
+    await p.setViewportSize({width:w,height:h2});await p.waitForTimeout(400);
+    await p.evaluate(()=>{document.querySelectorAll('.win').forEach(x=>x.remove())});
+    await abre();
+    const e=await p.evaluate(()=>{const pop=document.querySelector('#pop'),r=pop.getBoundingClientRect();pop.scrollTop=pop.scrollHeight;
+      const tm=document.querySelector('#pop [data-bg=mapa]');tm.scrollIntoView({block:'nearest'});const t=tm.getBoundingClientRect(),pr=pop.getBoundingClientRect();
+      return{dentro:r.left>=0&&r.top>=0&&r.right<=innerWidth+.5&&r.bottom<=innerHeight+.5,desliza:pop.scrollHeight>pop.clientHeight,alcanza:t.top>=pr.top-1&&t.bottom<=pr.bottom+1}});
+    await p.keyboard.press('Escape');
+    ok(e.dentro&&e.desliza&&e.alcanza,`a ${w}×${h2} el menú cabe en pantalla, se desliza y se llega a la última plantilla`);
+    await abre();await p.hover('#pop [data-bg=venn]').catch(()=>{});await p.evaluate(()=>{document.querySelector('#pop').scrollTop=0});
+    await p.mouse.down();await p.waitForTimeout(800);await p.mouse.up();await p.waitForTimeout(400);
+    ok(await dentro('#pop'),`a ${w}×${h2} las opciones de una plantilla caben`);await p.keyboard.press('Escape');
+  }
+  await ctx.close();
+  ok(errs.length===0,'sin errores en las pruebas de plantillas'+(errs.length?': '+errs.join(' | '):''));
 }
 server.listen(0,async()=>{
   const url=`http://localhost:${server.address().port}/`;
   // FORI_CHROME=1 usa el Chrome instalado en el equipo en vez del navegador de Playwright
   const b=await chromium.launch(process.env.FORI_CHROME?{channel:'chrome',args:['--no-sandbox']}:{});
   try{
-    if(process.env.FORI_SOLO==='fondos'){await fondos(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
+    if(process.env.FORI_SOLO==='fondos'){await fondos(b,url);await plantillas(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     const p=await b.newPage({viewport:{width:1920,height:1080}});
     const errs=[];p.on('pageerror',e=>errs.push(e.message));
     p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource|ERR_/.test(m.text()))errs.push(m.text())});
@@ -669,6 +810,7 @@ server.listen(0,async()=>{
     await pizarra(b,url);
     await guardado(b,url);
     await fondos(b,url);
+    await plantillas(b,url);
   }catch(e){fails.push(String(e));console.log(e)}
   await b.close();server.close();
   console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0);
