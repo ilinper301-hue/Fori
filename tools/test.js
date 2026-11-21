@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* Prueba rápida de Fori: arranca la app, dibuja, abre todas las herramientas y comprueba que no hay errores.
-   Uso: node tools/test.js (FORI_SOLO=fondos o FORI_SOLO=formas para correr solo esas pruebas)   (necesita Playwright; primero genera index.html con python3 tools/build.py) */
+   Uso: node tools/test.js (FORI_SOLO=fondos, FORI_SOLO=formas o FORI_SOLO=copia para correr solo esas pruebas)   (necesita Playwright; primero genera index.html con python3 tools/build.py) */
 const http=require('http'),fs=require('fs'),path=require('path');
 const {chromium}=require('playwright');
 const ROOT=path.resolve(__dirname,'..');
@@ -897,12 +897,89 @@ async function formas(b,url){
   await ctx.close();
   ok(errs.length===0,'sin errores en las pruebas de formas'+(errs.length?': '+errs.join(' | '):''));
 }
+/* Copia completa (Ajustes → Copia de seguridad): todo en un archivo y de vuelta en un navegador limpio */
+async function copia(b,url){
+  console.log('\nCopia completa');
+  const os=require('os');
+  const ctx=await b.newContext({viewport:{width:1280,height:800},acceptDownloads:true});
+  const p=await ctx.newPage();
+  const errs=[];p.on('pageerror',e=>errs.push(e.message));
+  p.on('dialog',d=>d.accept());
+  await p.goto(url);await p.waitForTimeout(800);
+  const drag=async(pg,x0,y0,x1,y1)=>{await pg.mouse.move(x0,y0);await pg.mouse.down();await pg.mouse.move(x1,y1,{steps:6});await pg.mouse.up()};
+  const store=pg=>pg.evaluate(()=>new Promise(r=>{const q=indexedDB.open('fori',1);q.onsuccess=()=>{const st=q.result.transaction('kv').objectStore('kv'),a=st.getAllKeys(),v=st.getAll();
+    v.onsuccess=async()=>{const o={};for(let i=0;i<a.result.length;i++){const x=v.result[i];o[a.result[i]]=x instanceof Blob?'blob:'+x.type+':'+x.size+':'+(await x.text()).length:JSON.stringify(x)}r(o)}}}));
+  const mem=pg=>pg.evaluate(()=>({cur:__fori.cur,pages:__fori.pages.map(q=>[q.strokes,q.bg,q.img,q.size])}));
+  // pizarra con dos páginas, una imagen (Blob) y una lección; alumnos propios y un PIN
+  await drag(p,500,300,800,380);
+  const png=await p.evaluate(()=>{const c=document.createElement('canvas');c.width=c.height=120;const x=c.getContext('2d'),d=x.createImageData(120,120);for(let i=0;i<d.data.length;i++)d.data[i]=i%4===3?255:Math.random()*256;x.putImageData(d,0,0);return c.toDataURL('image/png')});
+  await p.setInputFiles('input[type=file][accept="image/*"]:not([capture]):not(#bgFile)',{name:'foto.png',mimeType:'image/png',buffer:Buffer.from(png.split(',')[1],'base64')});
+  await p.waitForTimeout(400);
+  await p.click('#pageLbl');await p.click('#pop >> text=Página nueva');await p.waitForTimeout(150);
+  await p.click('#left [data-tool=pen]');await drag(p,400,400,700,450);
+  await p.evaluate(()=>new Promise(r=>{const q=indexedDB.open('fori',1);q.onsuccess=()=>{const t=q.result.transaction('kv','readwrite'),st=t.objectStore('kv');
+    st.put([{id:'L1',name:'Sumas',date:'2026-11-20T10:00:00.000Z',n:1,thumb:''}],'lessons');st.put([{strokes:[],bg:'grid',img:null,size:{w:800,h:600}}],'lesson:L1');t.oncomplete=()=>r()}}));
+  await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('fori-v1')||'{}');s.students=['Lucía','Mario','Noa'];s.pinHash='abc';localStorage.setItem('fori-v1',JSON.stringify(s))});
+  await p.waitForTimeout(900); // que se guarde antes de recargar
+  await p.reload();await p.waitForTimeout(900);
+  await drag(p,450,500,650,520); // un trazo recién hecho, aún sin guardar, también entra
+  const m0=await mem(p);
+  const [dl]=await Promise.all([p.waitForEvent('download'),p.evaluate(()=>document.querySelector('#sAllExport').click())]);
+  const name=dl.suggestedFilename(),file=path.join(os.tmpdir(),'fori-prueba-'+Date.now()+'.foricopia');await dl.saveAs(file);
+  await p.waitForTimeout(300);
+  const s0=await store(p);
+  const d=JSON.parse(fs.readFileSync(file,'utf8'));
+  ok(/^fori-copia-\d{4}-\d\d-\d\d\.foricopia$/.test(name)&&d.app==='fori'&&d.type==='copia'&&d.version===1,'«Copia completa» descarga un archivo .foricopia');
+  const keys=d.kv.map(e=>e[0]);
+  ok(keys.includes('board2')&&keys.filter(k=>k.startsWith('page:')).length===2&&keys.includes('lessons')&&keys.includes('lesson:L1'),'lleva la pizarra (índice y páginas) y las lecciones');
+  const im=d.kv.find(e=>e[0].startsWith('img:'));
+  ok(!!im&&im[1].$blob==='image/png'&&im[1].b64.length>1000,'las imágenes guardadas como Blob van dentro');
+  const st=JSON.parse(d.ls['fori-v1']);
+  ok(same(st.students,['Lucía','Mario','Noa'])&&!('pinHash' in st),'lleva alumnos y ajustes, pero no el PIN');
+  ok(d.kv.find(e=>e[0]==='board2')[1].ids.length===2&&d.kv.filter(e=>e[0].startsWith('page:')).some(e=>e[1].strokes.length===2),'el último trazo, aún sin guardar, entra en la copia');
+
+  // navegador limpio: abrir la copia lo deja todo igual
+  const ctx2=await b.newContext({viewport:{width:1280,height:800}});
+  const q=await ctx2.newPage();const errs2=[];q.on('pageerror',e=>errs2.push(e.message));
+  let asked='';q.on('dialog',x=>{asked=x.message();x.accept()});
+  await q.goto(url);await q.waitForTimeout(800);
+  await q.evaluate(()=>{const s=JSON.parse(localStorage.getItem('fori-v1')||'{}');s.pinHash='xyz';localStorage.setItem('fori-v1',JSON.stringify(s))});
+  await q.reload();await q.waitForTimeout(800);
+  await q.setInputFiles('#sAllFile',file);
+  await q.waitForEvent('load',{timeout:8000}).catch(()=>{});await q.waitForTimeout(900);
+  ok(/sustituirán/.test(asked),'pregunta antes de sustituir nada');
+  const s1=await store(q),m1=await mem(q);
+  ok(same(Object.keys(s1).sort(),Object.keys(s0).sort())&&Object.keys(s0).every(k=>k==='board2'||s1[k]===s0[k]),'en el otro navegador el almacén queda igual (páginas, imágenes como Blob y lecciones)');
+  ok(same(m1,m0),'y la pizarra se ve igual: mismas páginas, trazos e imagen, en la misma página');
+  const st1=await q.evaluate(()=>JSON.parse(localStorage.getItem('fori-v1')));
+  ok(same(st1.students,['Lucía','Mario','Noa'])&&st1.pinHash==='xyz','recupera los alumnos y conserva el PIN de este equipo');
+  await q.click('#pageLbl');await q.click('#pop >> text=Página nueva');await q.click('#left [data-tool=pen]');await drag(q,300,300,500,320);await q.waitForTimeout(900);
+  ok((await q.evaluate(()=>new Promise(r=>{const o=indexedDB.open('fori',1);o.onsuccess=()=>{const g=o.result.transaction('kv').objectStore('kv').get('board2');g.onsuccess=()=>r(g.result.ids.length)}})))===3,'después se sigue guardando con normalidad');
+
+  // archivos que no son una copia, o decir que no: no cambia nada
+  const before=await store(q);
+  const toast=async()=>{await q.waitForTimeout(250);return q.evaluate(()=>[...document.querySelectorAll('.toast,#toast')].map(x=>x.textContent).join(' '))};
+  await q.setInputFiles('#sAllFile',{name:'x.fori',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({app:'fori',type:'lesson',version:1,name:'a',pages:[]}))});
+  const t1=await toast();
+  await q.setInputFiles('#sAllFile',{name:'x.foricopia',mimeType:'application/json',buffer:Buffer.from('no es json')});
+  const t2=await toast();
+  await q.setInputFiles('#sAllFile',{name:'x.foricopia',mimeType:'application/json',buffer:Buffer.from(JSON.stringify({...d,version:9}))});
+  const t3=await toast();
+  q.removeAllListeners('dialog');q.on('dialog',x=>x.dismiss());
+  await q.setInputFiles('#sAllFile',file);await q.waitForTimeout(600);
+  ok(/lección/.test(t1)&&/no válido/.test(t2)&&/más nueva/.test(t3),'avisa si es una lección, si no es un archivo válido o si es de una versión más nueva');
+  ok(same(await store(q),before),'ni esos archivos ni decir «Cancelar» cambian nada');
+  fs.unlinkSync(file);
+  await ctx2.close();await ctx.close();
+  ok(!errs.length&&!errs2.length,'sin errores en las pruebas de la copia completa'+(errs.length+errs2.length?': '+errs.concat(errs2).join(' | '):''));
+}
 server.listen(0,async()=>{
   const url=`http://localhost:${server.address().port}/`;
   // FORI_CHROME=1 usa el Chrome instalado en el equipo en vez del navegador de Playwright
   const b=await chromium.launch(process.env.FORI_CHROME?{channel:'chrome',args:['--no-sandbox']}:{});
   try{
     if(process.env.FORI_SOLO==='fondos'){await fondos(b,url);await plantillas(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
+    if(process.env.FORI_SOLO==='copia'){await copia(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     if(process.env.FORI_SOLO==='formas'){await formas(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     const p=await b.newPage({viewport:{width:1920,height:1080}});
     const errs=[];p.on('pageerror',e=>errs.push(e.message));
@@ -942,6 +1019,7 @@ server.listen(0,async()=>{
       ok(sw()===s0&&ix()===i0,'index.html y sw.js están al día: construir otra vez no cambia nada')}
     await pizarra(b,url);
     await guardado(b,url);
+    await copia(b,url);
     await fondos(b,url);
     await plantillas(b,url);
     await formas(b,url);
