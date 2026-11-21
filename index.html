@@ -552,6 +552,51 @@ dialog.tabdlg.small{width:min(420px,92vw)}
 .tab-meta{font-size:14px;font-weight:500;color:var(--muted)}
 .tab-sch{display:flex;flex-direction:column;gap:8px}
 .tab-sch select{align-self:flex-start;max-width:100%;background:var(--board);color:var(--ink);border:1px solid var(--line)}
+/* ---- Pintar encima de otras apps (38b-modo-capa.js) ---- */
+.mini.ready{box-shadow:0 0 0 3px var(--accent)}
+dialog.capadlg{width:min(520px,92vw)}
+dialog.capadlg h2{display:flex;align-items:center;gap:10px}
+dialog.capadlg h2 .ico svg{width:28px;height:28px}
+dialog.capadlg p{font-size:18px;line-height:1.45;margin:14px 0 20px}
+.capadlg-b{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end}
+.capadlg-b .btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+
+/* La capa es transparente: solo se ven lo pintado y su barra (como el modo transparente de 38-modo-transparente.js) */
+html.capa,html.capa body{background:transparent!important}
+html.capa body::before,html.capa #top,html.capa #left,html.capa #right,html.capa #dock,html.capa #bg,html.capa #bgimg,
+html.capa .zones,html.capa #cornerBtn,html.capa #mini{display:none!important}
+html.capa #app{grid-template-columns:0 1fr 0!important;grid-template-rows:0 1fr 0!important}
+html.capa #stage{background:transparent!important;box-shadow:none!important;border-radius:0!important;border:0!important}
+
+/* Barra de la capa: grande, para el dedo; abajo en el centro (o arriba) */
+#capaBar{position:fixed;left:8px;right:8px;bottom:12px;margin:0 auto;width:fit-content;z-index:1500;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;
+  gap:6px;padding:6px;border-radius:22px;background:rgba(19,33,74,.94);box-shadow:0 10px 30px rgba(0,0,0,.35);
+  touch-action:none;user-select:none;-webkit-user-select:none}
+#capaBar.arriba{bottom:auto;top:12px}
+body.capa-debajo #capaBar{display:none}
+#capaBar .cb-g{display:flex;gap:4px;align-items:center;padding:0 4px;border-left:1px solid rgba(255,255,255,.16)}
+#capaBar .cb-col{flex-wrap:wrap;justify-content:center}
+#capaBar button{width:56px;height:56px;border:0;border-radius:16px;background:transparent;color:#fff;display:grid;place-items:center;padding:0;cursor:pointer}
+#capaBar button .ico{width:30px;height:30px}
+#capaBar button .ico svg{display:block;width:30px;height:30px}
+#capaBar button:active{background:rgba(255,255,255,.18)}
+#capaBar button.on{background:#fff;color:#13214A}
+#capaBar .cb-grip{width:36px;opacity:.75}
+#capaBar .cb-c{width:46px}
+#capaBar .cb-c i{width:32px;height:32px;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.55)}
+#capaBar .cb-c.on{background:rgba(255,255,255,.22)}
+#capaBar .cb-c.on i{box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(255,255,255,.35)}
+#capaBar .cb-s i{display:block;border-radius:50%;background:currentColor}
+#capaBar .cb-txt{width:auto;padding:0 14px;display:flex;align-items:center;gap:8px;font:600 17px/1 'Fredoka',system-ui,sans-serif}
+#capaBar .cb-x{background:rgba(224,49,49,.9)}
+/* En la capa, el aviso (p. ej. «Página limpiada · Deshacer») va encima de la barra */
+html.capa #toast{bottom:96px}
+html.capa body:has(#capaBar.arriba) #toast{bottom:24px}
+@media (max-width:700px){
+  #capaBar button{width:48px;height:48px;border-radius:14px}
+  #capaBar .cb-c{width:38px}#capaBar .cb-c i{width:26px;height:26px}
+  #capaBar .cb-l{display:none}#capaBar .cb-txt{width:48px;padding:0}
+}
 /* Fichas de Charta: barra «Solución» (paso a paso) */
 #chbar{position:absolute;right:16px;bottom:16px;z-index:4;display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--panel);border:2px solid var(--line);border-radius:20px;box-shadow:0 6px 22px rgba(0,0,0,.25);zoom:var(--ui)}
 #chbar[hidden],body.v-clean #chbar{display:none}
@@ -1019,6 +1064,7 @@ const ICONS={
   apps:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/>',
   star:'<path fill="currentColor" d="M12 3.6l2.5 5.3 5.8.8-4.2 4 1 5.8-5.1-2.8-5.1 2.800 1-5.800-4.200-4 5.800-.800z"/>',
   lock:'<rect x="5" y="10.5" width="14" height="10" rx="2.500"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.500"/><path d="M12 14.500v2.500"/>',
+  hand:'<path d="M9 12.5V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 10.5V9a1.5 1.5 0 0 1 3 0v2"/><path d="M15 10.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.8a5 5 0 0 1-4-2l-2.6-3.600a1.500 1.500 0 0 1 2.300-1.900L9 15.500"/>',
   backspace:'<path d="M9 5.500h10a1.500 1.500 0 0 1 1.500 1.500v10a1.500 1.500 0 0 1-1.500 1.500H9L3 12z"/><path d="M12.500 9.500l5 5M17.500 9.500l-5 5"/>',
 };
 document.body.insertAdjacentHTML('afterbegin',`<svg width="0" height="0" style="position:absolute" aria-hidden="true">${Object.entries(ICONS).map(([k,v])=>`<symbol id="i-${k}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${v}</symbol>`).join('')}</svg>`);
@@ -1028,6 +1074,9 @@ const ib=(name,label)=>[ico(name),h('span',{class:'lbl-t'},label)];
 
 /* ============ Datos persistentes ============ */
 const KEY='fori-v1';
+// ?capa=1: Fori para Android abre esta página en una capa transparente para pintar encima de otras apps (38b-modo-capa.js).
+// En ese modo no se guarda nada: ni los ajustes (save no hace nada) ni la pizarra (no se abre IndexedDB).
+const CAPA=new URLSearchParams(location.search).get('capa')==='1';
 const DEF={
   students:Array.from({length:12},(_,i)=>`Alumno ${i+1}`),
   roles:['Encargado/a de la clase','Pizarra','Material','Biblioteca','Luces','Plantas'],
@@ -1043,6 +1092,7 @@ const DEF={
 let S;
 try{S={...structuredClone(DEF),...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{S=structuredClone(DEF)}
 const save=()=>{
+  if(CAPA)return;
   if(Array.isArray(S.classes)&&S.classes[S.cls]){const c=S.classes[S.cls];c.students=S.students;c.roles=S.roles;c.offset=S.offset}
   try{localStorage.setItem(KEY,JSON.stringify(S))}catch{toast('No se pudieron guardar los ajustes: el almacenamiento está lleno')}
 };
@@ -5133,10 +5183,10 @@ buildLeft();buildDock();renderClassChip(); // la barra derecha la monta layout()
 document.documentElement.dataset.theme=S.theme;
 new ResizeObserver(fit).observe(stage);
 fit();tickClock();setInterval(tickClock,1000);
-setView(S.view||'full');
+setView(CAPA?'full':(S.view||'full'));
 renderZoneBars();
 if(document.fonts&&document.fonts.load)document.fonts.load("600 48px Fredoka").then(()=>redraw()).catch(()=>{});
-loadBoard().then(chEntrada);
+if(!CAPA)loadBoard().then(chEntrada); // en la capa la pizarra es una hoja vacía en memoria: no se lee ni se guarda
 window.__foriOK=true; // arranque correcto
 window.__fori={BD,REG,get pages(){return pages},get cur(){return cur}}; // para las pruebas (tools/test.js)
 if(location.protocol.startsWith('http')&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
@@ -5178,6 +5228,107 @@ if(OVERLAY){
     document.addEventListener('keydown',e=>{if(e.key==='Escape')DESK.closeOverlay()});
   }
 }
+/* ============ Pintar encima de otras apps (Fori para Android) ============ */
+// La APK (android/, CapaService.kt) pone encima de cualquier app una ventana transparente con esta misma Fori en ?capa=1
+// y una burbuja flotante. En ese «modo capa» la pizarra es una hoja vacía en memoria: no se lee ni se guarda nada
+// (CAPA está en 02-datos-persistentes.js; save() no hace nada y loadBoard() no se llama, así que IndexedDB ni se abre).
+// La capa habla con la app por window.ForiAndroid.capa(orden): 'debajo' (tocar la app de debajo), 'ocultar', 'cerrar'.
+// La app le habla por window.__foriCapa(orden): 'pintar' (vuelve de «Tocar debajo»), 'debajo', 'borrar'.
+// En Fori normal, en Android, el botón «Pintar encima» (pulsación larga) abre la capa de la APK.
+const APK_URL='https://github.com/ilinper301-hue/fori/releases/latest/download/Fori.apk';
+const UA_ANDROID=/Android/i.test(navigator.userAgent),UA_APK=/ForiAndroid\//.test(navigator.userAgent);
+const capaApp=o=>{try{const a=window.ForiAndroid;if(a&&typeof a.capa==='function'){a.capa(o);return true}}catch{}return false};
+const capaInfo={intent:null}; // para las pruebas: última dirección intent:// usada
+
+if(CAPA){
+  const KEY_CAPA='fori-capa'; // último color, grosor y sitio de la barra (no es la pizarra ni los ajustes de Fori)
+  let mem={};try{mem=JSON.parse(localStorage.getItem(KEY_CAPA))||{}}catch{}
+  const memSave=()=>{try{localStorage.setItem(KEY_CAPA,JSON.stringify({color:T.color,size:T.size,tool:T.tool,arriba:bar.classList.contains('arriba')}))}catch{}};
+  const COLORES=[['#e03131','Rojo'],['#1e6fe0','Azul'],['#2f9e44','Verde'],['#f08c00','Naranja'],['#fcc419','Amarillo'],['#7048e8','Morado'],['#111111','Negro'],['#ffffff','Blanco']];
+  const GROSORES=[[3,'Fino',8],[6,'Medio',14],[12,'Grueso',22]];
+  document.documentElement.classList.add('ov','capa');document.body.classList.add('v-overlay','v-capa');
+  T.tool=['pen','marker','eraser'].includes(mem.tool)?mem.tool:'pen';
+  T.color=COLORES.some(c=>c[0]===mem.color)?mem.color:'#e03131'; // el color «tinta» (negro o blanco según el tema) no se vería según lo que haya debajo
+  T.size=GROSORES.some(g=>g[0]===mem.size)?mem.size:6;
+  const btn=(cls,label,kids,fn,extra={})=>h('button',{type:'button',class:cls,'aria-label':label,title:label,onclick:fn,...extra},kids);
+  const herr=(t,ic,label)=>btn('cb-t',label,ico(ic),()=>{commitEditor();T.tool=t;pinta();memSave()},{'data-ct':t});
+  let cerrarT=0;
+  const bar=h('div',{id:'capaBar',role:'toolbar','aria-label':'Pintar encima'},
+    btn('cb-grip','Mover la barra arriba o abajo',ico('grip'),()=>{bar.classList.toggle('arriba');memSave()}),
+    h('div',{class:'cb-g'},herr('pen','pen','Lápiz'),herr('marker','marker','Fluorescente'),herr('eraser','eraser','Borrador')),
+    h('div',{class:'cb-g cb-col'},COLORES.map(([c,n])=>btn('cb-c',n,h('i',{style:`background:${c}`}),()=>{T.color=c;if(T.tool==='eraser')T.tool='pen';pinta();memSave()},{'data-cc':c}))),
+    h('div',{class:'cb-g'},GROSORES.map(([s,n,d])=>btn('cb-s',n,h('i',{style:`width:${d}px;height:${d}px`}),()=>{T.size=s;if(T.tool==='eraser')T.tool='pen';pinta();memSave()},{'data-cs':s}))),
+    h('div',{class:'cb-g'},
+      btn('cb-a','Deshacer',ico('undo'),()=>undo(),{id:'capaUndo'}),
+      btn('cb-a','Borrar todo',ico('trash'),()=>{clearBoard()},{id:'capaClear'})),
+    h('div',{class:'cb-g'},
+      btn('cb-a cb-txt','Tocar la app de debajo sin perder lo pintado',[ico('hand'),h('span',{class:'cb-l'},'Tocar debajo')],()=>capaDebajo(true),{id:'capaUnder'}),
+      btn('cb-a','Ocultar lo pintado (la burbuja lo vuelve a mostrar)',ico('eye'),()=>{if(!capaApp('ocultar'))toast('Solo en Fori para Android')},{id:'capaHide'}),
+      btn('cb-a cb-x','Cerrar',ico('x'),()=>{
+        if(P().strokes.length&&Date.now()-cerrarT>3000){cerrarT=Date.now();toast('Toca otra vez ✕ para cerrar: se borra lo pintado');return}
+        if(!capaApp('cerrar'))toast('Solo en Fori para Android');
+      },{id:'capaClose'})));
+  if(mem.arriba)bar.classList.add('arriba');
+  function pinta(){
+    $$('[data-ct]',bar).forEach(b=>b.classList.toggle('on',b.dataset.ct===T.tool));
+    $$('[data-cc]',bar).forEach(b=>b.classList.toggle('on',T.tool!=='eraser'&&b.dataset.cc===T.color));
+    $$('[data-cs]',bar).forEach(b=>b.classList.toggle('on',T.tool!=='eraser'&&Number(b.dataset.cs)===T.size));
+    dr.style.cursor='crosshair';
+  }
+  // «Tocar debajo»: la app deja pasar los toques a la app de debajo; lo pintado se sigue viendo y la burbuja trae de vuelta la barra
+  function capaDebajo(on){
+    commitEditor();
+    document.body.classList.toggle('capa-debajo',on);
+    if(on&&!capaApp('debajo')){document.body.classList.remove('capa-debajo');toast('Solo en Fori para Android')}
+  }
+  window.__foriCapa=o=>{
+    if(o==='pintar')capaDebajo(false);
+    else if(o==='debajo')document.body.classList.add('capa-debajo');
+    else if(o==='borrar'){P().strokes.length=0;P().undo.length=0;P().redo.length=0;redraw();drawLive()}
+  };
+  document.body.append(bar);
+  refreshTools();pinta();
+}
+
+/* --- Botón «Pintar encima» (solo en Android: en la APK abre la capa; en Chrome, la APK si está instalada) --- */
+function capaAviso(viejo){
+  const d=h('dialog',{class:'capadlg','aria-label':'Pintar encima de otras apps'},
+    h('h2',{},ib('overlay','Pintar encima de otras apps')),
+    h('p',{},viejo?'Tu app Fori para Android es de una versión anterior. Descarga la nueva e instálala encima: no se pierde nada de lo guardado.'
+      :'Para pintar encima de otras apps hace falta la app Fori para Android. Descárgala, instálala y ábrela; luego mantén pulsado «Pintar encima» dentro de la app.'),
+    h('div',{class:'capadlg-b'},
+      h('a',{class:'btn',href:APK_URL,onclick:()=>setTimeout(()=>d.close(),300)},ib('download','Descargar Fori.apk')),
+      h('button',{type:'button',class:'btn ghost',onclick:()=>d.close()},'Ahora no')));
+  d.addEventListener('close',()=>d.remove());
+  document.body.append(d);d.showModal();
+}
+function pintarEncima(){
+  commitEditor();boardFlush();
+  if(UA_APK){
+    const a=window.ForiAndroid;
+    if(a&&typeof a.abrirCapa==='function'){try{a.abrirCapa()}catch{}}else capaAviso(true);
+    return;
+  }
+  // Chrome de Android: abre la APK; si no está instalada, Chrome vuelve a Fori con ?sinapk=1 (y se explica cómo conseguirla)
+  const back=location.origin+location.pathname+'?sinapk=1';
+  capaInfo.intent=`intent://capa#Intent;scheme=fori;package=es.fori.pizarra;S.browser_fallback_url=${encodeURIComponent(back)};end`;
+  location.href=capaInfo.intent;
+}
+if(UA_ANDROID&&!CAPA&&!DESK){
+  const b=h('button',{class:'mini',id:'btnCapa','aria-label':'Pintar encima',title:'Pintar encima de otras apps (mantén pulsado)'},ico('overlay'));
+  // se activa al soltar tras mantener pulsado: Chrome solo deja abrir otra app justo después de un toque
+  let t=null,listo=false;
+  b.addEventListener('pointerdown',()=>{listo=false;b.classList.add('holding');t=setTimeout(()=>{listo=true;b.classList.remove('holding');b.classList.add('ready')},500)});
+  const cancel=()=>{clearTimeout(t);b.classList.remove('holding','ready')};
+  b.addEventListener('pointerup',()=>{const ok=listo;cancel();listo=false;if(ok)pintarEncima();else toast('Mantén pulsado para pintar encima de otras apps')});
+  b.addEventListener('pointerleave',()=>{cancel();listo=false});b.addEventListener('pointercancel',()=>{cancel();listo=false});
+  const fs=$('#btnFs');if(fs)fs.before(b);
+}
+if(!CAPA&&new URLSearchParams(location.search).get('sinapk')==='1'){
+  history.replaceState(null,'',location.pathname);
+  capaAviso(false);
+}
+window.__fori.capa=capaInfo;
 })();
 </script>
 </body>

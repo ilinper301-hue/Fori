@@ -5,6 +5,11 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Medidor de ruido: se pide solo cuando se abre -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Pintar encima de otras apps (CapaService): ventana superpuesta, servicio en primer plano y su notificación -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- La cámara y el micrófono no son obligatorios: muchas PDI no tienen -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
@@ -31,7 +36,26 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- fori://capa: abre la capa para pintar encima (botón «Pintar encima» de Fori en Chrome y atajo del icono) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="fori" android:host="capa" />
+            </intent-filter>
+            <meta-data
+                android:name="android.app.shortcuts"
+                android:resource="@xml/atajos" />
         </activity>
+
+        <service
+            android:name=".CapaService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Capa transparente para pintar encima de otras apps en la pizarra digital del aula" />
+        </service>
 
         <provider
             android:name="androidx.core.content.FileProvider"

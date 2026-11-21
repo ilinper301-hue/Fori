@@ -79,6 +79,10 @@ class Archivos(private val act: MainActivity) {
         @JavascriptInterface
         fun aviso(t: String?) { if (!t.isNullOrBlank()) this@Archivos.aviso(t) }
 
+        /** Botón «Pintar encima» de Fori: abre la capa para pintar encima de otras apps (CapaService) */
+        @JavascriptInterface
+        fun abrirCapa() { act.runOnUiThread { act.abrirCapa() } }
+
         @JavascriptInterface
         fun version(): String = act.packageManager.getPackageInfo(act.packageName, 0).versionName ?: ""
     }
