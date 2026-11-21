@@ -102,6 +102,7 @@ class MainActivity : Activity() {
     } catch (e: Exception) { "1" }
 
     // ---------- Pantalla completa (sin barras del sistema; se ven un momento deslizando desde el borde) ----------
+    @Suppress("DEPRECATION") // setDecorFitsSystemWindows: en Android 15 ya es así por defecto
     private fun pantallaCompleta() {
         if (Build.VERSION.SDK_INT >= 30) {
             window.setDecorFitsSystemWindows(false)

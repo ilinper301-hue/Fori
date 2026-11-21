@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* Prueba rápida de Fori: arranca la app, dibuja, abre todas las herramientas y comprueba que no hay errores.
-   Uso: node tools/test.js (FORI_SOLO=fondos, FORI_SOLO=formas o FORI_SOLO=copia para correr solo esas pruebas)   (necesita Playwright; primero genera index.html con python3 tools/build.py) */
+   Uso: node tools/test.js (FORI_SOLO=fondos, FORI_SOLO=formas, FORI_SOLO=copia o FORI_SOLO=android para correr solo esas pruebas)   (necesita Playwright; primero genera index.html con python3 tools/build.py) */
 const http=require('http'),fs=require('fs'),path=require('path');
 const {chromium}=require('playwright');
 const ROOT=path.resolve(__dirname,'..');
@@ -973,12 +973,65 @@ async function copia(b,url){
   await ctx2.close();await ctx.close();
   ok(!errs.length&&!errs2.length,'sin errores en las pruebas de la copia completa'+(errs.length+errs2.length?': '+errs.concat(errs2).join(' | '):''));
 }
+/* Puente de Android (android/app/src/main/assets/fori-android.js, lo inyecta la APK): con un window.ForiAndroid
+   simulado, las descargas y el PDF llegan enteros a la app y no se descarga nada por el navegador */
+async function android(b,url){
+  console.log('\nPuente de Android');
+  const shim=fs.readFileSync(path.join(ROOT,'android/app/src/main/assets/fori-android.js'),'utf8');
+  const ctx=await b.newContext({viewport:{width:1280,height:800},acceptDownloads:true});
+  const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+  p.on('dialog',d=>d.accept());
+  let descargas=0;p.on('download',()=>descargas++);
+  await p.addInitScript(()=>{window.__env=[];const E={};let n=0;
+    window.ForiAndroid={inicio(nm,mime,dest){const id=++n;E[id]={nm,mime,dest,parts:[]};return id},trozo(id,x){E[id].parts.push(x)},
+      fin(id){const e=E[id];window.__env.push({nm:e.nm,mime:e.mime,dest:e.dest,parts:e.parts})},error(id){window.__env.push({err:id})},aviso(t){window.__env.push({aviso:t})}}});
+  await p.goto(url);await p.waitForTimeout(800);
+  await p.evaluate(shim);await p.evaluate(shim); // la app lo inyecta en cada carga: dos veces no hace nada distinto
+  const bytes=e=>Buffer.concat(e.parts.map(x=>Buffer.from(x,'base64')));
+  const llega=async(f,ms=4000)=>{for(let t=0;t<ms;t+=100){const l=await p.evaluate(()=>__env.length);if(l>=f)break;await p.waitForTimeout(100)}return p.evaluate(()=>__env)};
+  ok(await p.evaluate(()=>document.documentElement.classList.contains('fori-android')&&getComputedStyle(document.querySelector('#btnFs')).display==='none'),'en la APK se quita el botón de pantalla completa');
+  await p.mouse.move(500,300);await p.mouse.down();await p.mouse.move(800,380,{steps:6});await p.mouse.up();
+  // 1. Guardar página como imagen
+  await p.click('#pageLbl');await p.click('#pop >> text=Guardar página como imagen');
+  let env=await llega(1);
+  ok(env.length===1&&env[0].nm==='fori-pagina-1.png'&&env[0].dest==='descargar'&&bytes(env[0]).slice(1,4).toString()==='PNG','«Guardar página como imagen» llega a la app como PNG');
+  // 2. Archivo grande: va en trozos y llega igual
+  const big=await p.evaluate(()=>{const u=new Uint8Array(7*1024*1024+5);for(let i=0;i<u.length;i++)u[i]=(i*7+3)%251;__foriEnviar(new Blob([u]),'grande.bin','descargar');let h=0;for(const x of u)h=(h*31+x)|0;return h});
+  env=await llega(2);
+  const g=bytes(env[1]);let hg=0;for(const x of g)hg=(hg*31+x)|0;
+  ok(env[1].parts.length===3&&g.length===7*1024*1024+5&&hg===big,'un archivo de 7 MB va en 3 trozos y llega idéntico');
+  // 3. Copia completa
+  await p.evaluate(()=>document.querySelector('#sAllExport').click());
+  env=await llega(3);
+  let cp=null;try{cp=JSON.parse(bytes(env[2]).toString('utf8'))}catch{}
+  ok(/\.foricopia$/.test(env[2].nm)&&cp&&cp.type==='copia'&&cp.kv.some(e=>e[0]==='board2'),'«Copia completa» llega a la app entera');
+  // 4. Un enlace de descarga tocado de verdad
+  await p.evaluate(()=>{const a=document.createElement('a');a.id='dlx';a.download='prueba.fori';a.href=URL.createObjectURL(new Blob(['{"a":1}'],{type:'application/json'}));a.textContent='x';a.style='position:fixed;left:10px;top:10px;z-index:99999';document.body.append(a)});
+  await p.click('#dlx');env=await llega(4);
+  ok(env[3]&&env[3].nm==='prueba.fori'&&bytes(env[3]).toString()==='{"a":1}','tocar un enlace de descarga también llega a la app');
+  // 5. Guardar todas en PDF: la página que se imprimiría llega a la app
+  await p.evaluate(()=>document.querySelector('#dlx').remove());
+  await p.click('#pageLbl');await p.click('#pop >> text=Guardar todas en PDF');
+  env=await llega(5,8000);
+  const pdf=env[4]&&bytes(env[4]).toString('utf8');
+  ok(!!pdf&&env[4].dest==='imprimir'&&/@page/.test(pdf)&&(pdf.match(/<img src="data:image\/jpeg/g)||[]).length===1,'«Guardar todas en PDF» manda a la app la página para imprimir');
+  ok(descargas===0&&!env.some(e=>e.err||e.aviso),'nada se descarga por el navegador ni da error');
+  await ctx.close();
+  // en Chrome (sin la APK) no hay window.ForiAndroid: aunque se cargara, no cambia nada
+  const c2=await b.newContext({acceptDownloads:true});const q=await c2.newPage();await q.goto(url);await q.waitForTimeout(600);
+  await q.evaluate(shim);
+  const [dl]=await Promise.all([q.waitForEvent('download',{timeout:5000}).catch(()=>null),q.evaluate(()=>document.querySelector('#sExport').click())]);
+  ok(!!dl&&await q.evaluate(()=>!document.documentElement.classList.contains('fori-android')&&getComputedStyle(document.querySelector('#btnFs')).display!=='none'),'sin la APK el puente no hace nada y las descargas son las de siempre');
+  await c2.close();
+  ok(!errs.length,'sin errores en las pruebas del puente de Android'+(errs.length?': '+errs.join(' | '):''));
+}
 server.listen(0,async()=>{
   const url=`http://localhost:${server.address().port}/`;
   // FORI_CHROME=1 usa el Chrome instalado en el equipo en vez del navegador de Playwright
   const b=await chromium.launch(process.env.FORI_CHROME?{channel:'chrome',args:['--no-sandbox']}:{});
   try{
     if(process.env.FORI_SOLO==='fondos'){await fondos(b,url);await plantillas(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
+    if(process.env.FORI_SOLO==='android'){await android(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     if(process.env.FORI_SOLO==='copia'){await copia(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     if(process.env.FORI_SOLO==='formas'){await formas(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     const p=await b.newPage({viewport:{width:1920,height:1080}});
@@ -1020,6 +1073,7 @@ server.listen(0,async()=>{
     await pizarra(b,url);
     await guardado(b,url);
     await copia(b,url);
+    await android(b,url);
     await fondos(b,url);
     await plantillas(b,url);
     await formas(b,url);

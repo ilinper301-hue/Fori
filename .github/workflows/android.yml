@@ -1,6 +1,6 @@
 # Fori para Android: compila la APK (carpeta android/) y, con la clave de firma, la publica en Releases.
 # Secretos del repositorio: FORI_KEYSTORE (la clave en base64) y FORI_KEYSTORE_PASSWORD (su contraseña).
-# Sin ellos solo se compila una APK de prueba (no se publica).
+# Sin ellos se compila una APK de prueba con una clave de usar y tirar (no se publica ni se instala).
 # Se publica al subir cambios de android/ a main o a mano (Actions → «APK de Android» → Run workflow).
 # Enlace fijo a la última: https://github.com/ilinper301-hue/fori/releases/latest/download/Fori.apk
 name: APK de Android
@@ -41,27 +41,31 @@ jobs:
           FORI_KEYSTORE: ${{ secrets.FORI_KEYSTORE }}
           FORI_KEYSTORE_PASSWORD: ${{ secrets.FORI_KEYSTORE_PASSWORD }}
         run: |
+          K="$RUNNER_TEMP/fori.keystore"
           if [ -n "$FORI_KEYSTORE" ] && [ -n "$FORI_KEYSTORE_PASSWORD" ]; then
-            printf '%s' "$FORI_KEYSTORE" | tr -d ' \r\n\t' | base64 -d > "$RUNNER_TEMP/fori.keystore"
-            echo "FORI_KEYSTORE_FILE=$RUNNER_TEMP/fori.keystore" >> "$GITHUB_ENV"
+            printf '%s' "$FORI_KEYSTORE" | tr -d ' \r\n\t' | base64 -d > "$K"
+            P="$FORI_KEYSTORE_PASSWORD"
             echo "firmada=1" >> "$GITHUB_OUTPUT"
           else
-            echo "::warning::Faltan los secretos FORI_KEYSTORE y FORI_KEYSTORE_PASSWORD: se compila una APK de prueba y no se publica."
+            # Sin los secretos: clave de usar y tirar, solo para comprobar que la APK se compila y se firma.
+            # Esa APK NO se publica ni se debe instalar (la siguiente, con la clave buena, no podría ponerse encima).
+            echo "::warning::Faltan los secretos FORI_KEYSTORE y FORI_KEYSTORE_PASSWORD: APK de prueba, no se publica."
+            P="$(openssl rand -hex 16)"
+            keytool -genkeypair -keystore "$K" -storetype PKCS12 -alias fori -keyalg RSA -keysize 2048 -validity 1 \
+              -storepass "$P" -keypass "$P" -dname "CN=Prueba" > /dev/null
           fi
+          echo "::add-mask::$P"
+          echo "FORI_KEYSTORE_FILE=$K" >> "$GITHUB_ENV"
+          echo "FORI_KEYSTORE_PASSWORD=$P" >> "$GITHUB_ENV"
+          keytool -list -keystore "$K" -storepass "$P" -alias fori > /dev/null && echo "Clave de firma lista"
 
       - name: Compilar
         working-directory: android
         env:
-          FORI_KEYSTORE_PASSWORD: ${{ secrets.FORI_KEYSTORE_PASSWORD }}
           FORI_VERSION_CODE: ${{ github.run_number }}
         run: |
-          if [ "${{ steps.clave.outputs.firmada }}" = "1" ]; then
-            gradle --no-daemon --stacktrace assembleRelease
-            cp app/build/outputs/apk/release/app-release.apk ../Fori.apk
-          else
-            gradle --no-daemon --stacktrace assembleDebug
-            cp app/build/outputs/apk/debug/app-debug.apk ../Fori.apk
-          fi
+          gradle --no-daemon --stacktrace assembleRelease
+          cp app/build/outputs/apk/release/app-release.apk ../Fori.apk
 
       - name: Comprobar la APK
         run: |
@@ -72,7 +76,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Fori-apk-${{ github.run_number }}
+          name: ${{ steps.clave.outputs.firmada == '1' && 'Fori-apk' || 'Fori-apk-PRUEBA-no-instalar' }}-${{ github.run_number }}
           path: Fori.apk
           retention-days: 14
 
