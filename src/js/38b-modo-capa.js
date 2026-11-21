@@ -17,7 +17,7 @@ if(CAPA){
   const COLORES=[['#e03131','Rojo'],['#1e6fe0','Azul'],['#2f9e44','Verde'],['#f08c00','Naranja'],['#fcc419','Amarillo'],['#7048e8','Morado'],['#111111','Negro'],['#ffffff','Blanco']];
   const GROSORES=[[3,'Fino',8],[6,'Medio',14],[12,'Grueso',22]];
   document.documentElement.classList.add('ov','capa');document.body.classList.add('v-overlay','v-capa');
-  T.tool=['pen','marker','eraser'].includes(mem.tool)?mem.tool:'pen';
+  T.tool=mem.tool==='marker'?'marker':'pen'; // el borrador no se recuerda: al abrir, a pintar
   T.color=COLORES.some(c=>c[0]===mem.color)?mem.color:'#e03131'; // el color «tinta» (negro o blanco según el tema) no se vería según lo que haya debajo
   T.size=GROSORES.some(g=>g[0]===mem.size)?mem.size:6;
   const btn=(cls,label,kids,fn,extra={})=>h('button',{type:'button',class:cls,'aria-label':label,title:label,onclick:fn,...extra},kids);

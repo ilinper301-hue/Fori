@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* Prueba rápida de Fori: arranca la app, dibuja, abre todas las herramientas y comprueba que no hay errores.
-   Uso: node tools/test.js (FORI_SOLO=fondos, FORI_SOLO=formas, FORI_SOLO=copia o FORI_SOLO=android para correr solo esas pruebas)   (necesita Playwright; primero genera index.html con python3 tools/build.py) */
+   Uso: node tools/test.js (FORI_SOLO=fondos, FORI_SOLO=formas, FORI_SOLO=copia, FORI_SOLO=android o FORI_SOLO=capa para correr solo esas pruebas)   (necesita Playwright; primero genera index.html con python3 tools/build.py) */
 const http=require('http'),fs=require('fs'),path=require('path');
 const {chromium}=require('playwright');
 const ROOT=path.resolve(__dirname,'..');
@@ -1025,12 +1025,109 @@ async function android(b,url){
   await c2.close();
   ok(!errs.length,'sin errores en las pruebas del puente de Android'+(errs.length?': '+errs.join(' | '):''));
 }
+/* Pintar encima (38b-modo-capa.js): ?capa=1 es una hoja transparente que no lee ni guarda nada, con su barra y sus órdenes
+   para la APK; el botón «Pintar encima» solo sale en Android */
+async function capa(b,url){
+  console.log('\nPintar encima (modo capa)');
+  const drag=async(pg,x0,y0,x1,y1)=>{await pg.mouse.move(x0,y0);await pg.mouse.down();await pg.mouse.move(x1,y1,{steps:6});await pg.mouse.up()};
+  const keys=pg=>pg.evaluate(()=>new Promise(r=>{const q=indexedDB.open('fori',1);q.onsuccess=()=>{try{const st=q.result.transaction('kv').objectStore('kv'),a=st.getAllKeys();a.onsuccess=()=>r(a.result.map(String).sort())}catch{r([])}}}));
+  const ctx=await b.newContext({viewport:{width:1920,height:1080}});
+  const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+  // 1. Fori normal con algo pintado y ajustes propios
+  await p.goto(url);await p.waitForTimeout(800);
+  await drag(p,500,300,800,380);await p.waitForTimeout(900);
+  await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('fori-v1')||'{}');s.students=['Lucía','Mario'];s.view='clean';localStorage.setItem('fori-v1',JSON.stringify(s))});
+  const k0=await keys(p),ls0=await p.evaluate(()=>localStorage.getItem('fori-v1'));
+  ok(k0.includes('board2')&&k0.length>=2,'(preparación) la pizarra normal está guardada');
+  // 2. La capa, con un ForiAndroid simulado que apunta las órdenes
+  await p.addInitScript(()=>{window.__ord=[];window.ForiAndroid={capa(o){window.__ord.push(o)},aviso(){},version(){return 'prueba'}}});
+  await p.goto(url+'?capa=1');await p.waitForTimeout(800);
+  ok(await p.evaluate(()=>window.__foriOK===true&&document.documentElement.classList.contains('capa')),'?capa=1 arranca en modo capa');
+  ok(await p.evaluate(()=>__fori.pages.length===1&&__fori.pages[0].strokes.length===0),'la capa empieza vacía (no carga la pizarra guardada)');
+  ok(await p.evaluate(()=>['#top','#left','#right','#dock','#bg'].every(s=>getComputedStyle(document.querySelector(s)).display==='none')&&getComputedStyle(document.querySelector('#capaBar')).display!=='none'),'solo se ve la barra de la capa');
+  ok(await p.evaluate(()=>!document.querySelector('#toast')||getComputedStyle(document.querySelector('#toast')).display==='none'),'no sale ningún aviso al abrir (aunque Fori estuviera en modo limpio)');
+  await drag(p,300,200,600,300);await drag(p,300,500,700,520);
+  ok(await p.evaluate(()=>__fori.pages[0].strokes.length===2&&__fori.pages[0].strokes[0].color==='#e03131'),'se pinta en la capa (rojo por defecto)');
+  const shot=await p.screenshot({omitBackground:true,clip:{x:1000,y:100,width:20,height:20}});
+  ok(await p.evaluate(b64=>new Promise(r=>{const i=new Image();i.onload=()=>{const c=document.createElement('canvas');c.width=c.height=20;const x=c.getContext('2d');x.drawImage(i,0,0);r(x.getImageData(10,10,1,1).data[3]===0)};i.src='data:image/png;base64,'+b64}),shot.toString('base64')),'el fondo de la capa es transparente');
+  // barra: color, grosor, fluorescente, borrador, deshacer, borrar todo
+  await p.click('#capaBar [data-cc="#1e6fe0"]');await p.click('#capaBar [data-cs="12"]');await drag(p,300,700,600,720);
+  ok(await p.evaluate(()=>{const s=__fori.pages[0].strokes.at(-1);return s.color==='#1e6fe0'&&s.size===12}),'la barra cambia color y grosor');
+  await p.click('#capaBar [data-ct=marker]');await drag(p,800,700,1000,720);
+  ok(await p.evaluate(()=>__fori.pages[0].strokes.at(-1).tool==='marker'),'fluorescente');
+  await p.click('#capaBar [data-ct=eraser]');await drag(p,450,150,450,350);
+  ok(await p.evaluate(()=>!__fori.pages[0].strokes.some(s=>s.points&&s.points.some(q=>Math.abs(q.x-450)<5&&Math.abs(q.y-250)<5))),'el borrador corta lo pintado');
+  ok(await p.evaluate(()=>document.querySelector('#capaBar [data-ct=eraser]').classList.contains('on')&&!document.querySelector('#capaBar .cb-c.on')),'con el borrador no se marca ningún color');
+  const n=await p.evaluate(()=>__fori.pages[0].strokes.length);
+  await p.click('#capaClear');
+  ok(await p.evaluate(()=>__fori.pages[0].strokes.length===0),'«Borrar todo» limpia la capa');
+  await p.click('#capaUndo');
+  ok(await p.evaluate(n=>__fori.pages[0].strokes.length===n,n),'«Deshacer» lo devuelve');
+  // órdenes para la app
+  await p.click('#capaUnder');
+  ok(await p.evaluate(()=>__ord.at(-1)==='debajo'&&getComputedStyle(document.querySelector('#capaBar')).display==='none'),'«Tocar debajo» avisa a la app y esconde la barra (lo pintado se queda)');
+  await p.evaluate(()=>__foriCapa('pintar'));
+  ok(await p.evaluate(()=>getComputedStyle(document.querySelector('#capaBar')).display!=='none'),'la burbuja trae de vuelta la barra');
+  await p.click('#capaHide');ok(await p.evaluate(()=>__ord.at(-1)==='ocultar'),'«Ocultar» avisa a la app');
+  await p.click('#capaClose');
+  ok(await p.evaluate(()=>__ord.at(-1)!=='cerrar'&&/otra vez/.test(document.querySelector('#toast').textContent)),'con algo pintado, cerrar pide un segundo toque');
+  await p.click('#capaClose');ok(await p.evaluate(()=>__ord.at(-1)==='cerrar'),'el segundo toque cierra');
+  await p.click('#capaUnder');await p.evaluate(()=>__foriCapa('pintar'));
+  // el sitio de la barra se recuerda (en su propia clave, no en los ajustes de Fori)
+  await p.click('#capaBar .cb-grip');
+  ok(await p.evaluate(()=>{const r=document.querySelector('#capaBar').getBoundingClientRect();return r.top<40}),'la barra se puede poner arriba');
+  await p.waitForTimeout(1200);
+  // 3. Nada de lo guardado ha cambiado
+  ok(JSON.stringify(await keys(p))===JSON.stringify(k0),'la capa no escribe nada en IndexedDB');
+  ok(await p.evaluate(()=>localStorage.getItem('fori-v1'))===ls0,'la capa no cambia los ajustes de Fori');
+  await p.reload();await p.waitForTimeout(700);
+  ok(await p.evaluate(()=>__fori.pages[0].strokes.length===0&&document.querySelector('#capaBar').getBoundingClientRect().top<40&&!!document.querySelector('#capaBar [data-ct=pen].on')),'al volver a abrirla empieza vacía, con la barra donde se dejó y con el lápiz (no con el borrador)');
+  // barra dentro de la pantalla en varios tamaños
+  for(const [w,hh] of [[1920,1080],[1280,720],[390,844],[844,390]]){
+    await p.setViewportSize({width:w,height:hh});await p.waitForTimeout(150);
+    ok(await p.evaluate(()=>[...document.querySelectorAll('#capaBar button')].every(e=>{const r=e.getBoundingClientRect();return r.width>=30&&r.left>=0&&r.top>=0&&r.right<=innerWidth+.5&&r.bottom<=innerHeight+.5})),`la barra de la capa cabe entera a ${w}×${hh}`);
+  }
+  // 4. Fori normal sigue con lo suyo
+  await ctx.clearCookies();
+  const q=await ctx.newPage();await q.goto(url);await q.waitForTimeout(900);
+  ok(await q.evaluate(()=>__fori.pages.length===1&&__fori.pages[0].strokes.length===1&&!document.querySelector('#capaBar')),'después, Fori normal abre su pizarra como estaba');
+  ok(await q.evaluate(()=>!document.querySelector('#btnCapa')),'sin Android no aparece «Pintar encima»');
+  await ctx.close();
+  // 5. Botón «Pintar encima» en Android
+  const UA='Mozilla/5.0 (Linux; Android 13; PDI) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36';
+  const c2=await b.newContext({viewport:{width:1280,height:800},userAgent:UA+' ForiAndroid/1.0.9'});
+  const a=await c2.newPage();a.on('pageerror',e=>errs.push(e.message));
+  await a.addInitScript(()=>{window.__abre=0;window.ForiAndroid={abrirCapa(){window.__abre++},aviso(){},version(){return '1'}}});
+  await a.goto(url);await a.waitForTimeout(700);
+  ok(await a.isVisible('#btnCapa'),'en la APK aparece «Pintar encima»');
+  await a.click('#btnCapa');await a.waitForTimeout(100);
+  ok(await a.evaluate(()=>__abre===0&&/Mantén pulsado/.test(document.querySelector('#toast').textContent)),'un toque corto no abre la capa (pide mantener pulsado)');
+  await a.hover('#btnCapa');await a.mouse.down();await a.waitForTimeout(700);await a.mouse.up();await a.waitForTimeout(100);
+  ok(await a.evaluate(()=>__abre===1),'mantener pulsado abre la capa de la APK');
+  await a.evaluate(()=>{delete window.ForiAndroid.abrirCapa});
+  await a.hover('#btnCapa');await a.mouse.down();await a.waitForTimeout(700);await a.mouse.up();await a.waitForTimeout(100);
+  ok(await a.evaluate(()=>!!document.querySelector('dialog.capadlg[open]')&&/versión anterior/.test(document.querySelector('dialog.capadlg').textContent)),'con una APK antigua explica que hay que actualizarla');
+  await c2.close();
+  const c3=await b.newContext({viewport:{width:390,height:844},userAgent:UA+' Mobile'});
+  const m=await c3.newPage();m.on('pageerror',e=>errs.push(e.message));
+  await m.goto(url);await m.waitForTimeout(700);
+  ok(await m.isVisible('#btnCapa'),'en Chrome de Android también aparece');
+  ok(await m.evaluate(()=>{const t=document.querySelector('#top').getBoundingClientRect();return [...document.querySelectorAll('#top button')].filter(e=>e.getBoundingClientRect().width).every(e=>{const r=e.getBoundingClientRect();return r.left>=t.left-1&&r.right<=Math.min(innerWidth,t.right)+1})}),'la barra de arriba sigue cabiendo en un móvil Android en vertical');
+  await m.hover('#btnCapa');await m.mouse.down();await m.waitForTimeout(700);await m.mouse.up();await m.waitForTimeout(200);
+  const it=await m.evaluate(()=>__fori.capa.intent);
+  ok(!!it&&it.startsWith('intent://capa#Intent;scheme=fori;package=es.fori.pizarra;')&&decodeURIComponent(it).includes('?sinapk=1'),'en Chrome abre la APK con fori://capa (y si no está, vuelve con ?sinapk=1)');
+  await m.goto(url+'?sinapk=1');await m.waitForTimeout(700);
+  ok(await m.evaluate(()=>!!document.querySelector('dialog.capadlg[open] a[href$="Fori.apk"]')&&location.search===''),'sin la APK explica cómo descargarla');
+  await c3.close();
+  ok(!errs.length,'sin errores en las pruebas de la capa'+(errs.length?': '+errs.join(' | '):''));
+}
 server.listen(0,async()=>{
   const url=`http://localhost:${server.address().port}/`;
   // FORI_CHROME=1 usa el Chrome instalado en el equipo en vez del navegador de Playwright
   const b=await chromium.launch(process.env.FORI_CHROME?{channel:'chrome',args:['--no-sandbox']}:{});
   try{
     if(process.env.FORI_SOLO==='fondos'){await fondos(b,url);await plantillas(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
+    if(process.env.FORI_SOLO==='capa'){await capa(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     if(process.env.FORI_SOLO==='android'){await android(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     if(process.env.FORI_SOLO==='copia'){await copia(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     if(process.env.FORI_SOLO==='formas'){await formas(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
@@ -1074,6 +1171,7 @@ server.listen(0,async()=>{
     await guardado(b,url);
     await copia(b,url);
     await android(b,url);
+    await capa(b,url);
     await fondos(b,url);
     await plantillas(b,url);
     await formas(b,url);
