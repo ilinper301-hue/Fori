@@ -39,7 +39,8 @@ import java.io.File
 class MainActivity : Activity() {
 
     companion object {
-        const val FORI_URL = "https://ilinper301-hue.github.io/fori/"
+        // Con «F» mayúscula: GitHub Pages distingue mayúsculas y /fori/ da 404
+        const val FORI_URL = "https://ilinper301-hue.github.io/Fori/"
         private const val HOST = "ilinper301-hue.github.io"
         private const val REQ_ARCHIVO = 1
         private const val REQ_GUARDAR = 2

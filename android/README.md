@@ -1,6 +1,6 @@
 # Fori para Android
 
-App de Android (Kotlin) que abre **la Fori publicada** (`https://ilinper301-hue.github.io/fori/`) a pantalla completa en un WebView. No lleva una copia de Fori: cada mejora que se publica en `main` llega sola a la APK. Sin conexión responde el service worker de Fori (hace falta internet solo la primera vez).
+App de Android (Kotlin) que abre **la Fori publicada** (`https://ilinper301-hue.github.io/Fori/`) a pantalla completa en un WebView. No lleva una copia de Fori: cada mejora que se publica en `main` llega sola a la APK. Sin conexión responde el service worker de Fori (hace falta internet solo la primera vez).
 
 **Descargar la última APK:** https://github.com/ilinper301-hue/fori/releases/latest/download/Fori.apk
 

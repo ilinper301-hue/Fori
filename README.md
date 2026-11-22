@@ -2,7 +2,7 @@
 
 Pizarra digital y panel de asamblea para la **Pantalla Digital Interactiva (PDI)** de un aula de primaria. Pensada para usarse a pantalla completa con el dedo o el lápiz: botones grandes, letra legible a distancia y controles delicados protegidos con pulsación larga. Funciona sin servidor, se puede instalar como app y funciona sin conexión.
 
-**Abrir la app:** https://ilinper301-hue.github.io/fori/
+**Abrir la app:** https://ilinper301-hue.github.io/Fori/
 
 ## Qué incluye
 - **Pizarra:** lápiz, fluorescente, borrador, formas (con o sin relleno), texto y herramienta para mover, duplicar o borrar lo dibujado. Paleta de 24 colores más color personalizado. Deshacer y rehacer. El borrador quita de verdad lo que toca: corta los trazos y las formas sin relleno por donde pasa y borra enteros los textos y las formas con relleno (las imágenes se borran con Mover).
