@@ -11,7 +11,8 @@ dialog.capadlg p{font-size:18px;line-height:1.45;margin:14px 0 20px}
 html.capa,html.capa body{background:transparent!important}
 html.capa body::before,html.capa #top,html.capa #left,html.capa #right,html.capa #dock,html.capa #bg,html.capa #bgimg,
 html.capa .zones,html.capa #cornerBtn,html.capa #mini{display:none!important}
-html.capa #app{grid-template-columns:0 1fr 0!important;grid-template-rows:0 1fr 0!important}
+/* una sola celda para la pizarra, sea cual sea la distribución (en el móvil en vertical, data-lay=p usa áreas con nombre) */
+html.capa #app{grid-template-columns:minmax(0,1fr)!important;grid-template-rows:minmax(0,1fr)!important;grid-template-areas:"stage"!important}
 html.capa #stage{background:transparent!important;box-shadow:none!important;border-radius:0!important;border:0!important}
 
 /* Barra de la capa: grande, para el dedo; abajo en el centro (o arriba) */

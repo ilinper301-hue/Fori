@@ -1087,6 +1087,15 @@ async function capa(b,url){
     await p.setViewportSize({width:w,height:hh});await p.waitForTimeout(150);
     ok(await p.evaluate(()=>[...document.querySelectorAll('#capaBar button')].every(e=>{const r=e.getBoundingClientRect();return r.width>=30&&r.left>=0&&r.top>=0&&r.right<=innerWidth+.5&&r.bottom<=innerHeight+.5})),`la barra de la capa cabe entera a ${w}×${hh}`);
   }
+  // con el dedo en un móvil, en vertical y en horizontal (en vertical, data-lay=p dejaba la pizarra con 0 de ancho)
+  for(const [w,hh] of [[390,844],[844,390]]){
+    const cm=await b.newContext({viewport:{width:w,height:hh},hasTouch:true,isMobile:true,userAgent:'Mozilla/5.0 (Linux; Android 14; Pixel) AppleWebKit/537.36 Chrome/130 Mobile Safari/537.36 ForiAndroid/1.0.9 ForiCapa'});
+    const pm=await cm.newPage();pm.on('pageerror',e=>errs.push(e.message));await pm.goto(url+'?capa=1');await pm.waitForTimeout(700);
+    const cdp=await cm.newCDPSession(pm),tp=(type,x,y)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:type==='touchEnd'?[]:[{x,y,radiusX:5,radiusY:5}]});
+    await tp('touchStart',100,120);for(let i=1;i<=8;i++){await tp('touchMove',100+i*20,120+i*15);await pm.waitForTimeout(16)}await tp('touchEnd');await pm.waitForTimeout(150);
+    ok(await pm.evaluate(()=>{const r=document.querySelector('#stage').getBoundingClientRect();return __fori.pages[0].strokes.length===1&&r.width===innerWidth&&r.height===innerHeight}),`en un móvil a ${w}×${hh} la capa ocupa toda la pantalla y pinta con el dedo`);
+    await cm.close();
+  }
   // 4. Fori normal sigue con lo suyo
   await ctx.clearCookies();
   const q=await ctx.newPage();await q.goto(url);await q.waitForTimeout(900);
