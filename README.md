@@ -38,7 +38,7 @@ Pizarra digital y panel de asamblea para la **Pantalla Digital Interactiva (PDI)
 GitHub Pages sirve la rama `main` desde la raíz (*Settings → Pages*). Para instalarla en la PDI, ábrela en Chrome o Edge y pulsa **Instalar aplicación** en la barra de direcciones.
 
 ## App de Android
-Para la PDI con Android: **https://github.com/ilinper301-hue/fori/releases/latest/download/Fori.apk** (se instala a mano, sin Google Play). Abre esta misma Fori a pantalla completa y se actualiza sola con cada cambio publicado. Detalles en `android/README.md`.
+Para la PDI con Android: **https://github.com/ilinper301-hue/fori/releases/latest/download/Fori.apk** (se instala a mano, sin Google Play). Abre esta misma Fori a pantalla completa y se actualiza sola con cada cambio publicado. Además permite **pintar encima de otras apps** (vídeos, PDF, libros digitales): botón «Pintar encima» (mantener pulsado), que solo aparece en Android. Detalles en `android/README.md`.
 
 ## Créditos
 - Pictogramas: Sergio Palao. Origen: ARASAAC (https://arasaac.org). Licencia: CC BY-NC-SA. Propiedad: Gobierno de Aragón (España).

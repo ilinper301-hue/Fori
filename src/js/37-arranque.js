@@ -29,10 +29,10 @@ buildLeft();buildDock();renderClassChip(); // la barra derecha la monta layout()
 document.documentElement.dataset.theme=S.theme;
 new ResizeObserver(fit).observe(stage);
 fit();tickClock();setInterval(tickClock,1000);
-setView(S.view||'full');
+setView(CAPA?'full':(S.view||'full'));
 renderZoneBars();
 if(document.fonts&&document.fonts.load)document.fonts.load("600 48px Fredoka").then(()=>redraw()).catch(()=>{});
-loadBoard().then(chEntrada);
+if(!CAPA)loadBoard().then(chEntrada); // en la capa la pizarra es una hoja vacía en memoria: no se lee ni se guarda
 window.__foriOK=true; // arranque correcto
 window.__fori={BD,REG,get pages(){return pages},get cur(){return cur}}; // para las pruebas (tools/test.js)
 if(location.protocol.startsWith('http')&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});

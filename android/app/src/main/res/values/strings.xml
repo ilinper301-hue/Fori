@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Fori</string>
+    <string name="capa_corto">Pintar encima</string>
+    <string name="capa_largo">Pintar encima de otras apps</string>
 </resources>

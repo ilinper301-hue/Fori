@@ -1,5 +1,8 @@
 /* ============ Datos persistentes ============ */
 const KEY='fori-v1';
+// ?capa=1: Fori para Android abre esta página en una capa transparente para pintar encima de otras apps (38b-modo-capa.js).
+// En ese modo no se guarda nada: ni los ajustes (save no hace nada) ni la pizarra (no se abre IndexedDB).
+const CAPA=new URLSearchParams(location.search).get('capa')==='1';
 const DEF={
   students:Array.from({length:12},(_,i)=>`Alumno ${i+1}`),
   roles:['Encargado/a de la clase','Pizarra','Material','Biblioteca','Luces','Plantas'],
@@ -15,6 +18,7 @@ const DEF={
 let S;
 try{S={...structuredClone(DEF),...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch{S=structuredClone(DEF)}
 const save=()=>{
+  if(CAPA)return;
   if(Array.isArray(S.classes)&&S.classes[S.cls]){const c=S.classes[S.cls];c.students=S.students;c.roles=S.roles;c.offset=S.offset}
   try{localStorage.setItem(KEY,JSON.stringify(S))}catch{toast('No se pudieron guardar los ajustes: el almacenamiento está lleno')}
 };

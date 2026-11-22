@@ -84,6 +84,7 @@ const ICONS={
   apps:'<rect x="4" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6"/>',
   star:'<path fill="currentColor" d="M12 3.6l2.5 5.3 5.8.8-4.2 4 1 5.8-5.1-2.8-5.1 2.800 1-5.800-4.200-4 5.800-.800z"/>',
   lock:'<rect x="5" y="10.5" width="14" height="10" rx="2.500"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.500"/><path d="M12 14.500v2.500"/>',
+  hand:'<path d="M9 12.5V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 10.5V9a1.5 1.5 0 0 1 3 0v2"/><path d="M15 10.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.8a5 5 0 0 1-4-2l-2.6-3.600a1.500 1.500 0 0 1 2.300-1.900L9 15.500"/>',
   backspace:'<path d="M9 5.500h10a1.500 1.500 0 0 1 1.500 1.500v10a1.500 1.500 0 0 1-1.500 1.500H9L3 12z"/><path d="M12.500 9.500l5 5M17.500 9.500l-5 5"/>',
 };
 document.body.insertAdjacentHTML('afterbegin',`<svg width="0" height="0" style="position:absolute" aria-hidden="true">${Object.entries(ICONS).map(([k,v])=>`<symbol id="i-${k}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${v}</symbol>`).join('')}</svg>`);

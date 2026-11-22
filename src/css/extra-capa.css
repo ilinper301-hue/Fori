@@ -1,0 +1,45 @@
+/* ---- Pintar encima de otras apps (38b-modo-capa.js) ---- */
+.mini.ready{box-shadow:0 0 0 3px var(--accent)}
+dialog.capadlg{width:min(520px,92vw)}
+dialog.capadlg h2{display:flex;align-items:center;gap:10px}
+dialog.capadlg h2 .ico svg{width:28px;height:28px}
+dialog.capadlg p{font-size:18px;line-height:1.45;margin:14px 0 20px}
+.capadlg-b{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end}
+.capadlg-b .btn{display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+
+/* La capa es transparente: solo se ven lo pintado y su barra (como el modo transparente de 38-modo-transparente.js) */
+html.capa,html.capa body{background:transparent!important}
+html.capa body::before,html.capa #top,html.capa #left,html.capa #right,html.capa #dock,html.capa #bg,html.capa #bgimg,
+html.capa .zones,html.capa #cornerBtn,html.capa #mini{display:none!important}
+html.capa #app{grid-template-columns:0 1fr 0!important;grid-template-rows:0 1fr 0!important}
+html.capa #stage{background:transparent!important;box-shadow:none!important;border-radius:0!important;border:0!important}
+
+/* Barra de la capa: grande, para el dedo; abajo en el centro (o arriba) */
+#capaBar{position:fixed;left:8px;right:8px;bottom:12px;margin:0 auto;width:fit-content;z-index:1500;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;
+  gap:6px;padding:6px;border-radius:22px;background:rgba(19,33,74,.94);box-shadow:0 10px 30px rgba(0,0,0,.35);
+  touch-action:none;user-select:none;-webkit-user-select:none}
+#capaBar.arriba{bottom:auto;top:12px}
+body.capa-debajo #capaBar{display:none}
+#capaBar .cb-g{display:flex;gap:4px;align-items:center;padding:0 4px;border-left:1px solid rgba(255,255,255,.16)}
+#capaBar .cb-col{flex-wrap:wrap;justify-content:center}
+#capaBar button{width:56px;height:56px;border:0;border-radius:16px;background:transparent;color:#fff;display:grid;place-items:center;padding:0;cursor:pointer}
+#capaBar button .ico{width:30px;height:30px}
+#capaBar button .ico svg{display:block;width:30px;height:30px}
+#capaBar button:active{background:rgba(255,255,255,.18)}
+#capaBar button.on{background:#fff;color:#13214A}
+#capaBar .cb-grip{width:36px;opacity:.75}
+#capaBar .cb-c{width:46px}
+#capaBar .cb-c i{width:32px;height:32px;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.55)}
+#capaBar .cb-c.on{background:rgba(255,255,255,.22)}
+#capaBar .cb-c.on i{box-shadow:0 0 0 3px #fff,0 0 0 6px rgba(255,255,255,.35)}
+#capaBar .cb-s i{display:block;border-radius:50%;background:currentColor}
+#capaBar .cb-txt{width:auto;padding:0 14px;display:flex;align-items:center;gap:8px;font:600 17px/1 'Fredoka',system-ui,sans-serif}
+#capaBar .cb-x{background:rgba(224,49,49,.9)}
+/* En la capa, el aviso (p. ej. «Página limpiada · Deshacer») va encima de la barra */
+html.capa #toast{bottom:96px}
+html.capa body:has(#capaBar.arriba) #toast{bottom:24px}
+@media (max-width:700px){
+  #capaBar button{width:48px;height:48px;border-radius:14px}
+  #capaBar .cb-c{width:38px}#capaBar .cb-c i{width:26px;height:26px}
+  #capaBar .cb-l{display:none}#capaBar .cb-txt{width:48px;padding:0}
+}

@@ -3,6 +3,7 @@ package es.fori.pizarra
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.Intent
@@ -13,6 +14,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.provider.Settings
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowInsetsController
@@ -42,6 +44,8 @@ class MainActivity : Activity() {
         private const val REQ_ARCHIVO = 1
         private const val REQ_GUARDAR = 2
         private const val REQ_MICRO = 3
+        private const val REQ_NOTI = 4
+        private const val PREFS = "fori-app"
 
         /** ¿Es una dirección de Fori? (lo demás, como Lectori o Barri, se abre en el navegador) */
         fun esFori(u: Uri?): Boolean =
@@ -56,6 +60,7 @@ class MainActivity : Activity() {
     private var fotoUri: Uri? = null
     private var permisoPendiente: PermissionRequest? = null
     private var shim: String? = null
+    private var capaPendiente = false // se ha ido a pedir el permiso de superponer y al volver se abre la capa
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,6 +100,66 @@ class MainActivity : Activity() {
 
         if (savedInstanceState == null || web.restoreState(savedInstanceState) == null) web.loadUrl(FORI_URL)
         pantallaCompleta()
+        if (savedInstanceState == null && esCapa(intent)) web.post { abrirCapa() }
+    }
+
+    // ---------- Pintar encima de otras apps (CapaService) ----------
+    /** fori://capa: lo abre el botón «Pintar encima» de Fori en Chrome y el atajo del icono */
+    private fun esCapa(i: Intent?): Boolean {
+        val d = i?.data ?: return false
+        if (d.scheme != "fori" || d.host != "capa") return false
+        setIntent(Intent(Intent.ACTION_MAIN)) // para no volver a abrirla si Android recrea la pantalla
+        return true
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        if (esCapa(intent)) abrirCapa()
+    }
+
+    /** Pide lo que haga falta (permiso de superponer y, una vez, el de notificaciones), abre la capa y se va al fondo */
+    fun abrirCapa() {
+        if (!CapaService.puede(this)) {
+            AlertDialog.Builder(this)
+                .setTitle("Pintar encima de otras apps")
+                .setMessage("Para poner una capa transparente encima de otras apps, Android pide un permiso: " +
+                    "«Mostrar sobre otras apps» (o «Superponer a otras apps»).\n\n" +
+                    "En la pantalla siguiente activa Fori y vuelve con Atrás.")
+                .setPositiveButton("Ir al permiso") { _, _ -> pedirSuperponer() }
+                .setNegativeButton("Ahora no", null)
+                .show()
+            return
+        }
+        val prefs = getSharedPreferences(PREFS, MODE_PRIVATE)
+        if (Build.VERSION.SDK_INT >= 33 && !prefs.getBoolean("noti-pedida", false) &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // la notificación lleva «Cerrar»; si dice que no, la capa funciona igual
+            prefs.edit().putBoolean("noti-pedida", true).apply()
+            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQ_NOTI)
+            return
+        }
+        lanzarCapa()
+    }
+
+    private fun lanzarCapa() {
+        try {
+            CapaService.abrir(this)
+            moveTaskToBack(true) // se ve la app que había debajo (o el escritorio), con la burbuja encima
+        } catch (e: Exception) {
+            archivos.aviso("No se ha podido abrir la capa para pintar encima")
+        }
+    }
+
+    private fun pedirSuperponer() {
+        val ajustes = listOf(
+            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:$packageName")),
+            Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
+        )
+        for (i in ajustes) {
+            try { startActivity(i); capaPendiente = true; return } catch (e: ActivityNotFoundException) { }
+        }
+        archivos.aviso("No se encuentran los ajustes de permisos en este equipo")
     }
 
     private fun versionName(): String = try {
@@ -129,7 +194,15 @@ class MainActivity : Activity() {
         web.saveState(outState)
     }
 
-    override fun onResume() { super.onResume(); web.onResume() }
+    override fun onResume() {
+        super.onResume()
+        web.onResume()
+        if (capaPendiente) {
+            capaPendiente = false
+            if (CapaService.puede(this)) web.postDelayed({ abrirCapa() }, 300)
+            else archivos.aviso("Sin el permiso «Mostrar sobre otras apps» no se puede pintar encima")
+        }
+    }
     override fun onPause() { web.onPause(); super.onPause() }
     override fun onDestroy() { archivos.cerrar(); web.destroy(); super.onDestroy() }
 
@@ -282,6 +355,7 @@ class MainActivity : Activity() {
         super.onActivityResult(requestCode, resultCode, data)
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        if (requestCode == REQ_NOTI) { lanzarCapa(); return }
         if (requestCode != REQ_MICRO) return
         val p = permisoPendiente ?: return
         permisoPendiente = null

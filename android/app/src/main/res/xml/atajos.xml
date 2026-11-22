@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Mantener pulsado el icono de Fori → «Pintar encima» -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="capa"
+        android:enabled="true"
+        android:icon="@mipmap/ic_launcher"
+        android:shortcutShortLabel="@string/capa_corto"
+        android:shortcutLongLabel="@string/capa_largo">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="fori://capa"
+            android:targetPackage="es.fori.pizarra"
+            android:targetClass="es.fori.pizarra.MainActivity" />
+    </shortcut>
+</shortcuts>
