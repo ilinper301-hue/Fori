@@ -105,6 +105,12 @@
     <button class="btn ghost" id="sImport"><span class="ico" aria-hidden="true"><svg><use href="#i-upload"/></svg></span> Importar datos</button>
     <input type="file" id="sFile" accept="application/json" hidden>
   </div>
+  <p class="sec-note">«Copia completa» guarda en un solo archivo la pizarra, las lecciones, los alumnos y los ajustes (sin el PIN). Sirve para pasarlo todo a otro equipo o a la app de Android: allí, «Abrir copia completa» lo sustituye todo.</p>
+  <div class="row">
+    <button class="btn ghost" id="sAllExport"><span class="ico" aria-hidden="true"><svg><use href="#i-download"/></svg></span> Copia completa</button>
+    <button class="btn ghost" id="sAllImport"><span class="ico" aria-hidden="true"><svg><use href="#i-upload"/></svg></span> Abrir copia completa</button>
+    <input type="file" id="sAllFile" accept=".foricopia,application/octet-stream,application/json" hidden>
+  </div>
   <div class="row end">
     <button class="btn ghost" id="sCancel">Cancelar</button>
     <button class="btn" id="sSave">Guardar</button>

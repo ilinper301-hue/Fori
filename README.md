@@ -21,7 +21,7 @@ Pizarra digital y panel de asamblea para la **Pantalla Digital Interactiva (PDI)
 - **Ruleta** para elegir alumno, **regla** para trazar líneas apoyándose en ella y letra **Fredoka** en la herramienta Texto.
 - **Tabula:** importa clases, alumnos y horario desde Tabula (mismo navegador o archivo de copia). **PIN** opcional para Ajustes.
 - **Charta:** en Charta, «▶ Proyectar en Fori» convierte la ficha en páginas (la actividad entera y un ejercicio por página) para escribir encima; la barra **Solución** muestra las respuestas paso a paso (+ / − / Todo). También `?ficha=ID` o `?comp=…`: Fori se la pide a Charta.
-- **Privacidad:** no hay cuentas ni servidor. Alumnos, ajustes y pizarras se guardan solo en el navegador del equipo. *Ajustes → Exportar datos* hace una copia de seguridad de alumnos y ajustes.
+- **Privacidad:** no hay cuentas ni servidor. Alumnos, ajustes y pizarras se guardan solo en el navegador del equipo. *Ajustes → Exportar datos* hace una copia de seguridad de alumnos y ajustes, y *Copia completa* guarda en un solo archivo (`.foricopia`) también la pizarra y las lecciones, para pasarlo todo a otro equipo o a la app de Android.
 
 ## Archivos
 | Archivo | Para qué sirve |
@@ -31,10 +31,14 @@ Pizarra digital y panel de asamblea para la **Pantalla Digital Interactiva (PDI)
 | `manifest.webmanifest` | Datos para instalarla como app |
 | `icon.svg`, `icon-fav.svg`, `icon-mark.svg`, `icon-192.png`, `icon-512.png`, `apple-touch-icon.png`, `favicon-32.png` | Icono de la app, de la pestaña y marca de la barra superior |
 | `fonts/` | Fuentes Inter y Fredoka (licencia OFL) |
+| `android/` | App de Android (APK) que abre esta Fori a pantalla completa; ver `android/README.md` |
 | `billetes/` (opcional) | Imágenes oficiales del BCE (`5.jpg`, `10.jpg`, `20.jpg`, `50.jpg`, `100.jpg`, `200.jpg`) para el modelo «Imagen real» de billetes |
 
 ## Publicar
 GitHub Pages sirve la rama `main` desde la raíz (*Settings → Pages*). Para instalarla en la PDI, ábrela en Chrome o Edge y pulsa **Instalar aplicación** en la barra de direcciones.
+
+## App de Android
+Para la PDI con Android: **https://github.com/ilinper301-hue/fori/releases/latest/download/Fori.apk** (se instala a mano, sin Google Play). Abre esta misma Fori a pantalla completa y se actualiza sola con cada cambio publicado. Detalles en `android/README.md`.
 
 ## Créditos
 - Pictogramas: Sergio Palao. Origen: ARASAAC (https://arasaac.org). Licencia: CC BY-NC-SA. Propiedad: Gobierno de Aragón (España).
