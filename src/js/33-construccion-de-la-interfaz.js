@@ -41,11 +41,11 @@ function refreshTools(){
   $$('.sw').forEach(b=>b.classList.toggle('on',b.dataset.c===T.color));
   $$('.sz').forEach(b=>b.classList.toggle('on',Number(b.dataset.s)===T.size));
   const cc=$('.curc');if(cc)cc.style.setProperty('--c',cssColor(T.color));
-  const sc=$('.szc i');if(sc)sc.style.width=sc.style.height=(T.size*1.6+4)+'px';
+  const sc=$('.szc i');if(sc)sc.style.width=sc.style.height=sizeDot(T.size)+'px';
   dr.style.cursor=T.tool==='text'?'text':T.tool==='select'?'move':'crosshair';
   if(T.tool!=='select')setSel(null);
 }
-function setSize(s){T.size=s;refreshTools();if(editor){editor.fs=FS[s];editor.ta.style.fontSize=FS[s]+'px';sizeEditor()}}
+function setSize(s){T.size=s;refreshTools();if(editor){editor.fs=fsOf(s);editor.ta.style.fontSize=editor.fs+'px';sizeEditor()}}
 const fillLabel=()=>T.fill?'◼ Con relleno':'◻ Sin relleno';
 const shapeNodes=()=>[
   ...[['linea','Líneas'],['plana','Planas'],['cuerpo','Cuerpos']].flatMap(([g,name])=>[
@@ -73,9 +73,10 @@ function buildLeft(){
     h('button',{class:'tool','data-pop':'color',onclick:e=>openPop('color',e.currentTarget,1,colorNodes())},h('span',{class:'curc'}),h('small',{},'Colores')),
     h('div',{class:'grid2',id:'recent'}),
     h('div',{class:'sep'}),
-    ...[[3,'Fino',6],[6,'Medio',12],[12,'Grueso',22]].map(([s,n,d])=>h('button',{class:'sz','data-s':s,'aria-label':n,onclick:()=>setSize(s)},h('i',{style:`width:${d}px;height:${d}px`}))),
+    // toque: ese grosor; pulsación larga: barra para elegir cualquier grosor (ver 33d-grosor.js)
+    ...[[3,'Fino',6],[6,'Medio',12],[12,'Grueso',22]].map(([s,n,d])=>sizeHold(h('button',{class:'sz','data-s':s,'aria-label':n,title:n+' · mantén pulsado para elegir el grosor',onclick:e=>{if(!wasHeld(e))setSize(s)}},h('i',{style:`width:${d}px;height:${d}px`})))),
     // cuando no caben los tres grosores (ver 35b-pantallas-pequenas.js), este botón los recorre
-    h('button',{class:'tool szc','aria-label':'Grosor',title:'Grosor',onclick:()=>setSize(T.size===3?6:T.size===6?12:3)},h('i')));
+    sizeHold(h('button',{class:'tool szc','aria-label':'Grosor',title:'Grosor · mantén pulsado para elegir el grosor',onclick:e=>{if(!wasHeld(e))setSize(nextSize())}},h('i'))));
   renderRecent();refreshTools();updatePageUI();
 }
 /* --- Menú de fondo ---
@@ -157,6 +158,7 @@ function buildDock(){
     await setBgImage(f);setBg();
   });
   const pageBtn=h('button',{class:'dbtn','data-pop':'page',id:'pageLbl',onclick:e=>openPop('page',e.currentTarget,1,[
+    h('button',{class:'wide',onclick:()=>{closePop();openPagesView()}},...ib('pages','Ver todas las páginas')),
     h('button',{class:'wide',onclick:()=>{closePop();addPage(false)}},...ib('plus','Página nueva')),
     h('button',{class:'wide',onclick:()=>{closePop();addPage(true)}},...ib('copy','Duplicar esta página')),
     h('button',{class:'wide',onclick:()=>{closePop();deletePage()}},...ib('trash','Borrar esta página')),

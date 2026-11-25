@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* Prueba rápida de Fori: arranca la app, dibuja, abre todas las herramientas y comprueba que no hay errores.
-   Uso: node tools/test.js (FORI_SOLO=fondos, FORI_SOLO=formas, FORI_SOLO=copia, FORI_SOLO=android o FORI_SOLO=capa para correr solo esas pruebas)   (necesita Playwright; primero genera index.html con python3 tools/build.py) */
+   Uso: node tools/test.js (FORI_SOLO=fondos, FORI_SOLO=formas, FORI_SOLO=copia, FORI_SOLO=android, FORI_SOLO=capa o FORI_SOLO=paginas para correr solo esas pruebas)   (necesita Playwright; primero genera index.html con python3 tools/build.py) */
 const http=require('http'),fs=require('fs'),path=require('path');
 const {chromium}=require('playwright');
 const ROOT=path.resolve(__dirname,'..');
@@ -1130,6 +1130,93 @@ async function capa(b,url){
   await c3.close();
   ok(!errs.length,'sin errores en las pruebas de la capa'+(errs.length?': '+errs.join(' | '):''));
 }
+/* Barra de grosor (pulsación larga en los botones de grosor) y vista de todas las páginas */
+async function paginas(b,url){
+  console.log('\nGrosor y vista de páginas');
+  const ctx=await b.newContext({viewport:{width:1920,height:1080}});
+  const p=await ctx.newPage();
+  const errs=[];p.on('pageerror',e=>errs.push(e.message));
+  await p.goto(url);await p.waitForTimeout(800);
+  const drag=async(x0,y0,x1,y1,n=6)=>{await p.mouse.move(x0,y0);await p.mouse.down();await p.mouse.move(x1,y1,{steps:n});await p.mouse.up()};
+  const hold=async(sel,ms=750)=>{const r=await p.locator(sel).first().boundingBox();await p.mouse.move(r.x+r.width/2,r.y+r.height/2);await p.mouse.down();await p.waitForTimeout(ms);await p.mouse.up();await p.waitForTimeout(150)};
+  const size=()=>p.evaluate(()=>__fori.T.size);
+  const board=async()=>{await p.waitForTimeout(900);return readBoard(p)};
+  // grosor
+  await p.click('#left .sz[data-s="12"]');ok(await size()===12&&await p.isHidden('#pop'),'toque corto en Grueso: grosor 12, sin panel');
+  await hold('#left .sz[data-s="6"]');
+  ok(await p.isVisible('#pop .szp')&&await size()===12,'pulsación larga en Medio: abre la barra sin cambiar el grosor');
+  ok(await p.$eval('#pop .szp-r',r=>r.value)==='12'&&await p.$eval('#pop .szp-n',n=>n.textContent)==='12','la barra empieza en el grosor actual');
+  await p.$eval('#pop .szp-r',r=>{r.value='20';r.dispatchEvent(new Event('input',{bubbles:true}))});
+  ok(await size()===20&&await p.$eval('#pop .szp-n',n=>n.textContent)==='20','mover la barra cambia el grosor (20)');
+  await p.click('#pop [aria-label="Más grueso"]');ok(await size()===21,'botón + sube uno');
+  await p.click('#pop [aria-label="Más fino"]');await p.click('#pop [aria-label="Más fino"]');ok(await size()===19,'botón − baja uno');
+  for(let i=0;i<40;i++)await p.click('#pop [aria-label="Más grueso"]');ok(await size()===30,'no pasa de 30');
+  await p.click('#pop .szp-q[data-q="3"]');ok(await size()===3&&await p.$eval('#pop .szp-q[data-q="3"]',b=>b.classList.contains('on')),'atajo Fino dentro del panel');
+  await p.$eval('#pop .szp-r',r=>{r.value='17';r.dispatchEvent(new Event('input',{bubbles:true}))});
+  ok(await p.$$eval('#left .sz.on',x=>x.length)===0,'con un grosor propio no se marca ninguno de los tres');
+  await p.mouse.click(1000,900);ok(await p.isHidden('#pop'),'tocar la pizarra cierra el panel');
+  await drag(400,300,900,300);let d=await board();
+  ok(d.pages[0].strokes.at(-1).size===17,'el trazo se guarda con el grosor elegido (17)');
+  await p.click('#left [data-tool=marker]');await hold('#left .sz[data-s="3"]');ok(await size()===17&&await p.isVisible('#pop .szp'),'también con el fluorescente');
+  await p.keyboard.press('Escape');
+  await p.click('#left [data-tool=text]');await p.mouse.click(400,600);
+  ok(await p.$eval('#stage textarea, textarea',t=>t.style.fontSize)==='87px','texto con grosor 17: letra de 87 px');
+  await p.keyboard.press('Escape');await p.click('#left [data-tool=pen]');
+  for(const [s,f] of [[3,'32px'],[6,'48px'],[12,'72px']]){await p.click(`#left .sz[data-s="${s}"]`);await p.click('#left [data-tool=text]');await p.mouse.click(400,700);
+    ok(await p.$eval('textarea',t=>t.style.fontSize)===f,`texto con grosor ${s}: letra de ${f}, como antes`);await p.keyboard.press('Escape');await p.click('#left [data-tool=pen]')}
+  // barra Mínima
+  await p.click('#top [data-pop=view], [data-pop=view]');await p.click('#pop >> text=Mínima');await p.waitForTimeout(200);
+  await hold('#mini [aria-label=Grosor]');ok(await p.isVisible('#pop .szp'),'barra Mínima: pulsación larga abre la barra de grosor');
+  await p.$eval('#pop .szp-r',r=>{r.value='9';r.dispatchEvent(new Event('input',{bubbles:true}))});
+  ok(await size()===9&&await p.$eval('#mini .mdot',i=>i.style.width)==='18px','barra Mínima: el punto muestra el grosor');
+  await p.click('#mini [aria-label=Grosor]');ok(await size()===12,'barra Mínima: toque corto pasa al grosor siguiente');
+  await p.keyboard.press('Escape');await p.click('#mini [data-pop=view]');await p.click('#pop >> text=Completa');await p.waitForTimeout(200);
+  // vista de páginas
+  for(let i=0;i<4;i++){await p.click('#pageLbl');await p.click('#pop >> text=Página nueva');await drag(300+i*80,200,600,500)}
+  await board();const ids=await p.evaluate(()=>__fori.pages.map(x=>x.id||null));
+  await p.click('#pageLbl');await p.click('#pop >> text=Ver todas las páginas');await p.waitForTimeout(600);
+  ok(await p.locator('#pagesView .pv-t').count()===5,'la vista muestra las 5 páginas');
+  ok(await p.locator('#pagesView .pv-c').count()===5,'con su miniatura');
+  ok(await p.$eval('#pagesView .pv-t.on',t=>t.dataset.i)==='4','marca la página en la que se está');
+  const dark=await p.$eval('#pagesView .pv-t[data-i="2"] canvas',c=>{const x=c.getContext('2d').getImageData(0,0,c.width,c.height).data;let n=0;for(let i=0;i<x.length;i+=4)if(x[i]<100)n++;return n});
+  ok(dark>20,'la miniatura enseña lo dibujado');
+  const p3=await p.evaluate(()=>__fori.pages[2]),p5=await p.evaluate(()=>__fori.pages[4].strokes.length);
+  await p.click('#pagesView .pv-t[data-i="2"] .pv-del');await p.waitForTimeout(300);
+  ok(await p.locator('#pagesView .pv-t').count()===4&&await p.evaluate(()=>__fori.pages.length)===4,'la papelera borra esa página y la vista se actualiza');
+  ok(await p.evaluate(()=>__fori.cur)===3&&await p.$eval('#pagesView .pv-t.on',t=>t.dataset.i)==='3','se sigue en la misma página');
+  d=await board();ok(d.ids.length===4,'el borrado se guarda');
+  await p.click('#toast button');await p.waitForTimeout(300);
+  ok(await p.locator('#pagesView .pv-t').count()===5&&same(await p.evaluate(()=>__fori.pages.map(x=>x.id||null)),ids),'Deshacer la devuelve a su sitio');
+  ok(await p.evaluate(()=>__fori.cur)===4,'y se sigue en la misma página');
+  d=await board();ok(d.ids.length===5&&d.pages.every(Boolean),'deshacer se guarda');
+  await p.click('#pagesView .pv-t[data-i="4"] .pv-del');await p.waitForTimeout(300);
+  ok(await p.evaluate(()=>__fori.pages.length===4&&__fori.cur===3),'borrar la página actual lleva a la anterior');
+  await p.click('#pagesView .pv-t[data-i="1"] .pv-go');await p.waitForTimeout(200);
+  ok(await p.isHidden('#pagesView')&&await p.evaluate(()=>__fori.cur)===1,'tocar una miniatura lleva a esa página y cierra la vista');
+  await p.click('#pageLbl');await p.click('#pop >> text=Ver todas las páginas');await p.waitForTimeout(300);
+  await p.keyboard.press('Escape');ok(await p.isHidden('#pagesView'),'Escape cierra la vista');
+  await p.click('#pageLbl');await p.click('#pop >> text=Ver todas las páginas');await p.waitForTimeout(300);
+  for(let i=0;i<4;i++){await p.click('#pagesView .pv-t[data-i="0"] .pv-del');await p.waitForTimeout(150)}
+  ok(await p.evaluate(()=>__fori.pages.length===1&&!__fori.pages[0].strokes.length),'borrarlas todas deja una página vacía');
+  await p.click('#toast button');await p.waitForTimeout(200);
+  ok(await p.evaluate(()=>__fori.pages.length===1&&__fori.pages[0].strokes.length>0),'Deshacer devuelve la última borrada');
+  await p.click('#pagesView .pv-new');await p.waitForTimeout(200);
+  ok(await p.isHidden('#pagesView')&&await p.evaluate(()=>__fori.pages.length===2&&__fori.cur===1),'«Página nueva» añade una al final y va a ella');
+  await ctx.close();
+  // móvil: botón único de grosor y vista de páginas
+  const c2=await b.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
+  const m=await c2.newPage();m.on('pageerror',e=>errs.push(e.message));
+  await m.goto(url);await m.waitForTimeout(800);
+  const r=await m.locator('.szc').boundingBox();await m.mouse.move(r.x+r.width/2,r.y+r.height/2);await m.mouse.down();await m.waitForTimeout(750);await m.mouse.up();await m.waitForTimeout(150);
+  const pb=await m.locator('#pop').boundingBox();
+  ok(await m.isVisible('#pop .szp')&&pb.x>=0&&pb.y>=0&&pb.x+pb.width<=390&&pb.y+pb.height<=844,'390×844: la barra de grosor sale entera en pantalla');
+  await m.keyboard.press('Escape');
+  await m.click('#pageLbl');await m.click('#pop >> text=Ver todas las páginas');await m.waitForTimeout(300);
+  const xb=await m.locator('#pagesView .pv-x').boundingBox(),db=await m.locator('#pagesView .pv-del').first().boundingBox();
+  ok(xb.x+xb.width<=390&&db.x+db.width<=390,'390×844: la vista de páginas cabe (cerrar y papelera a la vista)');
+  await c2.close();
+  ok(!errs.length,'sin errores en las pruebas de grosor y páginas'+(errs.length?': '+errs.join(' | '):''));
+}
 server.listen(0,async()=>{
   const url=`http://localhost:${server.address().port}/`;
   // FORI_CHROME=1 usa el Chrome instalado en el equipo en vez del navegador de Playwright
@@ -1139,6 +1226,7 @@ server.listen(0,async()=>{
     if(process.env.FORI_SOLO==='capa'){await capa(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     if(process.env.FORI_SOLO==='android'){await android(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     if(process.env.FORI_SOLO==='copia'){await copia(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
+    if(process.env.FORI_SOLO==='paginas'){await paginas(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     if(process.env.FORI_SOLO==='formas'){await formas(b,url);await b.close();server.close();console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0)}
     const p=await b.newPage({viewport:{width:1920,height:1080}});
     const errs=[];p.on('pageerror',e=>errs.push(e.message));
@@ -1184,6 +1272,7 @@ server.listen(0,async()=>{
     await fondos(b,url);
     await plantillas(b,url);
     await formas(b,url);
+    await paginas(b,url);
   }catch(e){fails.push(String(e));console.log(e)}
   await b.close();server.close();
   console.log(fails.length?`\n${fails.length} fallo(s)`:'\nTodo correcto');process.exit(fails.length?1:0);
