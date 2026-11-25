@@ -16,7 +16,7 @@ function renderMini(){
     tb('pen','pen','Lápiz'),tb('marker','marker','Fluorescente'),tb('eraser','eraser','Borrador'),tb('text','text','Texto'),
     ...S.recent.slice(0,4).map(c=>h('button',{class:'sw msw','data-c':c,'aria-label':'Color',style:`background:${cssColor(c)}`,onclick:()=>setColor(c)})),
     h('button',{'data-pop':'color','aria-label':'Más colores',onclick:e=>openPop('color',e.currentTarget,1,colorNodes(),'above')},h('span',{class:'curc',style:'width:34px;height:34px;border-width:5px'})),
-    h('button',{'aria-label':'Grosor',onclick:()=>{T.size=T.size===3?6:T.size===6?12:3;refreshTools();renderMini()}},h('i',{class:'mdot',style:`width:${T.size*1.6+4}px;height:${T.size*1.6+4}px`})),
+    sizeHold(h('button',{'aria-label':'Grosor',title:'Grosor · mantén pulsado para elegir el grosor',onclick:e=>{if(wasHeld(e))return;T.size=nextSize();refreshTools();renderMini()}},h('i',{class:'mdot',style:`width:${sizeDot(T.size)}px;height:${sizeDot(T.size)}px`})),'above',renderMini),
     h('button',{'aria-label':'Deshacer',onclick:undo},ico('undo')),h('button',{'aria-label':'Rehacer',onclick:redo},ico('redo')),
     h('button',{'data-pop':'view','aria-label':'Modo de pantalla',onclick:e=>openPop('view',e.currentTarget,1,viewNodes(),'above')},ico('view')));
   refreshTools();placeMini();

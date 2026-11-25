@@ -666,6 +666,43 @@ html.capa body:has(#capaBar.arriba) #toast{bottom:24px}
 .les-empty .les-sub{font-size:14px;color:var(--muted)}
 @media (max-width:640px){.les-item{flex-direction:column}.les-th{width:100%}}
 .win:has(.les-bar){max-width:calc(100% - 24px)}
+/* Grosor: panel con barra (33d-grosor.js) */
+.szp{display:flex;flex-direction:column;gap:10px;min-width:280px}
+.szp-t{display:flex;justify-content:space-between;align-items:center;font-size:18px;font-weight:700}
+.szp-n{font-size:22px;min-width:2ch;text-align:right;color:var(--accent)}
+.szp-prev{display:block;margin:0 auto;border-radius:12px;background:var(--bg,transparent);border:2px solid var(--line)}
+.szp-row{display:flex;align-items:center;gap:10px}
+#pop button.szp-pm{width:52px;height:52px;min-width:0;flex:none;border-radius:14px;border:2px solid var(--line);background:var(--panel);display:grid;place-items:center;font-size:26px;padding:0}
+.szp-r{flex:1;min-width:170px;height:52px;margin:0;background:transparent;-webkit-appearance:none;appearance:none;touch-action:none;cursor:pointer}
+.szp-r::-webkit-slider-runnable-track{height:12px;border-radius:6px;background:var(--line)}
+.szp-r::-webkit-slider-thumb{-webkit-appearance:none;width:38px;height:38px;margin-top:-13px;border-radius:50%;background:var(--accent);border:4px solid var(--panel);box-shadow:0 2px 6px #0005}
+.szp-r::-moz-range-track{height:12px;border-radius:6px;background:var(--line)}
+.szp-r::-moz-range-progress{height:12px;border-radius:6px;background:var(--accent)}
+.szp-r::-moz-range-thumb{width:32px;height:32px;border-radius:50%;background:var(--accent);border:4px solid var(--panel);box-shadow:0 2px 6px #0005}
+.szp-qs{display:flex;gap:8px}
+#pop button.szp-q{flex:1;height:48px;min-width:0;border-radius:12px;border:2px solid var(--line);background:var(--panel);font-size:17px;font-weight:600;padding:0 6px}
+#pop button.szp-q.on{border-color:var(--accent);color:var(--accent);background:rgba(15,143,130,.12);box-shadow:none}
+.sz.holding,.szc.holding,#mini .holding{background:rgba(39,193,176,.28)}
+/* Vista de todas las páginas (33e-vista-paginas.js); por debajo del aviso (#toast, z-index 2000) para poder deshacer */
+#pagesView{position:fixed;inset:0;z-index:1500;background:var(--panel);color:var(--ink);display:flex;flex-direction:column}
+.pv-top{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:2px solid var(--line);flex-wrap:wrap}
+.pv-top h2{margin:0;display:flex;align-items:center;gap:10px;font-size:24px}
+.pv-top h2 .ico{font-size:28px}
+.pv-hint{opacity:.65;font-size:16px;flex:1;min-width:0}
+.pv-new{display:inline-flex;align-items:center;gap:8px}
+.pv-x{width:56px;height:56px;padding:0;border-radius:16px;border:2px solid var(--line);background:var(--panel);display:grid;place-items:center;color:inherit}
+.pv-x .ico{font-size:30px}
+.pv-grid{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;padding:20px 20px 120px;align-content:start}
+.pv-t{position:relative}
+.pv-go{display:block;width:100%;padding:0;border:4px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel);cursor:pointer;color:inherit}
+.pv-t.on .pv-go{border-color:var(--accent)}
+.pv-img{width:100%;display:block;background:var(--line)}
+.pv-c{display:block;width:100%;height:100%}
+.pv-n{position:absolute;left:10px;bottom:10px;min-width:36px;height:36px;padding:0 8px;border-radius:12px;background:#111c;color:#fff;font-size:20px;font-weight:700;display:grid;place-items:center}
+.pv-t.on .pv-n{background:var(--accent)}
+.pv-del{position:absolute;right:10px;top:10px;width:52px;height:52px;border-radius:14px;border:0;background:#c92a2ae6;color:#fff;display:grid;place-items:center;padding:0;box-shadow:0 2px 8px #0004}
+.pv-del .ico{font-size:28px}
+@media (max-width:600px){.pv-grid{grid-template-columns:repeat(2,1fr);gap:12px;padding:12px 12px 120px}.pv-hint{display:none}.pv-del{width:44px;height:44px}}
 /* ============ Cajón de herramientas ============ */
 #pop{max-height:calc(100% - 16px);overflow-y:auto;overscroll-behavior:contain}
 #btnTools{margin-top:auto;background:var(--frame2);color:var(--on-frame)} /* siempre abajo y a la vista */
@@ -1014,6 +1051,7 @@ const ICONS={
   right:'<path d="M9 5.5l6.5 6.5L9 18.5"/>',
   page:'<path d="M6 3.5h8l4.5 4.5v12.5H6z"/><path d="M14 3.5V8h4.5"/>',
   plus:'<path d="M12 5v14"/><path d="M5 12h14"/>',
+  pages:'<rect x="3.5" y="3.5" width="7.5" height="7.5" rx="1.5"/><rect x="13" y="3.5" width="7.5" height="7.5" rx="1.5"/><rect x="3.5" y="13" width="7.5" height="7.5" rx="1.5"/><rect x="13" y="13" width="7.5" height="7.5" rx="1.5"/>',
   copy:'<rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V5a1.5 1.5 0 0 0-1.5-1.5H5A1.5 1.5 0 0 0 3.5 5v9A1.5 1.5 0 0 0 5 15.5h3.5"/>',
   image:'<rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><circle cx="9" cy="9.5" r="1.8"/><path d="M20.5 16l-5-5-9 8.5"/>',
   pdf:'<path d="M6 3.5h8l4.5 4.5v12.5H6z"/><path d="M14 3.5V8h4.5"/><path d="M9 13.5h6"/><path d="M9 17h4"/>',
@@ -1136,7 +1174,8 @@ const stage=$('#stage'),bg=$('#bg'),dr=$('#draw'),lv=$('#live');
 const cb=bg.getContext('2d'),cd=dr.getContext('2d'),cl=lv.getContext('2d');
 const T={tool:'pen',color:'ink',size:6,shape:'line',fill:false};
 const FONT="'Fredoka',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif"; // letra de la herramienta Texto
-const FS={3:32,6:48,12:72}; // tamaño de letra según el grosor elegido
+// tamaño de letra según el grosor elegido: con los grosores de siempre, 3→32, 6→48 y 12→72; entre medias y fuera, por tramos rectos
+const fsOf=g=>{g=Number(g)||6;return Math.round(g<=3?24+(Math.max(1,g)-1)*4:g<=6?32+(g-3)*16/3:g<=12?48+(g-6)*4:72+(g-12)*3)};
 const active=new Map();
 let fistNow=null; // gesto de borrar con el puño en curso (05e-borrar-puno.js): {ids:Set, s:trazo borrador, last:{x,y}}
 const inkColor=()=>document.documentElement.dataset.theme==='dark'?'#ffffff':'#111111';
@@ -1463,7 +1502,7 @@ function sizeEditor(){
 }
 function openEditor(x,y,orig){
   commitEditor();setSel(null);
-  const fs=orig?orig.fs:FS[T.size],color=orig?orig.color:T.color;
+  const fs=orig?orig.fs:fsOf(T.size),color=orig?orig.color:T.color;
   const ta=h('textarea',{class:'txted',spellcheck:'false',rows:'1'});
   ta.style.cssText=`left:${x-3}px;top:${y-3}px;font-size:${fs}px;color:${cssColor(color)}`;
   let idx=-1;
@@ -1498,7 +1537,7 @@ dr.addEventListener('pointerdown',e=>{
     e.preventDefault();
     if(editor){commitEditor();return}
     const hit=hitTest(p);
-    if(hit&&hit.type==='text')openEditor(hit.x,hit.y,hit);else openEditor(p.x,p.y-FS[T.size]*.6);
+    if(hit&&hit.type==='text')openEditor(hit.x,hit.y,hit);else openEditor(p.x,p.y-fsOf(T.size)*.6);
     return;
   }
   commitEditor();
@@ -1635,12 +1674,21 @@ function addPage(copy){
   const p=copy?{...newPage(P().bg,P().bgo),strokes:structuredClone(P().strokes),img:P().img,size:P().size?{...P().size}:null,v:P().v?{...P().v}:null,ch:P().ch?{...P().ch}:null}:newPage(P().bg,P().bgo);
   pages.splice(cur+1,0,p);gotoPage(cur+1);
 }
-function deletePage(){
+function deletePage(){deletePageAt(cur)}
+// Borra la página i. Si no es la que se está viendo, se sigue en la misma. after(): se llama tras borrar y tras deshacer (vista de páginas)
+function deletePageAt(i,after){
   commitEditor();
-  const removed=pages[cur],at=cur;
-  if(pages.length===1)pages=[newPage(removed.bg,removed.bgo)];else pages.splice(cur,1);
-  gotoPage(Math.min(at,pages.length-1));
-  toast('Página borrada',{label:ib('undo','Deshacer'),fn:()=>{if(pages.length===1&&!pages[0].strokes.length&&pages[0]!==removed)pages=[removed];else pages.splice(at,0,removed);gotoPage(at)}});
+  const removed=pages[i],was=P();if(!removed)return;
+  let ph=null;
+  if(pages.length===1)pages=[ph=newPage(removed.bg,removed.bgo)];else pages.splice(i,1);
+  gotoPage(removed===was?Math.min(i,pages.length-1):pages.indexOf(was));
+  if(after)after();
+  toast('Página borrada',{label:ib('undo','Deshacer'),fn:()=>{
+    const now=P();
+    if(ph&&pages.length===1&&pages[0]===ph&&!ph.strokes.length)pages=[removed];else pages.splice(Math.min(i,pages.length),0,removed);
+    gotoPage(removed===was||now===ph?pages.indexOf(removed):pages.indexOf(now));
+    if(after)after();
+  }});
 }
 function deleteAllPages(){
   commitEditor();
@@ -4352,11 +4400,11 @@ function refreshTools(){
   $$('.sw').forEach(b=>b.classList.toggle('on',b.dataset.c===T.color));
   $$('.sz').forEach(b=>b.classList.toggle('on',Number(b.dataset.s)===T.size));
   const cc=$('.curc');if(cc)cc.style.setProperty('--c',cssColor(T.color));
-  const sc=$('.szc i');if(sc)sc.style.width=sc.style.height=(T.size*1.6+4)+'px';
+  const sc=$('.szc i');if(sc)sc.style.width=sc.style.height=sizeDot(T.size)+'px';
   dr.style.cursor=T.tool==='text'?'text':T.tool==='select'?'move':'crosshair';
   if(T.tool!=='select')setSel(null);
 }
-function setSize(s){T.size=s;refreshTools();if(editor){editor.fs=FS[s];editor.ta.style.fontSize=FS[s]+'px';sizeEditor()}}
+function setSize(s){T.size=s;refreshTools();if(editor){editor.fs=fsOf(s);editor.ta.style.fontSize=editor.fs+'px';sizeEditor()}}
 const fillLabel=()=>T.fill?'◼ Con relleno':'◻ Sin relleno';
 const shapeNodes=()=>[
   ...[['linea','Líneas'],['plana','Planas'],['cuerpo','Cuerpos']].flatMap(([g,name])=>[
@@ -4384,9 +4432,10 @@ function buildLeft(){
     h('button',{class:'tool','data-pop':'color',onclick:e=>openPop('color',e.currentTarget,1,colorNodes())},h('span',{class:'curc'}),h('small',{},'Colores')),
     h('div',{class:'grid2',id:'recent'}),
     h('div',{class:'sep'}),
-    ...[[3,'Fino',6],[6,'Medio',12],[12,'Grueso',22]].map(([s,n,d])=>h('button',{class:'sz','data-s':s,'aria-label':n,onclick:()=>setSize(s)},h('i',{style:`width:${d}px;height:${d}px`}))),
+    // toque: ese grosor; pulsación larga: barra para elegir cualquier grosor (ver 33d-grosor.js)
+    ...[[3,'Fino',6],[6,'Medio',12],[12,'Grueso',22]].map(([s,n,d])=>sizeHold(h('button',{class:'sz','data-s':s,'aria-label':n,title:n+' · mantén pulsado para elegir el grosor',onclick:e=>{if(!wasHeld(e))setSize(s)}},h('i',{style:`width:${d}px;height:${d}px`})))),
     // cuando no caben los tres grosores (ver 35b-pantallas-pequenas.js), este botón los recorre
-    h('button',{class:'tool szc','aria-label':'Grosor',title:'Grosor',onclick:()=>setSize(T.size===3?6:T.size===6?12:3)},h('i')));
+    sizeHold(h('button',{class:'tool szc','aria-label':'Grosor',title:'Grosor · mantén pulsado para elegir el grosor',onclick:e=>{if(!wasHeld(e))setSize(nextSize())}},h('i'))));
   renderRecent();refreshTools();updatePageUI();
 }
 /* --- Menú de fondo ---
@@ -4468,6 +4517,7 @@ function buildDock(){
     await setBgImage(f);setBg();
   });
   const pageBtn=h('button',{class:'dbtn','data-pop':'page',id:'pageLbl',onclick:e=>openPop('page',e.currentTarget,1,[
+    h('button',{class:'wide',onclick:()=>{closePop();openPagesView()}},...ib('pages','Ver todas las páginas')),
     h('button',{class:'wide',onclick:()=>{closePop();addPage(false)}},...ib('plus','Página nueva')),
     h('button',{class:'wide',onclick:()=>{closePop();addPage(true)}},...ib('copy','Duplicar esta página')),
     h('button',{class:'wide',onclick:()=>{closePop();deletePage()}},...ib('trash','Borrar esta página')),
@@ -4609,6 +4659,106 @@ function openDrawer(anchor){
   nodes.push(h('button',{class:'wide',onclick:resetTools},...ib('reset','Reiniciar herramientas')));
   openPop('tools',anchor,cols,nodes,compact?'above':'left');
 }
+/* ============ Grosor: barra deslizante con pulsación larga ============
+   Los botones de grosor (Fino, Medio, Grueso, el botón único de las pantallas pequeñas y el de la barra Mínima)
+   eligen su grosor con un toque; si se mantienen pulsados 600 ms abren un panel con una barra para elegir
+   cualquier grosor de GROSOR_MIN a GROSOR_MAX. Cada trazo guarda su grosor como número: no cambia ningún dato. */
+const GROSOR_MIN=1,GROSOR_MAX=30;
+const sizeDot=s=>Math.round(Math.min(34,s*1.6+4)); // punto que representa el grosor en los botones
+const nextSize=()=>T.size<3?3:T.size<6?6:T.size<12?12:3; // el botón único recorre los tres grosores de siempre
+// true si este clic es el que llega al soltar tras una pulsación larga (y entonces no hay que hacer nada más)
+function wasHeld(e){const b=e.currentTarget;if(b&&b._held){b._held=false;return true}return false}
+// Añade la pulsación larga a un botón de grosor. place: dónde se abre el panel; done: se llama al cambiar el grosor
+function sizeHold(b,place,done){
+  let timer=null,x0=0,y0=0;
+  const cancel=()=>{clearTimeout(timer);timer=null;b.classList.remove('holding')};
+  b.addEventListener('pointerdown',e=>{b._held=false;x0=e.clientX;y0=e.clientY;b.classList.add('holding');
+    timer=setTimeout(()=>{cancel();b._held=true;sizePanel(b,place,done)},600)});
+  b.addEventListener('pointermove',e=>{if(timer&&Math.hypot(e.clientX-x0,e.clientY-y0)>12)cancel()});
+  for(const ev of ['pointerup','pointerleave','pointercancel'])b.addEventListener(ev,cancel);
+  b.addEventListener('contextmenu',e=>e.preventDefault()); // en pantallas táctiles, la pulsación larga no abre el menú del navegador
+  return b;
+}
+// Grosor con el que pinta de verdad la herramienta actual (igual que en 05-pizarra.js)
+const sizeReal=s=>T.tool==='eraser'?Math.max(30,s*5):T.tool==='marker'?s*4+10:s;
+function sizePanel(anchor,place,done){
+  if(popOwner==='size')closePop();
+  commitEditor();
+  const W=260,H=90,dpr=devicePixelRatio||1;
+  const cv=h('canvas',{class:'szp-prev',width:W*dpr,height:H*dpr,style:`width:${W}px;height:${H}px`});
+  const num=h('b',{class:'szp-n'});
+  const range=h('input',{type:'range',class:'szp-r',min:GROSOR_MIN,max:GROSOR_MAX,step:1,'aria-label':'Grosor'});
+  range.value=clamp(Math.round(T.size),GROSOR_MIN,GROSOR_MAX);
+  const paint=()=>{
+    const x=cv.getContext('2d'),s=Number(range.value),lw=Math.min(H-10,sizeReal(s));
+    x.setTransform(dpr,0,0,dpr,0,0);x.clearRect(0,0,W,H);
+    x.lineCap=x.lineJoin='round';x.lineWidth=lw;
+    const ink=getComputedStyle(document.documentElement).getPropertyValue('--ink').trim()||'#222';
+    x.strokeStyle=T.tool==='eraser'?'#adb5bd':T.color==='ink'?ink:T.color;
+    x.globalAlpha=T.tool==='marker'?.4:1;
+    const m=Math.max(12,lw/2+4);
+    x.beginPath();x.moveTo(m,H/2+12);x.bezierCurveTo(W*.35,-10,W*.6,H+10,W-m,H/2-12);x.stroke();
+    num.textContent=s;
+    quick.forEach(q=>q.classList.toggle('on',Number(q.dataset.q)===s));
+  };
+  const set=s=>{range.value=s;setSize(s);paint();if(done)done()};
+  range.addEventListener('input',()=>set(Number(range.value)));
+  const quick=[[3,'Fino'],[6,'Medio'],[12,'Grueso']].map(([s,n])=>h('button',{class:'szp-q','data-q':s,onclick:()=>set(s)},n));
+  const nodes=[h('div',{class:'szp'},
+    h('div',{class:'szp-t'},h('span',{},'Grosor'),num),
+    cv,
+    h('div',{class:'szp-row'},
+      h('button',{class:'szp-pm','aria-label':'Más fino',onclick:()=>set(clamp(Number(range.value)-1,GROSOR_MIN,GROSOR_MAX))},ico('minus')),
+      range,
+      h('button',{class:'szp-pm','aria-label':'Más grueso',onclick:()=>set(clamp(Number(range.value)+1,GROSOR_MIN,GROSOR_MAX))},ico('plus'))),
+    h('div',{class:'szp-qs'},...quick))];
+  openPop('size',anchor,1,nodes,place);
+  paint();
+}
+/* ============ Vista de todas las páginas ============
+   Menú Página → «Ver todas las páginas»: capa a pantalla completa con una miniatura de cada página.
+   Tocar una miniatura lleva a esa página; la papelera la borra (con Deshacer en el aviso de abajo).
+   Las miniaturas se pintan con renderPage, una a una, para que la lista salga enseguida aunque haya muchas. */
+let pvEl=null,pvGen=0;
+function closePagesView(){if(!pvEl)return;pvEl.remove();pvEl=null;pvGen++;document.removeEventListener('keydown',pvKey,true)}
+function pvKey(e){if(e.key==='Escape'&&pvEl){e.stopPropagation();closePagesView()}}
+function openPagesView(){
+  commitEditor();closePop();
+  if(!pvEl){
+    pvEl=h('div',{id:'pagesView',role:'dialog','aria-label':'Todas las páginas'});
+    document.body.append(pvEl);document.addEventListener('keydown',pvKey,true);
+  }
+  renderPagesView();
+}
+function renderPagesView(){
+  if(!pvEl)return;
+  const gen=++pvGen,W=stage.clientWidth||1,H=stage.clientHeight||1;
+  const tiles=pages.map((p,i)=>{
+    const box=h('div',{class:'pv-img',style:`aspect-ratio:${W}/${H}`});
+    const del=h('button',{class:'pv-del','aria-label':`Borrar la página ${i+1}`,title:'Borrar esta página',onclick:e=>{e.stopPropagation();deletePageAt(i,renderPagesView)}},ico('trash'));
+    const t=h('div',{class:'pv-t'+(i===cur?' on':''),'data-i':i},
+      h('button',{class:'pv-go','aria-label':`Ir a la página ${i+1}`,onclick:()=>{closePagesView();gotoPage(i)}},box,h('span',{class:'pv-n'},String(i+1))),
+      del);
+    return{t,box,p};
+  });
+  pvEl.replaceChildren(
+    h('div',{class:'pv-top'},
+      h('h2',{},ico('pages'),`Páginas (${pages.length})`),
+      h('span',{class:'pv-hint'},'Toca una página para ir a ella'),
+      h('button',{class:'btn pv-new',onclick:()=>{closePagesView();cur=pages.length-1;addPage(false)}},...ib('plus','Página nueva')),
+      h('button',{class:'pv-x','aria-label':'Cerrar',title:'Cerrar',onclick:closePagesView},ico('x'))),
+    h('div',{class:'pv-grid'},...tiles.map(x=>x.t)));
+  const cur0=tiles[cur];if(cur0)cur0.t.scrollIntoView({block:'nearest'});
+  // miniaturas, una a una (si se vuelve a pintar la vista mientras tanto, se deja de pintar la anterior)
+  (async()=>{
+    const tw=Math.min(360,Math.max(160,tiles[0]?tiles[0].box.clientWidth:240)),sc=Math.min(1,tw*(devicePixelRatio||1)/W);
+    for(const x of tiles){
+      if(gen!==pvGen)return;
+      try{const c=await renderPage(x.p,sc);if(gen!==pvGen)return;c.className='pv-c';x.box.replaceChildren(c)}catch{}
+      await new Promise(r=>setTimeout(r,0));
+    }
+  })();
+}
 /* ============ Clases (varias listas de alumnos) ============ */
 // La clase activa vive en S.students / S.roles / S.offset; S.classes guarda todas.
 if(!Array.isArray(S.classes)||!S.classes.length){S.classes=[{name:'Mi clase',students:S.students,roles:S.roles,offset:S.offset||0}];S.cls=0}
@@ -4645,7 +4795,7 @@ function renderMini(){
     tb('pen','pen','Lápiz'),tb('marker','marker','Fluorescente'),tb('eraser','eraser','Borrador'),tb('text','text','Texto'),
     ...S.recent.slice(0,4).map(c=>h('button',{class:'sw msw','data-c':c,'aria-label':'Color',style:`background:${cssColor(c)}`,onclick:()=>setColor(c)})),
     h('button',{'data-pop':'color','aria-label':'Más colores',onclick:e=>openPop('color',e.currentTarget,1,colorNodes(),'above')},h('span',{class:'curc',style:'width:34px;height:34px;border-width:5px'})),
-    h('button',{'aria-label':'Grosor',onclick:()=>{T.size=T.size===3?6:T.size===6?12:3;refreshTools();renderMini()}},h('i',{class:'mdot',style:`width:${T.size*1.6+4}px;height:${T.size*1.6+4}px`})),
+    sizeHold(h('button',{'aria-label':'Grosor',title:'Grosor · mantén pulsado para elegir el grosor',onclick:e=>{if(wasHeld(e))return;T.size=nextSize();refreshTools();renderMini()}},h('i',{class:'mdot',style:`width:${sizeDot(T.size)}px;height:${sizeDot(T.size)}px`})),'above',renderMini),
     h('button',{'aria-label':'Deshacer',onclick:undo},ico('undo')),h('button',{'aria-label':'Rehacer',onclick:redo},ico('redo')),
     h('button',{'data-pop':'view','aria-label':'Modo de pantalla',onclick:e=>openPop('view',e.currentTarget,1,viewNodes(),'above')},ico('view')));
   refreshTools();placeMini();
@@ -5189,7 +5339,7 @@ renderZoneBars();
 if(document.fonts&&document.fonts.load)document.fonts.load("600 48px Fredoka").then(()=>redraw()).catch(()=>{});
 if(!CAPA)loadBoard().then(chEntrada); // en la capa la pizarra es una hoja vacía en memoria: no se lee ni se guarda
 window.__foriOK=true; // arranque correcto
-window.__fori={BD,REG,get pages(){return pages},get cur(){return cur}}; // para las pruebas (tools/test.js)
+window.__fori={BD,REG,T,get pages(){return pages},get cur(){return cur}}; // para las pruebas (tools/test.js)
 if(location.protocol.startsWith('http')&&'serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 /* ============ Modo transparente (solo en Fori Escritorio) ============ */
 // Fori Escritorio (carpeta desktop/) abre dos ventanas sin marco y siempre visibles: una transparente a pantalla

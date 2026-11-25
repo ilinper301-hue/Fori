@@ -3,7 +3,8 @@ const stage=$('#stage'),bg=$('#bg'),dr=$('#draw'),lv=$('#live');
 const cb=bg.getContext('2d'),cd=dr.getContext('2d'),cl=lv.getContext('2d');
 const T={tool:'pen',color:'ink',size:6,shape:'line',fill:false};
 const FONT="'Fredoka',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif"; // letra de la herramienta Texto
-const FS={3:32,6:48,12:72}; // tamaño de letra según el grosor elegido
+// tamaño de letra según el grosor elegido: con los grosores de siempre, 3→32, 6→48 y 12→72; entre medias y fuera, por tramos rectos
+const fsOf=g=>{g=Number(g)||6;return Math.round(g<=3?24+(Math.max(1,g)-1)*4:g<=6?32+(g-3)*16/3:g<=12?48+(g-6)*4:72+(g-12)*3)};
 const active=new Map();
 let fistNow=null; // gesto de borrar con el puño en curso (05e-borrar-puno.js): {ids:Set, s:trazo borrador, last:{x,y}}
 const inkColor=()=>document.documentElement.dataset.theme==='dark'?'#ffffff':'#111111';
@@ -330,7 +331,7 @@ function sizeEditor(){
 }
 function openEditor(x,y,orig){
   commitEditor();setSel(null);
-  const fs=orig?orig.fs:FS[T.size],color=orig?orig.color:T.color;
+  const fs=orig?orig.fs:fsOf(T.size),color=orig?orig.color:T.color;
   const ta=h('textarea',{class:'txted',spellcheck:'false',rows:'1'});
   ta.style.cssText=`left:${x-3}px;top:${y-3}px;font-size:${fs}px;color:${cssColor(color)}`;
   let idx=-1;
@@ -365,7 +366,7 @@ dr.addEventListener('pointerdown',e=>{
     e.preventDefault();
     if(editor){commitEditor();return}
     const hit=hitTest(p);
-    if(hit&&hit.type==='text')openEditor(hit.x,hit.y,hit);else openEditor(p.x,p.y-FS[T.size]*.6);
+    if(hit&&hit.type==='text')openEditor(hit.x,hit.y,hit);else openEditor(p.x,p.y-fsOf(T.size)*.6);
     return;
   }
   commitEditor();
@@ -502,12 +503,21 @@ function addPage(copy){
   const p=copy?{...newPage(P().bg,P().bgo),strokes:structuredClone(P().strokes),img:P().img,size:P().size?{...P().size}:null,v:P().v?{...P().v}:null,ch:P().ch?{...P().ch}:null}:newPage(P().bg,P().bgo);
   pages.splice(cur+1,0,p);gotoPage(cur+1);
 }
-function deletePage(){
+function deletePage(){deletePageAt(cur)}
+// Borra la página i. Si no es la que se está viendo, se sigue en la misma. after(): se llama tras borrar y tras deshacer (vista de páginas)
+function deletePageAt(i,after){
   commitEditor();
-  const removed=pages[cur],at=cur;
-  if(pages.length===1)pages=[newPage(removed.bg,removed.bgo)];else pages.splice(cur,1);
-  gotoPage(Math.min(at,pages.length-1));
-  toast('Página borrada',{label:ib('undo','Deshacer'),fn:()=>{if(pages.length===1&&!pages[0].strokes.length&&pages[0]!==removed)pages=[removed];else pages.splice(at,0,removed);gotoPage(at)}});
+  const removed=pages[i],was=P();if(!removed)return;
+  let ph=null;
+  if(pages.length===1)pages=[ph=newPage(removed.bg,removed.bgo)];else pages.splice(i,1);
+  gotoPage(removed===was?Math.min(i,pages.length-1):pages.indexOf(was));
+  if(after)after();
+  toast('Página borrada',{label:ib('undo','Deshacer'),fn:()=>{
+    const now=P();
+    if(ph&&pages.length===1&&pages[0]===ph&&!ph.strokes.length)pages=[removed];else pages.splice(Math.min(i,pages.length),0,removed);
+    gotoPage(removed===was||now===ph?pages.indexOf(removed):pages.indexOf(now));
+    if(after)after();
+  }});
 }
 function deleteAllPages(){
   commitEditor();
